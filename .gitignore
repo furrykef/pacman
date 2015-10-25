@@ -1,0 +1,7 @@
+*.o
+*.nes
+*.srm
+*.pyc
+*/__pycache__/
+map.txt
+*listing*

@@ -1,0 +1,55 @@
+A possible method of movement
+-----------------------------
+Movement is handled using a tilemap with turns. Each tile has five flags: north, east, south, west, slow, and AI-horizontal. The directional flags mean you can turn in that direction. The "slow" flag means ghosts move slowly when on this tile. The "AI-horizontal" flag means the ghosts are restricted to moving horizontally in this area but Pac-Man is not. (Frightened ghosts are exempt.)
+
+It is assumed that Pac-Man can turn in direction opposite the one he is facing at any time.
+
+One problem with this method is it makes editing levels more difficult and basically precludes the possibility of a sensible in-game level editor.
+
+
+Calculating turns
+-----------------
+A ghost approaching an intersection will have to choose one of up to three directions to turn. It examines the north, east, south, and west tiles around the intersection (discarding the direction it's coming from) and moves into the one that is closest to the target tile. Which one is closest? Let's suppose we have a ghost moving north and it reaches a three-way intersection (north, east, or west). It scores each of these turns depending on how northish, eastish, or westish the target tile is relative to the intersection. If the target is further east than north or west, turn east; if it's further north than east or west, keep going north; etc.
+
+This should be equivalent to, but much faster and simpler than, computing the Euclidean distance to the target from each tile neighboring the intersection.
+
+Algorithm:
+
+    max_score = 0
+    north_score = ghost_y - target_y
+    south_score = -north_score
+    west_score = ghost_x - target_x
+    east_score = -west_score
+    IF can go north AND north_score > 0
+        max_score = north_score
+        max_direction = north
+    IF can go east AND east_score > max_score
+        max_score = east_score
+        max_direction = east
+    IF can go south AND south_score > max_score
+        max_score = south_score
+        max_direction = south
+    IF can go west AND west_score > max_score
+        max_score = west_score
+        max_direction = west
+
+
+Cropping sprites at tunnel edges
+--------------------------------
+Done by setting sprite priority to background when (and only when) a sprite's X coordinate is too high or too low. Since there are no dots or other BG tiles inside the tunnel, the priority flip will not be visible to the player. At the edges of the tunnel will be black BG tiles (i.e. black as a foreground color); Pac-Man and the ghosts will go behind these tiles and seem to disappear.
+
+Note that there seems to be one full tile off each edge of the screen that Pac-Man can appear (or rather not appear) in. After Pac-Man disappears in one end of the tunnel, there is some time before he comes out the other end.
+
+
+Flickering
+----------
+Pac-Man does not flicker.
+
+When the sprite overflow flag is set, cycle the priorities for the ghosts so they all flicker equally.
+
+
+Things to remember
+------------------
+Ghosts decide which direction they're going to turn some time before they actually turn. The dossier seems to be saying that the decision is made as soon as the ghost enters the tile *before* the intersection. The in-game evidence suggests they make the turn as soon as they arrive at the intersection (their eyes change direction before the turn, but not while they're a whole tile away).
+
+Ghosts always move left upon exiting the ghost house, unless the ghost was in the house during a mode chance, in which case they will move right.
