@@ -1,5 +1,6 @@
 .include "nes.inc"
 .include "header.inc"
+.include "ai.asm"
 .include "map.asm"
 
 
@@ -63,6 +64,8 @@ Main:
         inx
         bne     @clrram
 
+        ; @TODO@ -- clear VRAM
+
         ; Init variables
         lda     #0
         sta     FrameCounter
@@ -91,9 +94,11 @@ Main:
         sta     PPUMASK
 
 ;*** BEGIN TEST ***
+        jsr     InitAI
 forever:
         jsr     WaitForVblank
         jsr     ReadJoys
+        jsr     MoveGhosts
         lda     Joy1State
         and     #JOY_DOWN
         beq     @test_up
@@ -119,11 +124,14 @@ HandleVblank:
         sta     OAMADDR
         lda     #>MyOAM
         sta     OAMDMA
-        ; Load palette
+
+        ; Load BG palettes
         lda     #$3f
         sta     PPUADDR
         lda     #$00
         sta     PPUADDR
+
+        ; Palette 1 (maze)
         lda     #$0f
         sta     PPUDATA
         lda     #$12
@@ -132,6 +140,23 @@ HandleVblank:
         sta     PPUDATA
         lda     #$35
         sta     PPUDATA
+
+        ; Load sprite palettes
+        lda     #$3f
+        sta     PPUADDR
+        lda     #$10
+        sta     PPUADDR
+
+        ; Palette 0 (Blinky)
+        lda     #$0f
+        sta     PPUDATA
+        lda     #$05
+        sta     PPUDATA
+        lda     #$12
+        sta     PPUDATA
+        lda     #$30
+        sta     PPUDATA
+
         ; Set scroll
         lda     #$a0                        ; NMI on, 8x16 sprites
         sta     PPUCTRL

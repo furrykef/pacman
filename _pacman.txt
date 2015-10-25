@@ -7,6 +7,35 @@ It is assumed that Pac-Man can turn in direction opposite the one he is facing a
 One problem with this method is it makes editing levels more difficult and basically precludes the possibility of a sensible in-game level editor.
 
 
+Other movement ideas
+--------------------
+Directions are represented as follows:
+
+    00: left
+    01: right
+    10: up
+    11: down
+
+This way, you can reverse a ghost's direction by XORing it with 0x03.
+
+
+Bitfields for motion
+--------------------
+I have heard (but can't substantiate) that sprites move according to bitfields. E.g., 11111111 is full speed, and 10101010 is half speed. Frame-advancing the attract mode suggests a bitfield of 11111110 or similar.
+
+Likely bitfields:
+    10010010: 37.5% speed
+    10101010: 50% speed
+    11011010: 62.5% speed
+    11101110: 75% speed
+    11111110: 87.5% speed
+    11111111: 100% speed
+
+For more fine-grained speed adjustment, we can use 16-bit bitfields.
+
+Eating a dot causes Pac-Man to stop for one frame; eating an energizer causes him to stop for three frames.
+
+
 Calculating turns
 -----------------
 A ghost approaching an intersection will have to choose one of up to three directions to turn. It examines the north, east, south, and west tiles around the intersection (discarding the direction it's coming from) and moves into the one that is closest to the target tile. Which one is closest? Let's suppose we have a ghost moving north and it reaches a three-way intersection (north, east, or west). It scores each of these turns depending on how northish, eastish, or westish the target tile is relative to the intersection. If the target is further east than north or west, turn east; if it's further north than east or west, keep going north; etc.
