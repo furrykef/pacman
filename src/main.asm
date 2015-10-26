@@ -98,7 +98,6 @@ Main:
 forever:
         jsr     WaitForVblank
         jsr     ReadJoys
-        jsr     MoveGhosts
         lda     Joy1State
         and     #JOY_DOWN
         beq     @test_up
@@ -106,8 +105,10 @@ forever:
 @test_up:
         lda     Joy1State
         and     #JOY_UP
-        beq     forever
+        beq     @end
         dec     VScroll
+@end:
+        jsr     MoveGhosts
         jmp     forever
 ;*** END TEST ***
 

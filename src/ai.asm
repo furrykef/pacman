@@ -7,7 +7,7 @@
 
 .enum GhostState
         active
-        scared
+        blue
         eaten
         waiting
         exiting
@@ -32,16 +32,13 @@ Pinky:      .tag Ghost
 Inky:       .tag Ghost
 Clyde:      .tag Ghost
 
-TileID:         .res 1
-PixelOffset:    .res 1
-
 
 .segment "CODE"
 
 InitAI:
-        lda     #128
+        lda     #127
         sta     Blinky+Ghost::pos_x
-        lda     #83
+        lda     #91
         sta     Blinky+Ghost::pos_y
         lda     #Direction::left
         sta     Blinky+Ghost::direction
@@ -54,19 +51,21 @@ InitAI:
         rts
 
 MoveGhosts:
+        ; Move Blinky
+        ldx     Blinky+Ghost::direction
         lda     Blinky+Ghost::pos_x
-        sub     #1
+        add     DeltaXTbl,x
         sta     Blinky+Ghost::pos_x
-        pha
-        lsr
-        lsr
-        lsr
-        sta     TileID
-        pla
-        and     #$07
-        sta     PixelOffset
-        ; @XXX@
         lda     Blinky+Ghost::pos_y
+        add     DeltaYTbl,x
+        sta     Blinky+Ghost::pos_y
+
+        ; @XXX@
+
+        ; Update Blinky in OAM
+        lda     Blinky+Ghost::pos_y
+        sub     VScroll
+        sub     #8
         sta     MyOAM
         sta     MyOAM+4
         lda     #$01                        ; Sprite index number
@@ -77,7 +76,20 @@ MoveGhosts:
         sta     MyOAM+2
         sta     MyOAM+6
         lda     Blinky+Ghost::pos_x
+        sub     #7
         sta     MyOAM+3
         add     #8
         sta     MyOAM+7
         rts
+
+DeltaXTbl:
+        .byte   -1                          ; left
+        .byte   1                           ; right
+        .byte   0                           ; up
+        .byte   0                           ; down
+
+DeltaYTbl:
+        .byte   0                           ; left
+        .byte   0                           ; right
+        .byte   -1                          ; up
+        .byte   1                           ; down
