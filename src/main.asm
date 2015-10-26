@@ -7,7 +7,6 @@
 ; Exports for easy debugging
 .export HandleVblank
 .export ReadJoys
-.export LoadMapIntoVram
 
 
 MyOAM = $200
@@ -15,6 +14,10 @@ MyOAM = $200
 
 .segment "ZEROPAGE"
 
+TmpL:          .res 1
+TmpH:          .res 1
+Tmp2L:          .res 1
+Tmp2H:          .res 1
 FrameCounter:   .res 1
 fRenderOff:     .res 1                      ; tells vblank handler not to mess with VRAM if nonzero
 Joy1State:      .res 1
@@ -94,7 +97,7 @@ Main:
         ; Let's get started!
         lda     #1
         sta     fRenderOff
-        jsr     LoadMapIntoVram
+        jsr     LoadBoard
         lda     #0
         sta     fRenderOff
 

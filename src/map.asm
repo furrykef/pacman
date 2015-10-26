@@ -1,4 +1,45 @@
+.segment "BSS"
+
+CurrentBoard:   .res 32*31
+
+
 .segment "CODE"
+
+LoadBoard:
+        lda     #<FullBoard
+        sta     TmpL
+        lda     #>FullBoard
+        sta     TmpH
+        lda     #<CurrentBoard
+        sta     Tmp2L
+        lda     #>CurrentBoard
+        sta     Tmp2H
+        ldx     #31
+@copy_row:
+        ldy     #0
+@copy_cell:
+        lda     (TmpL),y
+        sta     (Tmp2L),y
+        iny
+        cpy     #32
+        bne     @copy_cell
+        ; Finished this row; bump pointers by a row
+        lda     TmpL
+        add     #32
+        sta     TmpL
+        lda     TmpH
+        adc     #0
+        sta     TmpH
+        lda     Tmp2L
+        add     #32
+        sta     Tmp2L
+        lda     Tmp2H
+        adc     #0
+        sta     Tmp2H
+        dex
+        bne     @copy_row
+        jmp     CopyBoardIntoVram
+
 
 .macro Load8Rows offset
 .local loop
@@ -10,7 +51,7 @@ loop:
         bne     loop
 .endmacro
 
-LoadMapIntoVram:
+CopyBoardIntoVram:
         ; Load nametable
         ; This will overshoot a little bit and clobber the attribute table,
         ; but that's OK.
@@ -18,10 +59,10 @@ LoadMapIntoVram:
         sta     PPUADDR
         lda     #$00
         sta     PPUADDR
-        Load8Rows Map
-        Load8Rows Map+$100
-        Load8Rows Map+$200
-        Load8Rows Map+$300
+        Load8Rows CurrentBoard
+        Load8Rows CurrentBoard+$100
+        Load8Rows CurrentBoard+$200
+        Load8Rows CurrentBoard+$300
 
         ; Last row has to be written to other nametable
         lda     #$28
@@ -30,7 +71,7 @@ LoadMapIntoVram:
         sta     PPUADDR
         tax
 @loop:
-        lda     Map+32*30,x
+        lda     CurrentBoard+32*30,x
         sta     PPUDATA
         inx
         cpx     #32
@@ -60,7 +101,7 @@ ClearAttr:
 
 
 
-Map:
+FullBoard:
     .byte $00,$00,$84,$85,$85,$85,$85,$85,$85,$85,$85,$85,$85,$85,$85,$aa,$ab,$85,$85,$85,$85,$85,$85,$85,$85,$85,$85,$85,$85,$86,$00,$00
     .byte $00,$00,$94,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$91,$93,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$96,$00,$00
     .byte $00,$00,$94,$92,$81,$82,$82,$83,$92,$81,$82,$82,$82,$83,$92,$91,$93,$92,$81,$82,$82,$82,$83,$92,$81,$82,$82,$83,$92,$96,$00,$00

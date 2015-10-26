@@ -1,3 +1,4 @@
+; This ordering is used so that you can reverse direction using EOR #$03
 .enum Direction
         left
         right
@@ -15,7 +16,7 @@
 
 
 .struct Ghost
-        pos_x       .byte
+        pos_x       .byte                   ; center of sprite, not upper left
         pos_y       .byte
         direction   .byte
         turn_dir    .byte                   ; Direction ghost has planned to turn in
@@ -31,6 +32,15 @@ Blinky:     .tag Ghost
 Pinky:      .tag Ghost
 Inky:       .tag Ghost
 Clyde:      .tag Ghost
+
+TileX:          .res 1
+TileY:          .res 1
+PixelX:         .res 1
+PixelY:         .res 1
+NextTileX:      .res 1
+NextTileY:      .res 1
+TargetTileX:    .res 1
+TargetTileY:    .res 1
 
 
 .segment "CODE"
@@ -56,9 +66,43 @@ MoveGhosts:
         lda     Blinky+Ghost::pos_x
         add     DeltaXTbl,x
         sta     Blinky+Ghost::pos_x
+        pha
+        lsr
+        lsr
+        lsr
+        sta     TileX
+        add     DeltaXTbl,x
+        sta     NextTileX
+        pla
+        and     #$07
+        sta     PixelX
         lda     Blinky+Ghost::pos_y
         add     DeltaYTbl,x
         sta     Blinky+Ghost::pos_y
+        pha
+        lsr
+        lsr
+        lsr
+        sta     TileY
+        add     DeltaYTbl,x
+        sta     NextTileY
+        pla
+        and     #$07
+        sta     PixelY
+
+        ; @TODO@ -- if TileX and TileY match Pac-Man's, kill Pac-Man
+
+        ; *** TEST ***
+        lda     #0
+        sta     TargetTileX
+        sta     TargetTileY
+        ; *** END TEST ***
+
+        ; Will we be able to go north?
+        ;ldx     NextTileX
+        ;dex
+        ;ldy     NextTileY
+        ;jsr     IsTileEnterable
 
         ; @XXX@
 
@@ -93,3 +137,13 @@ DeltaYTbl:
         .byte   0                           ; right
         .byte   -1                          ; up
         .byte   1                           ; down
+
+; Input:
+;   X = X coordinate
+;   Y = Y coordinate
+;
+; Output:
+;   EQ if so, NE if not
+IsTileEnterable:
+        ; @XXX@
+        rts
