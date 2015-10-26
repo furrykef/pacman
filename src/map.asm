@@ -139,3 +139,23 @@ FullBoard:
     .byte $00,$00,$94,$92,$a1,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a3,$92,$a1,$a3,$92,$a1,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a3,$92,$96,$00,$00
     .byte $00,$00,$94,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$96,$00,$00
     .byte $00,$00,$a4,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a6,$00,$00
+
+;FullBoardRowAddrL:
+;.repeat I, 31
+;    .byte <FullBoard+(32*I)
+;.endrepeat
+;
+;FullBoardRowAddrH:
+;.repeat I, 31
+;    .byte <FullBoard+(32*I)
+;.endrepeat
+
+CurrentBoardRowAddrL:
+.repeat 31, I
+    .byte <CurrentBoard+(32*I)
+.endrepeat
+
+CurrentBoardRowAddrH:
+.repeat 31, I
+    .byte >CurrentBoard+(32*I)
+.endrepeat

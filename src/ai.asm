@@ -147,23 +147,12 @@ DeltaYTbl:
 ; Output:
 ;   EQ if so, NE if not
 IsTileEnterable:
-        ; All this loop does is set TmpL to CurrentBoard+y_coord*32
-        lda     #<CurrentBoard
+        ; Set Tmp to the appropriate row of CurrentBoard
+        lda     CurrentBoardRowAddrL,x
         sta     TmpL
-        lda     #>CurrentBoard
+        lda     CurrentBoardRowAddrH,x
         sta     TmpH
-@loop:
-        dex
-        bmi     @end_loop
-        lda     TmpL
-        add     #32
-        sta     TmpL
-        lda     TmpH
-        adc     #0
-        sta     TmpH
-        jmp     @loop
-@end_loop:
-        ; Now we can finally check if the tile can be entered or not
+        ; Now check if the tile can be entered or not
         lda     (TmpL),y
         cmp     #$20                    ; space
         beq     @done
