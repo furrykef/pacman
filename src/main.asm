@@ -52,7 +52,7 @@ Main:
         ; Value >= $ef should be used to clear OAM
         lda     #$ff
         ldx     #0
-@clrram:
+@init_ram:
         sta     $000,x
         sta     $100,x
         sta     $200,x
@@ -62,9 +62,21 @@ Main:
         sta     $600,x
         sta     $700,x
         inx
-        bne     @clrram
+        bne     @init_ram
 
-        ; @TODO@ -- clear VRAM
+        ; Clear VRAM ($2000-2fff)
+        lda     #$20
+        sta     PPUADDR
+        lda     #$00
+        sta     PPUADDR
+        tax                                 ; X := 0
+        ldy     #$10
+@clear_vram:
+        sta     PPUDATA
+        dex
+        bne     @clear_vram
+        dey
+        bne     @clear_vram
 
         ; Init variables
         lda     #0
