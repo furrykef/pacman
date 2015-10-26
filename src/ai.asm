@@ -99,10 +99,10 @@ MoveGhosts:
         ; *** END TEST ***
 
         ; Will we be able to go north?
-        ;ldx     NextTileX
-        ;dex
-        ;ldy     NextTileY
-        ;jsr     IsTileEnterable
+        ldy     NextTileX
+        dey
+        ldx     NextTileY
+        jsr     IsTileEnterable
 
         ; @XXX@
 
@@ -139,11 +139,36 @@ DeltaYTbl:
         .byte   1                           ; down
 
 ; Input:
-;   X = X coordinate
-;   Y = Y coordinate
+;   Y = X coordinate
+;   X = Y coordinate
+;
+; Yes, I know it's backwards!
 ;
 ; Output:
 ;   EQ if so, NE if not
 IsTileEnterable:
-        ; @XXX@
+        ; All this loop does is set TmpL to CurrentBoard+y_coord*32
+        lda     #<CurrentBoard
+        sta     TmpL
+        lda     #>CurrentBoard
+        sta     TmpH
+@loop:
+        dex
+        bmi     @end_loop
+        lda     TmpL
+        add     #32
+        sta     TmpL
+        lda     TmpH
+        adc     #0
+        sta     TmpH
+        jmp     @loop
+@end_loop:
+        ; Now we can finally check if the tile can be entered or not
+        lda     (TmpL),y
+        cmp     #$20                    ; space
+        beq     @done
+        cmp     #$92                    ; dot
+        beq     @done
+        cmp     #$95                    ; energizer
+@done:
         rts

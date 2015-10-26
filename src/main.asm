@@ -14,8 +14,8 @@ MyOAM = $200
 
 .segment "ZEROPAGE"
 
-TmpL:          .res 1
-TmpH:          .res 1
+TmpL:           .res 1
+TmpH:           .res 1
 Tmp2L:          .res 1
 Tmp2H:          .res 1
 FrameCounter:   .res 1
