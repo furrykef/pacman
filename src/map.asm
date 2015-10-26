@@ -41,28 +41,34 @@ LoadBoard:
         jmp     CopyBoardIntoVram
 
 
-.macro Load8Rows offset
-.local loop
-        ldx     #0
-loop:
-        lda     offset,x
-        sta     PPUDATA
-        inx
-        bne     loop
-.endmacro
-
 CopyBoardIntoVram:
-        ; Load nametable
-        ; This will overshoot a little bit and clobber the attribute table,
-        ; but that's OK.
+        ; Load first nametable
         lda     #$20
         sta     PPUADDR
         lda     #$00
         sta     PPUADDR
-        Load8Rows CurrentBoard
-        Load8Rows CurrentBoard+$100
-        Load8Rows CurrentBoard+$200
-        Load8Rows CurrentBoard+$300
+        lda     #<CurrentBoard
+        sta     TmpL
+        lda     #>CurrentBoard
+        sta     TmpH
+        ldx     #30
+@copy_row:
+        ldy     #0
+@copy_cell:
+        lda     (TmpL),y
+        sta     PPUDATA
+        iny
+        cpy     #32
+        bne     @copy_cell
+        ; Finished this row; bump pointer by a row
+        lda     TmpL
+        add     #32
+        sta     TmpL
+        lda     TmpH
+        adc     #0
+        sta     TmpH
+        dex
+        bne     @copy_row
 
         ; Last row has to be written to other nametable
         lda     #$28
