@@ -7,6 +7,7 @@
 ; Exports for easy debugging
 .export HandleVblank
 .export ReadJoys
+.export ComputeTurn
 
 
 MyOAM = $200

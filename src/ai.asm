@@ -104,7 +104,7 @@ MoveGhosts:
         sta     TargetTileY
         ; *** END TEST ***
 
-        jsr     ScoreDirections
+        jsr     ComputeTurn
 
         ; Update Blinky in OAM
         lda     Blinky+Ghost::pos_y
@@ -142,7 +142,7 @@ DeltaYTbl:
         .byte   1                           ; down
 
 
-ScoreDirections:
+ComputeTurn:
         lda     #0
         sta     MaxScore
         lda     NextTileX
@@ -159,8 +159,8 @@ ScoreDirections:
         sta     ScoreDown
 
         ; Will we be able to go up?
-        lda     Blinky+Ghost::direction     ; Disallow if already going up
-        cmp     #Direction::up
+        lda     Blinky+Ghost::direction     ; Disallow if going down
+        cmp     #Direction::down
         beq     @no_up
         ldy     NextTileX
         ldx     NextTileY
@@ -177,8 +177,8 @@ ScoreDirections:
         lda     #0
         sta     ScoreUp
 @try_right:
-        lda     Blinky+Ghost::direction     ; Disallow if already going right
-        cmp     #Direction::right
+        lda     Blinky+Ghost::direction     ; Disallow if going left
+        cmp     #Direction::left
         beq     @no_right
         ldy     NextTileX
         iny
@@ -197,8 +197,8 @@ ScoreDirections:
         lda     #0
         sta     ScoreRight
 @try_down:
-        lda     Blinky+Ghost::direction     ; Disallow if already going down
-        cmp     #Direction::down
+        lda     Blinky+Ghost::direction     ; Disallow if going up
+        cmp     #Direction::up
         beq     @no_down
         ldy     NextTileX
         ldx     NextTileY
@@ -217,8 +217,8 @@ ScoreDirections:
         lda     #0
         sta     ScoreDown
 @try_left:
-        lda     Blinky+Ghost::direction     ; Disallow if already going left
-        cmp     #Direction::left
+        lda     Blinky+Ghost::direction     ; Disallow if going right
+        cmp     #Direction::right
         beq     @no_left
         ldy     NextTileX
         dey
