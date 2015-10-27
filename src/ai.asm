@@ -218,7 +218,7 @@ ScoreDirections:
         cmp     #Direction::left
         beq     @no_left
         ldy     NextTileX
-        iny
+        dey
         ldx     NextTileY
         jsr     IsTileEnterable
         bne     @no_left
