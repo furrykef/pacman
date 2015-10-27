@@ -112,9 +112,12 @@ MoveGhosts:
         sub     #8
         sta     MyOAM
         sta     MyOAM+4
-        lda     #$01                        ; Sprite index number
-        sta     MyOAM+1
-        lda     #$03
+        lda     Blinky+Ghost::turn_dir
+        asl
+        asl
+        ora     #$01
+        sta     MyOAM+1                     ; Sprite index number
+        add     #2
         sta     MyOAM+5
         lda     #$00                        ; Attributes
         sta     MyOAM+2
