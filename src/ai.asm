@@ -219,7 +219,7 @@ ComputeTurn:
         inx
         jsr     IsTileEnterable
         bne     @no_down
-        lda     ScoreRight
+        lda     ScoreDown
         bmi     @no_down
         cmp     MaxScore
         blt     @no_down
@@ -239,7 +239,7 @@ ComputeTurn:
         ldx     NextTileY
         jsr     IsTileEnterable
         bne     @no_left
-        lda     ScoreRight
+        lda     ScoreLeft
         bmi     @no_left
         cmp     MaxScore
         blt     @no_left
