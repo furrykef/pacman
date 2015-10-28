@@ -52,6 +52,7 @@ GhostOamH:      .res 1
 .segment "CODE"
 
 InitAI:
+        ; Blinky
         lda     #127
         sta     Blinky+Ghost::pos_x
         lda     #91
@@ -70,12 +71,38 @@ InitAI:
         sta     Blinky+Ghost::oam_offset
         lda     #0
         sta     Blinky+Ghost::palette
+
+        ; Pinky
+        lda     #127
+        sta     Pinky+Ghost::pos_x
+        lda     #115
+        sta     Pinky+Ghost::pos_y
+        lda     #Direction::left
+        sta     Pinky+Ghost::direction
+        sta     Pinky+Ghost::turn_dir
+        ; @TODO@ -- speed
+        lda     #GhostState::active
+        sta     Pinky+Ghost::state
+        lda     #<GetPinkyTargetTile
+        sta     Pinky+Ghost::get_target_tile
+        lda     #>GetPinkyTargetTile
+        sta     Pinky+Ghost::get_target_tile+1
+        lda     #$08
+        sta     Pinky+Ghost::oam_offset
+        lda     #1
+        sta     Pinky+Ghost::palette
+
         rts
 
 MoveGhosts:
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
+        sta     GhostH
+        jsr     MoveOneGhost
+        lda     #<Pinky
+        sta     GhostL
+        lda     #>Pinky
         sta     GhostH
         jmp     MoveOneGhost
 
@@ -148,6 +175,13 @@ GetBlinkyTargetTile:
         lda     PacTileX
         sta     TargetTileX
         lda     PacTileY
+        sta     TargetTileY
+        rts
+
+
+GetPinkyTargetTile:
+        lda     #0
+        sta     TargetTileX
         sta     TargetTileY
         rts
 
@@ -248,6 +282,11 @@ DrawGhosts:
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
+        sta     GhostH
+        jsr     DrawOneGhost
+        lda     #<Pinky
+        sta     GhostL
+        lda     #>Pinky
         sta     GhostH
         jmp     DrawOneGhost
 
