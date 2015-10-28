@@ -3,31 +3,74 @@ PacManOAM = MyOAM + $10
 
 .segment "ZEROPAGE"
 
-PacX:           .res 1
-PacY:           .res 1
-PacTileX:       .res 1
-PacTileY:       .res 1
-PacPixelX:      .res 1
-PacPixelY:      .res 1
-PacDirection:   .res 1
+PacX:               .res 1
+PacY:               .res 1
+PacTileX:           .res 1
+PacTileY:           .res 1
+PacDirection:       .res 1
+
+PacTryX:            .res 1
+PacTryY:            .res 1
+PacTryTileX:        .res 1
+PacTryTileY:        .res 1
+PacTryDirection:    .res 1
 
 
 .segment "CODE"
 
-SetPacDirection:
+MovePacMan:
+        ; Figure out direction we're trying to go in
+        ; Upper four bits of joy state are directions
         lda     Joy1State
         lsr
         lsr
         lsr
         lsr
-        beq     @end
+        bne     @change_dir
+        ; Player didn't press a direction button
+        ; Pac-Man will continue in same direction
+        lda     PacDirection
+        jmp     @no_change
+@change_dir:
         tax
-        lda     PacDirTbl,x
+        lda     JoyDirTbl,x
+@no_change:
+        sta     PacTryDirection
+        ; Now try to move
+        tax
+        lda     PacX
+        add     DeltaXTbl,x
+        sta     PacTryX
+        lsr
+        lsr
+        lsr
+        sta     PacTryTileX
+        tay                                 ; Will be passed to IsTileEnterable
+        lda     PacY
+        add     DeltaYTbl,x
+        sta     PacTryY
+        lsr
+        lsr
+        lsr
+        sta     PacTryTileY
+        tax
+        jsr     IsTileEnterable
+        bne     @reject_move
+        ; Move is OK; make it so
+        lda     PacTryDirection
         sta     PacDirection
-@end:
+        lda     PacTryX
+        sta     PacX
+        lda     PacTryY
+        sta     PacY
+        lda     PacTryTileX
+        sta     PacTileX
+        lda     PacTryTileY
+        sta     PacTileY
+@reject_move:
         rts
 
-PacDirTbl:                                  ; RLDU (right, left, down, up)
+JoyDirTbl:                                  ; RLDU (right, left, down, up)
         .byte   0                           ; 0000 (dummy entry)
         .byte   Direction::up               ; 0001
         .byte   Direction::down             ; 0010
@@ -44,32 +87,6 @@ PacDirTbl:                                  ; RLDU (right, left, down, up)
         .byte   Direction::right            ; 1101
         .byte   Direction::right            ; 1110
         .byte   Direction::right            ; 1111
-
-MovePacMan:
-        ldx     PacDirection
-        lda     PacX
-        add     DeltaXTbl,x
-        sta     PacX
-        pha
-        lsr
-        lsr
-        lsr
-        sta     PacTileX
-        pla
-        and     #$07
-        sta     PacPixelX
-        lda     PacY
-        add     DeltaYTbl,x
-        sta     PacY
-        pha
-        lsr
-        lsr
-        lsr
-        sta     PacTileY
-        pla
-        and     #$07
-        sta     PacPixelY
-        rts
 
 
 DrawPacMan:

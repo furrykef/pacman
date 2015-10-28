@@ -20,6 +20,7 @@
 .export HandleVblank
 .export ReadJoys
 .export ComputeTurn
+.export MovePacMan
 
 
 MyOAM = $200
@@ -126,7 +127,6 @@ Main:
 forever:
         jsr     WaitForVblank
         jsr     ReadJoys
-        jsr     SetPacDirection
         ; Must move ghosts *before* Pac-Man since collision detection
         ; is done inside MoveGhosts.
         jsr     MoveGhosts
