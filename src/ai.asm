@@ -67,9 +67,9 @@ InitAI:
         sta     Blinky+Ghost::get_target_tile
         lda     #>GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile+1
-        lda     #$00
+        lda     #$08
         sta     Blinky+Ghost::oam_offset
-        lda     #0
+        lda     #$00
         sta     Blinky+Ghost::palette
 
         ; Pinky
@@ -87,10 +87,50 @@ InitAI:
         sta     Pinky+Ghost::get_target_tile
         lda     #>GetPinkyTargetTile
         sta     Pinky+Ghost::get_target_tile+1
-        lda     #$08
+        lda     #$10
         sta     Pinky+Ghost::oam_offset
-        lda     #1
+        lda     #$01
         sta     Pinky+Ghost::palette
+
+        ; Inky
+        lda     #127
+        sta     Pinky+Ghost::pos_x
+        lda     #115
+        sta     Pinky+Ghost::pos_y
+        lda     #Direction::left
+        sta     Pinky+Ghost::direction
+        sta     Pinky+Ghost::turn_dir
+        ; @TODO@ -- speed
+        lda     #GhostState::active
+        sta     Inky+Ghost::state
+        lda     #<GetInkyTargetTile
+        sta     Inky+Ghost::get_target_tile
+        lda     #>GetInkyTargetTile
+        sta     Inky+Ghost::get_target_tile+1
+        lda     #$18
+        sta     Inky+Ghost::oam_offset
+        lda     #$02
+        sta     Inky+Ghost::palette
+
+        ; Clyde
+        lda     #127
+        sta     Clyde+Ghost::pos_x
+        lda     #115
+        sta     Clyde+Ghost::pos_y
+        lda     #Direction::left
+        sta     Clyde+Ghost::direction
+        sta     Clyde+Ghost::turn_dir
+        ; @TODO@ -- speed
+        lda     #GhostState::active
+        sta     Clyde+Ghost::state
+        lda     #<GetClydeTargetTile
+        sta     Clyde+Ghost::get_target_tile
+        lda     #>GetClydeTargetTile
+        sta     Clyde+Ghost::get_target_tile+1
+        lda     #$20
+        sta     Clyde+Ghost::oam_offset
+        lda     #$03
+        sta     Clyde+Ghost::palette
 
         rts
 
@@ -103,6 +143,16 @@ MoveGhosts:
         lda     #<Pinky
         sta     GhostL
         lda     #>Pinky
+        sta     GhostH
+        jsr     MoveOneGhost
+        lda     #<Inky
+        sta     GhostL
+        lda     #>Inky
+        sta     GhostH
+        jsr     MoveOneGhost
+        lda     #<Clyde
+        sta     GhostL
+        lda     #>Clyde
         sta     GhostH
         jmp     MoveOneGhost
 
@@ -178,12 +228,40 @@ GetBlinkyTargetTile:
         sta     TargetTileY
         rts
 
-
 GetPinkyTargetTile:
+        ldx     PacDirection
+        lda     PacTileX
+        add     DeltaX4Tbl,x
+        sta     TargetTileX
+        lda     PacTileY
+        add     DeltaY4Tbl,x
+        sta     TargetTileY
+        rts
+
+GetInkyTargetTile:
         lda     #0
         sta     TargetTileX
         sta     TargetTileY
         rts
+
+GetClydeTargetTile:
+        lda     #31
+        sta     TargetTileX
+        lda     #0
+        sta     TargetTileY
+        rts
+
+DeltaX4Tbl:
+        .byte   -4                          ; left
+        .byte   4                           ; right
+        .byte   0                           ; up
+        .byte   0                           ; down
+
+DeltaY4Tbl:
+        .byte   0                           ; left
+        .byte   0                           ; right
+        .byte   -4                          ; up
+        .byte   4                           ; down
 
 
 ComputeTurn:
@@ -287,6 +365,16 @@ DrawGhosts:
         lda     #<Pinky
         sta     GhostL
         lda     #>Pinky
+        sta     GhostH
+        jsr     DrawOneGhost
+        lda     #<Inky
+        sta     GhostL
+        lda     #>Inky
+        sta     GhostH
+        jsr     DrawOneGhost
+        lda     #<Clyde
+        sta     GhostL
+        lda     #>Clyde
         sta     GhostH
         jmp     DrawOneGhost
 

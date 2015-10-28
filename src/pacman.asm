@@ -1,4 +1,4 @@
-PacManOAM = MyOAM + $10
+PacManOAM = MyOAM
 
 
 .segment "ZEROPAGE"
