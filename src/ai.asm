@@ -157,20 +157,20 @@ DeltaYTbl:
 
 
 ComputeTurn:
+        ; Scores here will be 0..255, but think of 0 = -128, 1 = -127 ... 255 = 127
+        ; (signed comparisons suck on the 6502)
         lda     #0
         sta     MaxScore
         lda     NextTileX
         sub     TargetTileX
-        sta     ScoreLeft
-        eor     #$ff
-        add     #1
         sta     ScoreRight
+        add     #$80
+        sta     ScoreLeft
         lda     NextTileY
         sub     TargetTileY
-        sta     ScoreUp
-        eor     #$ff
-        add     #1
         sta     ScoreDown
+        add     #$80
+        sta     ScoreUp
 
         ; Will we be able to go up?
         lda     Blinky+Ghost::direction     ; Disallow if going down
@@ -182,14 +182,11 @@ ComputeTurn:
         jsr     IsTileEnterable
         bne     @no_up
         lda     ScoreUp
-        bmi     @no_up
         sta     MaxScore
         lda     #Direction::up
         sta     Blinky+Ghost::turn_dir
         jmp     @try_right
 @no_up:
-        lda     #0
-        sta     ScoreUp
 @try_right:
         lda     Blinky+Ghost::direction     ; Disallow if going left
         cmp     #Direction::left
@@ -200,7 +197,6 @@ ComputeTurn:
         jsr     IsTileEnterable
         bne     @no_right
         lda     ScoreRight
-        bmi     @no_right
         cmp     MaxScore
         blt     @no_right
         sta     MaxScore
@@ -208,8 +204,6 @@ ComputeTurn:
         sta     Blinky+Ghost::turn_dir
         jmp     @try_down
 @no_right:
-        lda     #0
-        sta     ScoreRight
 @try_down:
         lda     Blinky+Ghost::direction     ; Disallow if going up
         cmp     #Direction::up
@@ -220,7 +214,6 @@ ComputeTurn:
         jsr     IsTileEnterable
         bne     @no_down
         lda     ScoreDown
-        bmi     @no_down
         cmp     MaxScore
         blt     @no_down
         sta     MaxScore
@@ -228,8 +221,6 @@ ComputeTurn:
         sta     Blinky+Ghost::turn_dir
         jmp     @try_left
 @no_down:
-        lda     #0
-        sta     ScoreDown
 @try_left:
         lda     Blinky+Ghost::direction     ; Disallow if going right
         cmp     #Direction::right
@@ -240,7 +231,6 @@ ComputeTurn:
         jsr     IsTileEnterable
         bne     @no_left
         lda     ScoreLeft
-        bmi     @no_left
         cmp     MaxScore
         blt     @no_left
         ;sta     MaxScore
