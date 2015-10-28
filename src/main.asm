@@ -21,6 +21,7 @@
 .export ReadJoys
 .export ComputeTurn
 .export MovePacMan
+.export MoveGhosts
 
 
 MyOAM = $200
@@ -325,11 +326,11 @@ IsTileEnterable:
         sta     TmpH
         ; Now check if the tile can be entered or not
         lda     (TmpL),y
-        cmp     #$20                    ; space
+        cmp     #$20                        ; space
         beq     @done
-        cmp     #$92                    ; dot
+        cmp     #$92                        ; dot
         beq     @done
-        cmp     #$95                    ; energizer
+        cmp     #$95                        ; energizer
 @done:
         rts
 

@@ -26,6 +26,9 @@ Pinky:      .tag Ghost
 Inky:       .tag Ghost
 Clyde:      .tag Ghost
 
+GhostL:         .res 1
+GhostH:         .res 1
+
 TileX:          .res 1
 TileY:          .res 1
 PixelX:         .res 1
@@ -57,18 +60,27 @@ InitAI:
         sta     Blinky+Ghost::state
         lda     #0
         sta     Blinky+Ghost::palette
-        lda     #<(GetBlinkyTargetTile - 1)
+        lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile
-        lda     #>(GetBlinkyTargetTile - 1)
+        lda     #>GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile+1
         rts
 
 MoveGhosts:
-        ; Move Blinky
-        ldx     Blinky+Ghost::direction
-        lda     Blinky+Ghost::pos_x
+        lda     #<Blinky
+        sta     GhostL
+        lda     #>Blinky
+        sta     GhostH
+        jmp     MoveOneGhost
+
+MoveOneGhost:
+        ldy     #Ghost::direction 
+        lda     (GhostL),y
+        tax
+        ldy     #Ghost::pos_x
+        lda     (GhostL),y
         add     DeltaXTbl,x
-        sta     Blinky+Ghost::pos_x
+        sta     (GhostL),y
         pha
         lsr
         lsr
@@ -77,9 +89,10 @@ MoveGhosts:
         pla
         and     #$07
         sta     PixelX
-        lda     Blinky+Ghost::pos_y
+        ldy     #Ghost::pos_y
+        lda     (GhostL),y
         add     DeltaYTbl,x
-        sta     Blinky+Ghost::pos_y
+        sta     (GhostL),y
         pha
         lsr
         lsr
@@ -91,14 +104,16 @@ MoveGhosts:
 
         ; @TODO@ -- if TileX and TileY match Pac-Man's, kill Pac-Man
 
-        ; JSR to Blinky+Ghost::get_target_tile
-        lda     Blinky+Ghost::get_target_tile
+        ; JSR to Ghost::get_target_tile
+        ldy     #Ghost::get_target_tile
+        lda     (GhostL),y
         sta     JsrIndAddrL
-        lda     Blinky+Ghost::get_target_tile+1
+        iny
+        lda     (GhostL),y
         sta     JsrIndAddrH
         jsr     JsrInd
 
-        ; If ghost is centered in tile, have him turn if necessary
+        ; If ghost is centered in tile, have it turn if necessary
         ; and compute next turn
         lda     PixelX
         cmp     #$03
@@ -106,8 +121,10 @@ MoveGhosts:
         lda     PixelY
         cmp     #$03
         bne     @not_centered
-        lda     Blinky+Ghost::turn_dir
-        sta     Blinky+Ghost::direction
+        ldy     #Ghost::turn_dir
+        lda     (GhostL),y
+        ldy     #Ghost::direction
+        sta     (GhostL),y
         tax
         lda     TileX
         add     DeltaXTbl,x
@@ -146,7 +163,8 @@ ComputeTurn:
         sta     ScoreUp
 
         ; Will we be able to go up?
-        lda     Blinky+Ghost::direction     ; Disallow if going down
+        ldy     #Ghost::direction           ; Disallow if going down
+        lda     (GhostL),y
         cmp     #Direction::down
         beq     @no_up
         ldy     NextTileX
@@ -157,11 +175,13 @@ ComputeTurn:
         lda     ScoreUp
         sta     MaxScore
         lda     #Direction::up
-        sta     Blinky+Ghost::turn_dir
+        ldy     #Ghost::turn_dir
+        sta     (GhostL),y
         jmp     @try_right
 @no_up:
 @try_right:
-        lda     Blinky+Ghost::direction     ; Disallow if going left
+        ldy     #Ghost::direction           ; Disallow if going left
+        lda     (GhostL),y
         cmp     #Direction::left
         beq     @no_right
         ldy     NextTileX
@@ -174,11 +194,13 @@ ComputeTurn:
         blt     @no_right
         sta     MaxScore
         lda     #Direction::right
-        sta     Blinky+Ghost::turn_dir
+        ldy     #Ghost::turn_dir
+        sta     (GhostL),y
         jmp     @try_down
 @no_right:
 @try_down:
-        lda     Blinky+Ghost::direction     ; Disallow if going up
+        ldy     #Ghost::direction           ; Disallow if going up
+        lda     (GhostL),y
         cmp     #Direction::up
         beq     @no_down
         ldy     NextTileX
@@ -191,11 +213,13 @@ ComputeTurn:
         blt     @no_down
         sta     MaxScore
         lda     #Direction::down
-        sta     Blinky+Ghost::turn_dir
+        ldy     #Ghost::turn_dir
+        sta     (GhostL),y
         jmp     @try_left
 @no_down:
 @try_left:
-        lda     Blinky+Ghost::direction     ; Disallow if going right
+        ldy     #Ghost::direction           ; Disallow if going right
+        lda     (GhostL),y
         cmp     #Direction::right
         beq     @no_left
         ldy     NextTileX
@@ -208,7 +232,8 @@ ComputeTurn:
         blt     @no_left
         ;sta     MaxScore
         lda     #Direction::left
-        sta     Blinky+Ghost::turn_dir
+        ldy     #Ghost::turn_dir
+        sta     (GhostL),y
 @no_left:
         rts
 
