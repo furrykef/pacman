@@ -14,8 +14,9 @@
         turn_dir        .byte               ; direction ghost has planned to turn in
         speed           .byte
         state           .byte
-        palette         .byte
         get_target_tile .addr
+        oam_offset      .byte
+        palette         .byte
 .endstruct
 
 
@@ -44,6 +45,9 @@ ScoreRight:     .res 1
 ScoreDown:      .res 1
 ScoreLeft:      .res 1
 
+GhostOamL:      .res 1
+GhostOamH:      .res 1
+
 
 .segment "CODE"
 
@@ -58,12 +62,14 @@ InitAI:
         ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Blinky+Ghost::state
-        lda     #0
-        sta     Blinky+Ghost::palette
         lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile
         lda     #>GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile+1
+        lda     #$00
+        sta     Blinky+Ghost::oam_offset
+        lda     #0
+        sta     Blinky+Ghost::palette
         rts
 
 MoveGhosts:
@@ -239,13 +245,29 @@ ComputeTurn:
 
 
 DrawGhosts:
-        ; Update Blinky in OAM
+        lda     #<Blinky
+        sta     GhostL
+        lda     #>Blinky
+        sta     GhostH
+        jmp     DrawOneGhost
+
+DrawOneGhost:
+        ; Update ghost in OAM
+        ldy     #Ghost::oam_offset
+        lda     (GhostL),y
+        sta     GhostOamL
+        lda     #>MyOAM
+        sta     GhostOamH
+
         ; Y position
-        lda     Blinky+Ghost::pos_y
+        ldy     #Ghost::pos_y
+        lda     (GhostL),y
         sub     VScroll
         sub     #8
-        sta     MyOAM
-        sta     MyOAM+4
+        ldy     #0
+        sta     (GhostOamL),y
+        ldy     #4
+        sta     (GhostOamL),y
         ; Pattern index
         ; Toggle between two frames
         lda     FrameCounter
@@ -254,22 +276,31 @@ DrawGhosts:
         lda     #$10                        ; Second frame is $10 tiles after frame
 @first_frame:
         sta     TmpL
-        lda     Blinky+Ghost::turn_dir
+        ldy     #Ghost::turn_dir
+        lda     (GhostL),y
         asl
         asl
         ora     #$01                        ; Use $1000 bank of VRAM
         add     TmpL
-        sta     MyOAM+1
+        ldy     #1
+        sta     (GhostOamL),y
         add     #2
-        sta     MyOAM+5
+        ldy     #5
+        sta     (GhostOamL),y
         ; Attributes
-        lda     #$00
-        sta     MyOAM+2
-        sta     MyOAM+6
+        ldy     #Ghost::palette
+        lda     (GhostL),y
+        ldy     #2
+        sta     (GhostOamL),y
+        ldy     #6
+        sta     (GhostOamL),y
         ; X position
-        lda     Blinky+Ghost::pos_x
+        ldy     #Ghost::pos_x
+        lda     (GhostL),y
         sub     #7
-        sta     MyOAM+3
+        ldy     #3
+        sta     (GhostOamL),y
         add     #8
-        sta     MyOAM+7
+        ldy     #7
+        sta     (GhostOamL),y
         rts
