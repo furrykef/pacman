@@ -56,7 +56,7 @@ InitAI:
         sta     Blinky+Ghost::pos_x
         lda     #91
         sta     Blinky+Ghost::pos_y
-        lda     #Direction::right
+        lda     #Direction::left
         sta     Blinky+Ghost::direction
         sta     Blinky+Ghost::turn_dir
         ; @TODO@ -- speed
@@ -95,8 +95,9 @@ MoveGhosts:
         ; @TODO@ -- if TileX and TileY match Pac-Man's, kill Pac-Man
 
         ; *** TEST ***
-        lda     #0
+        lda     PacX
         sta     TargetTileX
+        lda     PacY
         sta     TargetTileY
         ; *** END TEST ***
 
@@ -121,21 +122,33 @@ MoveGhosts:
 @not_centered:
 
         ; Update Blinky in OAM
+        ; Y position
         lda     Blinky+Ghost::pos_y
         sub     VScroll
         sub     #8
         sta     MyOAM
         sta     MyOAM+4
+        ; Pattern index
+        ; Toggle between two frames
+        lda     FrameCounter
+        and     #$08
+        beq     :+                          ; This will store $00 to TmpL
+        lda     #$10                        ; Second frame is $10 tiles after frame
+:
+        sta     TmpL
         lda     Blinky+Ghost::turn_dir
         asl
         asl
-        ora     #$01
-        sta     MyOAM+1                     ; Sprite index number
+        ora     #$01                        ; Use $1000 bank of VRAM
+        add     TmpL
+        sta     MyOAM+1
         add     #2
         sta     MyOAM+5
-        lda     #$00                        ; Attributes
+        ; Attributes
+        lda     #$00
         sta     MyOAM+2
         sta     MyOAM+6
+        ; X position
         lda     Blinky+Ghost::pos_x
         sub     #7
         sta     MyOAM+3

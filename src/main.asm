@@ -1,6 +1,7 @@
 .include "nes.inc"
 .include "header.inc"
 .include "ai.asm"
+.include "pacman.asm"
 .include "map.asm"
 
 
@@ -110,10 +111,11 @@ Main:
         sta     PPUMASK
 
 ;*** BEGIN TEST ***
-        jsr     InitAI
+        jsr     InitLife
 forever:
         jsr     WaitForVblank
         jsr     ReadJoys
+        jsr     SetPacDirection
         lda     Joy1State
         and     #JOY_DOWN
         beq     @test_up
@@ -124,9 +126,24 @@ forever:
         beq     @end
         dec     VScroll
 @end:
+        ; Must move ghosts *before* Pac-Man since collision detection
+        ; is done inside MoveGhosts.
         jsr     MoveGhosts
+        jsr     MovePacMan
+        jsr     DrawPacMan
         jmp     forever
 ;*** END TEST ***
+
+
+InitLife:
+        jsr     InitAI
+        lda     #127
+        sta     PacX
+        lda     #127
+        sta     PacY
+        lda     #Direction::left
+        sta     PacDirection
+        rts
 
 
 HandleVblank:
