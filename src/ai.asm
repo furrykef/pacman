@@ -8,13 +8,14 @@
 
 
 .struct Ghost
-        pos_x       .byte                   ; center of sprite, not upper left
-        pos_y       .byte
-        direction   .byte
-        turn_dir    .byte                   ; Direction ghost has planned to turn in
-        speed       .byte
-        state       .byte
-        palette     .byte
+        pos_x           .byte               ; center of ghost, not upper left
+        pos_y           .byte
+        direction       .byte
+        turn_dir        .byte               ; direction ghost has planned to turn in
+        speed           .byte
+        state           .byte
+        palette         .byte
+        get_target_tile .addr
 .endstruct
 
 
@@ -56,6 +57,10 @@ InitAI:
         sta     Blinky+Ghost::state
         lda     #0
         sta     Blinky+Ghost::palette
+        lda     #<(GetBlinkyTargetTile - 1)
+        sta     Blinky+Ghost::get_target_tile
+        lda     #>(GetBlinkyTargetTile - 1)
+        sta     Blinky+Ghost::get_target_tile+1
         rts
 
 MoveGhosts:
@@ -86,12 +91,12 @@ MoveGhosts:
 
         ; @TODO@ -- if TileX and TileY match Pac-Man's, kill Pac-Man
 
-        ; *** TEST ***
-        lda     PacTileX
-        sta     TargetTileX
-        lda     PacTileY
-        sta     TargetTileY
-        ; *** END TEST ***
+        ; JSR to Blinky+Ghost::get_target_tile
+        lda     Blinky+Ghost::get_target_tile
+        sta     JsrIndAddrL
+        lda     Blinky+Ghost::get_target_tile+1
+        sta     JsrIndAddrH
+        jsr     JsrInd
 
         ; If ghost is centered in tile, have him turn if necessary
         ; and compute next turn
@@ -113,6 +118,14 @@ MoveGhosts:
         jsr     ComputeTurn
 @not_centered:
 
+        rts
+
+
+GetBlinkyTargetTile:
+        lda     PacTileX
+        sta     TargetTileX
+        lda     PacTileY
+        sta     TargetTileY
         rts
 
 

@@ -38,6 +38,8 @@ Joy1State:      .res 1
 Joy2State:      .res 1
 HScroll:        .res 1
 VScroll:        .res 1
+JsrIndAddrL:    .res 1                      ; Since we're on the zero page,
+JsrIndAddrH:    .res 1                      ; we won't get bit by the $xxFF JMP bug
 
 
 .segment "CODE"
@@ -203,7 +205,7 @@ HandleVblank:
         ; Palette 0 (Blinky)
         lda     #$0f
         sta     PPUDATA
-        lda     #$05
+        lda     #$16
         sta     PPUDATA
         lda     #$12
         sta     PPUDATA
@@ -343,6 +345,13 @@ DeltaYTbl:
         .byte   0                           ; right
         .byte   -1                          ; up
         .byte   1                           ; down
+
+
+; Indirect JSR
+; To use: load address into JsrIndAddrL and JsrIndAddrH
+; Then just JSR JsrInd
+JsrInd:
+        jmp     (JsrIndAddrL)
 
 
 .segment "VECTORS"
