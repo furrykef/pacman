@@ -157,5 +157,5 @@ CurrentBoardRowAddrL:
 
 CurrentBoardRowAddrH:
 .repeat 31, I
-    .byte >CurrentBoard+(32*I)
+    .byte >(CurrentBoard+(32*I))
 .endrepeat

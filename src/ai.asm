@@ -56,7 +56,7 @@ InitAI:
         sta     Blinky+Ghost::pos_x
         lda     #91
         sta     Blinky+Ghost::pos_y
-        lda     #Direction::left
+        lda     #Direction::right
         sta     Blinky+Ghost::direction
         sta     Blinky+Ghost::turn_dir
         ; @TODO@ -- speed
@@ -104,7 +104,18 @@ MoveGhosts:
         sta     TargetTileY
         ; *** END TEST ***
 
+        ; If ghost is centered in tile, have him turn if necessary
+        ; and compute next turn
+        lda     PixelX
+        cmp     #$03
+        bne     @not_centered
+        lda     PixelY
+        cmp     #$03
+        bne     @not_centered
+        lda     Blinky+Ghost::turn_dir
+        sta     Blinky+Ghost::direction
         jsr     ComputeTurn
+@not_centered:
 
         ; Update Blinky in OAM
         lda     Blinky+Ghost::pos_y
@@ -187,7 +198,7 @@ ComputeTurn:
         bne     @no_right
         lda     ScoreRight
         bmi     @no_right
-        cmp     #MaxScore
+        cmp     MaxScore
         blt     @no_right
         sta     MaxScore
         lda     #Direction::right
@@ -207,7 +218,7 @@ ComputeTurn:
         bne     @no_down
         lda     ScoreRight
         bmi     @no_down
-        cmp     #MaxScore
+        cmp     MaxScore
         blt     @no_down
         sta     MaxScore
         lda     #Direction::down
@@ -227,9 +238,9 @@ ComputeTurn:
         bne     @no_left
         lda     ScoreRight
         bmi     @no_left
-        cmp     #MaxScore
+        cmp     MaxScore
         blt     @no_left
-        sta     MaxScore
+        ;sta     MaxScore
         lda     #Direction::left
         sta     Blinky+Ghost::turn_dir
 @no_left:

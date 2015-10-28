@@ -1,6 +1,8 @@
 *.o
 *.nes
 *.srm
+*.deb
+*.nl
 *.pyc
 */__pycache__/
 map.txt
