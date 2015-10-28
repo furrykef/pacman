@@ -170,7 +170,9 @@ HandleVblank:
         tya
         pha
         lda     fRenderOff
-        bne     @end
+        beq     :+
+        jmp     @end
+:
         lda     #$00
         sta     OAMADDR
         lda     #>MyOAM
@@ -202,6 +204,36 @@ HandleVblank:
         lda     #$0f
         sta     PPUDATA
         lda     #$05
+        sta     PPUDATA
+        lda     #$12
+        sta     PPUDATA
+        lda     #$30
+        sta     PPUDATA
+
+        ; Palette 1 (Pinky)
+        lda     #$0f
+        sta     PPUDATA
+        lda     #$35
+        sta     PPUDATA
+        lda     #$12
+        sta     PPUDATA
+        lda     #$30
+        sta     PPUDATA
+
+        ; Palette 2 (Inky)
+        lda     #$0f
+        sta     PPUDATA
+        lda     #$31
+        sta     PPUDATA
+        lda     #$12
+        sta     PPUDATA
+        lda     #$30
+        sta     PPUDATA
+
+        ; Palette 3 (Clyde/Pac-Man)
+        lda     #$0f
+        sta     PPUDATA
+        lda     #$27
         sta     PPUDATA
         lda     #$12
         sta     PPUDATA

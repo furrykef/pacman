@@ -85,7 +85,7 @@ DrawPacMan:
         lda     #$83
         sta     PacManOAM+5
         ; Attributes
-        lda     #0
+        lda     #$03
         sta     PacManOAM+2
         sta     PacManOAM+6
         ; X position
