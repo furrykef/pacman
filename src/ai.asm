@@ -95,9 +95,9 @@ MoveGhosts:
         ; @TODO@ -- if TileX and TileY match Pac-Man's, kill Pac-Man
 
         ; *** TEST ***
-        lda     PacX
+        lda     PacTileX
         sta     TargetTileX
-        lda     PacY
+        lda     PacTileY
         sta     TargetTileY
         ; *** END TEST ***
 
