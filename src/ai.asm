@@ -94,12 +94,12 @@ InitAI:
 
         ; Inky
         lda     #127
-        sta     Pinky+Ghost::pos_x
+        sta     Inky+Ghost::pos_x
         lda     #115
-        sta     Pinky+Ghost::pos_y
+        sta     Inky+Ghost::pos_y
         lda     #Direction::left
-        sta     Pinky+Ghost::direction
-        sta     Pinky+Ghost::turn_dir
+        sta     Inky+Ghost::direction
+        sta     Inky+Ghost::turn_dir
         ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Inky+Ghost::state
