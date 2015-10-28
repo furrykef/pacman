@@ -44,21 +44,21 @@ This should be equivalent to, but much faster and simpler than, computing the Eu
 
 Algorithm:
 
-    max_score = 0
+    max_score = -INFINITY
     north_score = ghost_y - target_y
     south_score = -north_score
     west_score = ghost_x - target_x
     east_score = -west_score
-    IF can go north AND north_score > 0
+    IF can go north
         max_score = north_score
         max_direction = north
     IF can go east AND east_score > max_score
         max_score = east_score
         max_direction = east
-    IF can go south AND south_score > max_score
+    IF can go south
         max_score = south_score
         max_direction = south
-    IF can go west AND west_score > max_score
+    IF can go west
         max_score = west_score
         max_direction = west
 

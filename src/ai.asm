@@ -114,24 +114,24 @@ MoveOneGhost:
         lda     (GhostL),y
         add     DeltaXTbl,x
         sta     (GhostL),y
-        pha
+        tay
         lsr
         lsr
         lsr
         sta     TileX
-        pla
+        tya
         and     #$07
         sta     PixelX
         ldy     #Ghost::pos_y
         lda     (GhostL),y
         add     DeltaYTbl,x
         sta     (GhostL),y
-        pha
+        tay
         lsr
         lsr
         lsr
         sta     TileY
-        pla
+        tya
         and     #$07
         sta     PixelY
 
@@ -301,8 +301,8 @@ DrawOneGhost:
         ; Y position
         ldy     #Ghost::pos_y
         lda     (GhostL),y
-        sub     VScroll
         sub     #8
+        sub     VScroll
         ldy     #0
         sta     (GhostOamL),y
         ldy     #4
