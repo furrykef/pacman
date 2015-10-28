@@ -1,5 +1,16 @@
 .include "nes.inc"
 .include "header.inc"
+
+
+; This ordering is used so that you can reverse direction using EOR #$03
+.enum Direction
+        left
+        right
+        up
+        down
+.endenum
+
+
 .include "ai.asm"
 .include "pacman.asm"
 .include "map.asm"
@@ -256,6 +267,44 @@ ReadJoyImpl:
         dex
         bne     @loop
         rts
+
+
+; Input:
+;   Y = X coordinate
+;   X = Y coordinate
+;
+; Yes, I know it's backwards!
+;
+; Output:
+;   EQ if so, NE if not
+IsTileEnterable:
+        ; Set Tmp to the appropriate row of CurrentBoard
+        lda     CurrentBoardRowAddrL,x
+        sta     TmpL
+        lda     CurrentBoardRowAddrH,x
+        sta     TmpH
+        ; Now check if the tile can be entered or not
+        lda     (TmpL),y
+        cmp     #$20                    ; space
+        beq     @done
+        cmp     #$92                    ; dot
+        beq     @done
+        cmp     #$95                    ; energizer
+@done:
+        rts
+
+
+DeltaXTbl:
+        .byte   -1                          ; left
+        .byte   1                           ; right
+        .byte   0                           ; up
+        .byte   0                           ; down
+
+DeltaYTbl:
+        .byte   0                           ; left
+        .byte   0                           ; right
+        .byte   -1                          ; up
+        .byte   1                           ; down
 
 
 .segment "VECTORS"

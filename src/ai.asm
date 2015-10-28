@@ -1,11 +1,3 @@
-; This ordering is used so that you can reverse direction using EOR #$03
-.enum Direction
-        left
-        right
-        up
-        down
-.endenum
-
 .enum GhostState
         active
         blue
@@ -156,18 +148,6 @@ MoveGhosts:
         sta     MyOAM+7
         rts
 
-DeltaXTbl:
-        .byte   -1                          ; left
-        .byte   1                           ; right
-        .byte   0                           ; up
-        .byte   0                           ; down
-
-DeltaYTbl:
-        .byte   0                           ; left
-        .byte   0                           ; right
-        .byte   -1                          ; up
-        .byte   1                           ; down
-
 
 ComputeTurn:
         ; Scores here will be 0..255, but think of 0 = -128, 1 = -127 ... 255 = 127
@@ -250,29 +230,4 @@ ComputeTurn:
         lda     #Direction::left
         sta     Blinky+Ghost::turn_dir
 @no_left:
-        rts
-
-
-; Input:
-;   Y = X coordinate
-;   X = Y coordinate
-;
-; Yes, I know it's backwards!
-;
-; Output:
-;   EQ if so, NE if not
-IsTileEnterable:
-        ; Set Tmp to the appropriate row of CurrentBoard
-        lda     CurrentBoardRowAddrL,x
-        sta     TmpL
-        lda     CurrentBoardRowAddrH,x
-        sta     TmpH
-        ; Now check if the tile can be entered or not
-        lda     (TmpL),y
-        cmp     #$20                    ; space
-        beq     @done
-        cmp     #$92                    ; dot
-        beq     @done
-        cmp     #$95                    ; energizer
-@done:
         rts
