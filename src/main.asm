@@ -127,21 +127,25 @@ forever:
         jsr     WaitForVblank
         jsr     ReadJoys
         jsr     SetPacDirection
-        lda     Joy1State
-        and     #JOY_DOWN
-        beq     @test_up
-        inc     VScroll
-@test_up:
-        lda     Joy1State
-        and     #JOY_UP
-        beq     @end
-        dec     VScroll
-@end:
         ; Must move ghosts *before* Pac-Man since collision detection
         ; is done inside MoveGhosts.
         jsr     MoveGhosts
         jsr     MovePacMan
+        jsr     DrawGhosts
         jsr     DrawPacMan
+        lda     PacY
+        sub     #112
+        bcc     @too_high
+        cmp     #32
+        blt     @scroll_ok                  ; OK if scroll is 0-32
+        lda     #32                         ; scroll is >32; snap to 32
+        jmp     @scroll_ok
+@too_high:
+        cmp     #-16
+        bge     @scroll_ok
+        lda     #-16
+@scroll_ok:
+        sta     VScroll
         jmp     forever
 ;*** END TEST ***
 
@@ -150,7 +154,7 @@ InitLife:
         jsr     InitAI
         lda     #127
         sta     PacX
-        lda     #127
+        lda     #187
         sta     PacY
         lda     #Direction::left
         sta     PacDirection

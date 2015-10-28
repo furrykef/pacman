@@ -113,39 +113,6 @@ MoveGhosts:
         jsr     ComputeTurn
 @not_centered:
 
-        ; Update Blinky in OAM
-        ; Y position
-        lda     Blinky+Ghost::pos_y
-        sub     VScroll
-        sub     #8
-        sta     MyOAM
-        sta     MyOAM+4
-        ; Pattern index
-        ; Toggle between two frames
-        lda     FrameCounter
-        and     #$08
-        beq     :+                          ; This will store $00 to TmpL
-        lda     #$10                        ; Second frame is $10 tiles after frame
-:
-        sta     TmpL
-        lda     Blinky+Ghost::turn_dir
-        asl
-        asl
-        ora     #$01                        ; Use $1000 bank of VRAM
-        add     TmpL
-        sta     MyOAM+1
-        add     #2
-        sta     MyOAM+5
-        ; Attributes
-        lda     #$00
-        sta     MyOAM+2
-        sta     MyOAM+6
-        ; X position
-        lda     Blinky+Ghost::pos_x
-        sub     #7
-        sta     MyOAM+3
-        add     #8
-        sta     MyOAM+7
         rts
 
 
@@ -230,4 +197,41 @@ ComputeTurn:
         lda     #Direction::left
         sta     Blinky+Ghost::turn_dir
 @no_left:
+        rts
+
+
+DrawGhosts:
+        ; Update Blinky in OAM
+        ; Y position
+        lda     Blinky+Ghost::pos_y
+        sub     VScroll
+        sub     #8
+        sta     MyOAM
+        sta     MyOAM+4
+        ; Pattern index
+        ; Toggle between two frames
+        lda     FrameCounter
+        and     #$08
+        beq     @first_frame                ; This will store $00 to TmpL
+        lda     #$10                        ; Second frame is $10 tiles after frame
+@first_frame:
+        sta     TmpL
+        lda     Blinky+Ghost::turn_dir
+        asl
+        asl
+        ora     #$01                        ; Use $1000 bank of VRAM
+        add     TmpL
+        sta     MyOAM+1
+        add     #2
+        sta     MyOAM+5
+        ; Attributes
+        lda     #$00
+        sta     MyOAM+2
+        sta     MyOAM+6
+        ; X position
+        lda     Blinky+Ghost::pos_x
+        sub     #7
+        sta     MyOAM+3
+        add     #8
+        sta     MyOAM+7
         rts
