@@ -77,8 +77,6 @@ MoveGhosts:
         lsr
         lsr
         sta     TileX
-        add     DeltaXTbl,x
-        sta     NextTileX
         pla
         and     #$07
         sta     PixelX
@@ -90,8 +88,6 @@ MoveGhosts:
         lsr
         lsr
         sta     TileY
-        add     DeltaYTbl,x
-        sta     NextTileY
         pla
         and     #$07
         sta     PixelY
@@ -114,6 +110,13 @@ MoveGhosts:
         bne     @not_centered
         lda     Blinky+Ghost::turn_dir
         sta     Blinky+Ghost::direction
+        tax
+        lda     TileX
+        add     DeltaXTbl,x
+        sta     NextTileX
+        lda     TileY
+        add     DeltaYTbl,x
+        sta     NextTileY
         jsr     ComputeTurn
 @not_centered:
 
