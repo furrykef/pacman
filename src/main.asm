@@ -131,8 +131,7 @@ forever:
         ; is done inside MoveGhosts.
         jsr     MoveGhosts
         jsr     MovePacMan
-        jsr     DrawGhosts
-        jsr     DrawPacMan
+        ; Set scroll
         lda     PacY
         sub     #112
         bcc     @too_high
@@ -146,6 +145,9 @@ forever:
         lda     #-16
 @scroll_ok:
         sta     VScroll
+        ; Now that we've set the scroll, we can put stuff in OAM
+        jsr     DrawGhosts
+        jsr     DrawPacMan
         jmp     forever
 ;*** END TEST ***
 
