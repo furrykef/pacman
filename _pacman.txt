@@ -1,24 +1,3 @@
-A possible method of movement
------------------------------
-Movement is handled using a tilemap with turns. Each tile has five flags: north, east, south, west, slow, and AI-horizontal. The directional flags mean you can turn in that direction. The "slow" flag means ghosts move slowly when on this tile. The "AI-horizontal" flag means the ghosts are restricted to moving horizontally in this area but Pac-Man is not. (Frightened ghosts are exempt.)
-
-It is assumed that Pac-Man can turn in direction opposite the one he is facing at any time.
-
-One problem with this method is it makes editing levels more difficult and basically precludes the possibility of a sensible in-game level editor.
-
-
-Other movement ideas
---------------------
-Directions are represented as follows:
-
-    00: left
-    01: right
-    10: up
-    11: down
-
-This way, you can reverse a ghost's direction by XORing it with 0x03.
-
-
 Bitfields for motion
 --------------------
 I have heard (but can't substantiate) that sprites move according to bitfields. E.g., 11111111 is full speed, and 10101010 is half speed. Frame-advancing the attract mode suggests a bitfield of 11111110 or similar.

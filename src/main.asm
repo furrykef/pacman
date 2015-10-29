@@ -5,9 +5,9 @@
 ; This ordering is used so that you can reverse direction using EOR #$03
 .enum Direction
         left
-        right
         up
         down
+        right
 .endenum
 
 
@@ -337,15 +337,15 @@ IsTileEnterable:
 
 DeltaXTbl:
         .byte   -1                          ; left
-        .byte   1                           ; right
         .byte   0                           ; up
         .byte   0                           ; down
+        .byte   1                           ; right
 
 DeltaYTbl:
         .byte   0                           ; left
-        .byte   0                           ; right
         .byte   -1                          ; up
         .byte   1                           ; down
+        .byte   0                           ; right
 
 
 ; Indirect JSR

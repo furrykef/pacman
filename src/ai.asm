@@ -253,20 +253,21 @@ GetClydeTargetTile:
 
 DeltaX4Tbl:
         .byte   -4                          ; left
-        .byte   4                           ; right
         .byte   0                           ; up
         .byte   0                           ; down
+        .byte   4                           ; right
 
 DeltaY4Tbl:
         .byte   0                           ; left
-        .byte   0                           ; right
         .byte   -4                          ; up
         .byte   4                           ; down
+        .byte   0                           ; right
 
 
 ComputeTurn:
-        ; Scores here will be 0..255, but think of 0 = -128, 1 = -127 ... 255 = 127
-        ; (signed comparisons suck on the 6502)
+        ; Scores here will be $00..$ff, but think of $00 = -128, $01 = -127 ... $ff = 127
+        ; This is called excess-128 representation (a form of excess-K, a.k.a. offset binary).
+        ; This is done because signed comparisons suck on 6502.
         lda     #0
         sta     MaxScore
         lda     NextTileX

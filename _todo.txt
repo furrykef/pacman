@@ -1,0 +1,14 @@
+Bugs
+----
+The upper-left corner of the maze is considered (0, 0). This can cause underflows with Inky's and Pinky's logic. Do not fix this bug until looking into the next bug.
+
+With the previous bug, when Pac-Man is at the very top of the maze and facing up, Pinky's target square should go way below the bottom of the maze. This means Pinky should retreat to the bottom in this situation. He does not. Thus, while Pinky *looks* like he's behaving sensibly by staying near Pac-Man, there may be a bug in his steering. The steering algo uses quasi-signed numbers, though; maybe an overflow winds up correcting the issue.
+
+
+To be implemented
+-----------------
+Ghosts don't slow down in tunnels.
+
+Ghost speed should be adjustable.
+
+Pac-Man's speed should be adjustable.

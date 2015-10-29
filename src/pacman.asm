@@ -92,8 +92,8 @@ JoyDirTbl:                                  ; RLDU (right, left, down, up)
 DrawPacMan:
         ; Y position
         lda     PacY
-        sub     VScroll
         sub     #8
+        sub     VScroll
         sta     PacManOAM
         sta     PacManOAM+4
         ; Pattern index
