@@ -1,3 +1,14 @@
+Pac-Man's movement algorithm
+----------------------------
+Here's how the yellow guy moves:
+* Pac-Man stays horizontally centered in his tile while moving vertically. If not centered, bump him one pixel toward the center.
+* Pac-Man stays vertically centered in his tile while moving horizontally. If not centered, bump him one pixel toward the center.
+* When Pac-Man reaches the center of a tile:
+** Stop him if the next tile in his path is not enterable.
+* When Pac-Man tries to turn:
+** Reject the turn if the next tile in his path is not enterable.
+
+
 Bitfields for motion
 --------------------
 I have heard (but can't substantiate) that sprites move according to bitfields. E.g., 11111111 is full speed, and 10101010 is half speed. Frame-advancing the attract mode suggests a bitfield of 11111110 or similar.
