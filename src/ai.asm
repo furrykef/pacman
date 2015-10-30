@@ -272,14 +272,24 @@ ComputeTurn:
         sta     MaxScore
         lda     NextTileX
         sub     TargetTileX
-        sta     ScoreRight
+        tax
         add     #$80
         sta     ScoreLeft
+        txa
+        eor     #$ff                        ; negate and add $80
+        sec
+        adc     #$80
+        sta     ScoreRight
         lda     NextTileY
         sub     TargetTileY
-        sta     ScoreDown
+        tax
         add     #$80
         sta     ScoreUp
+        txa
+        eor     #$ff
+        sec
+        adc     #$80
+        sta     ScoreDown
 
         ; Will we be able to go up?
         ldy     #Ghost::direction           ; Disallow if going down

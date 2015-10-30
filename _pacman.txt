@@ -15,7 +15,7 @@ Consider this situation (x = wall):
 
 Ghost G has entered its location from above and is forced to turn right. Just before it leaves this tile, it reverses direction, so it's now going left. If its eyes are naively set left, the ghost will go through the wall!
 
-Potential solution: when ghost reaches center of tile, check if it's about to collide with a wall and turn if so, ignoring the direction of its eyes.
+The original game sees to wait until the ghost is centered in its tile before reversing direction. So we have a flag for when the ghost reverses direction, and if it's set, set direction to EOR $03 of its current direction instead of its eye direction. Should also compute turn and set new eye direction after reversing, just as if the reverse flag hadn't been set.
 
 
 Pac-Man's movement algorithm
