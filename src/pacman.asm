@@ -7,8 +7,8 @@ PacX:               .res 1
 PacY:               .res 1
 PacTileX:           .res 1
 PacTileY:           .res 1
-PacPixelX:          .res 1
-PacPixelY:          .res 1
+PacPixelX:          .res 1                  ; outside code should not rely on this
+PacPixelY:          .res 1                  ; or this
 PacDirection:       .res 1
 
 PacTryX:            .res 1
@@ -23,24 +23,33 @@ PacTryDirection:    .res 1
 .segment "CODE"
 
 MovePacMan:
-        ; Figure out direction we're trying to go in
-        ; Upper four bits of joy state are directions
-        lda     Joy1State
-        lsr
-        lsr
-        lsr
-        lsr
-        bne     @change_dir
-        ; Player didn't press a direction button
-        ; Pac-Man will continue in same direction
-        lda     PacDirection
-        jmp     @no_change
-@change_dir:
+        ; @TODO@ -- move this somewhere more appropriate
+        ; (We do this again at the end of the routine, but we also need good values before it)
+        ; ***
+        lda     PacX
         tax
-        lda     JoyDirTbl,x
-@no_change:
-        sta     PacTryDirection
+        lsr
+        lsr
+        lsr
+        sta     PacTileX
+        txa
+        and     #$07
+        sta     PacPixelX
+        lda     PacY
+        tax
+        lsr
+        lsr
+        lsr
+        sta     PacTileY
+        txa
+        and     #$07
+        sta     PacPixelY
+        ; ***
+
+        jsr     TryTurningPacMan
+
         ; Now try to move
+        lda     PacDirection
         tax
         lda     PacX
         add     DeltaXTbl,x
@@ -69,8 +78,6 @@ MovePacMan:
         jsr     IsTileEnterable
         bne     @reject_move
         ; Move is OK; make it so
-        lda     PacTryDirection
-        sta     PacDirection
         lda     PacTryX
         sta     PacX
         lda     PacTryY
@@ -87,6 +94,46 @@ MovePacMan:
 @reject_move:
         rts
 
+
+TryTurningPacMan:
+; Figure out direction we're trying to go in
+        ; Upper four bits of joy state are directions
+        lda     Joy1State
+        lsr
+        lsr
+        lsr
+        lsr
+        beq     @end                        ; no change if player pressed no button
+        ; Player pressed direction button
+        tax
+        lda     JoyDirTbl,x
+        ; Pac-Man can always reverse direction
+        eor     #$03                        ; reverse direction to compare
+        cmp     PacDirection
+        php
+        eor     #$03                        ; unreverse
+        plp
+        beq     @direction_set              ; Pac-Man will reverse direction
+        ; Changing direction, but not reversing
+        ; Only allow if Pac-Man isn't blocked by the next tile in that direction
+        sta     PacTryDirection
+        tax
+        lda     PacTileX
+        add     DeltaXTbl,x
+        tay
+        lda     PacTileY
+        add     DeltaYTbl,x
+        tax
+        jsr     IsTileEnterable
+        bne     @end                        ; reject turn if not enterable
+        ; accept turn
+        lda     PacTryDirection
+@direction_set:
+        sta     PacDirection
+@end:
+        rts
+
+; Converts D-pad state to a direction
 JoyDirTbl:                                  ; RLDU (right, left, down, up)
         .byte   0                           ; 0000 (dummy entry)
         .byte   Direction::up               ; 0001
@@ -107,6 +154,7 @@ JoyDirTbl:                                  ; RLDU (right, left, down, up)
 
 
 ; Bumps Pac-Man toward center of his lane
+; Does not update PacPixelX or PacPixelY
 MovePacManTowardCenter:
         lda     PacDirection
         cmp     #Direction::up
