@@ -279,7 +279,7 @@ GetClydeTargetTile:
         cmp     #9
         bge     @chase
         tax
-        lda     Squares,x
+        lda     SquareTbl,x
         tay                                 ; save square of horizontal distance
         lda     TileY
         sub     PacTileY
@@ -291,7 +291,7 @@ GetClydeTargetTile:
         bge     @chase
         tax
         tya                                 ; get square of horizontal distance back
-        add     Squares,x
+        add     SquareTbl,x
         ; A is now the square of the distance between Clyde and Pac-Man
         cmp     #65                         ; 8**2 = 64
         bge     @chase
@@ -333,7 +333,7 @@ DeltaY4Tbl:
         .byte   4                           ; down
         .byte   0                           ; right
 
-Squares:
+SquareTbl:
         .byte   0                           ; 0*0
         .byte   1                           ; 1*1
         .byte   4                           ; 2*2
