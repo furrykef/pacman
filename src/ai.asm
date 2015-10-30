@@ -292,32 +292,32 @@ ComputeTurn:
         jsr     IsTileEnterable
         bne     @no_up
         lda     ScoreUp
+        ;cmp     MaxScore
+        ;blt     @no_up
         sta     MaxScore
         lda     #Direction::up
         ldy     #Ghost::turn_dir
         sta     (GhostL),y
-        jmp     @try_right
 @no_up:
-@try_right:
-        ldy     #Ghost::direction           ; Disallow if going left
+        ; Try left
+        ldy     #Ghost::direction           ; Disallow if going right
         lda     (GhostL),y
-        cmp     #Direction::left
-        beq     @no_right
+        cmp     #Direction::right
+        beq     @no_left
         ldy     NextTileX
-        iny
+        dey
         ldx     NextTileY
         jsr     IsTileEnterable
-        bne     @no_right
-        lda     ScoreRight
+        bne     @no_left
+        lda     ScoreLeft
         cmp     MaxScore
-        blt     @no_right
+        blt     @no_left
         sta     MaxScore
-        lda     #Direction::right
+        lda     #Direction::left
         ldy     #Ghost::turn_dir
         sta     (GhostL),y
-        jmp     @try_down
-@no_right:
-@try_down:
+@no_left:
+        ; Try down
         ldy     #Ghost::direction           ; Disallow if going up
         lda     (GhostL),y
         cmp     #Direction::up
@@ -334,26 +334,25 @@ ComputeTurn:
         lda     #Direction::down
         ldy     #Ghost::turn_dir
         sta     (GhostL),y
-        jmp     @try_left
 @no_down:
-@try_left:
-        ldy     #Ghost::direction           ; Disallow if going right
+        ; Try right
+        ldy     #Ghost::direction           ; Disallow if going left
         lda     (GhostL),y
-        cmp     #Direction::right
-        beq     @no_left
+        cmp     #Direction::left
+        beq     @no_right
         ldy     NextTileX
-        dey
+        iny
         ldx     NextTileY
         jsr     IsTileEnterable
-        bne     @no_left
-        lda     ScoreLeft
+        bne     @no_right
+        lda     ScoreRight
         cmp     MaxScore
-        blt     @no_left
+        blt     @no_right
         ;sta     MaxScore
-        lda     #Direction::left
+        lda     #Direction::right
         ldy     #Ghost::turn_dir
         sta     (GhostL),y
-@no_left:
+@no_right:
         rts
 
 

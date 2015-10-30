@@ -1,3 +1,7 @@
+dasm of Pac-Man: http://web.archive.org/web/20091003171028/http://www.lomont.org/Software/Games/PacMan/PacmanASM.html
+dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.20080621.asm
+
+
 A problem
 ---------
 Bad Things can happen when a ghost reverses direction or when it becomes un-scared if we're not careful.
@@ -27,17 +31,14 @@ Here's how the yellow guy moves:
 
 Bitfields for motion
 --------------------
-I have heard (but can't substantiate) that sprites move according to bitfields. E.g., 11111111 is full speed, and 10101010 is half speed. Frame-advancing the attract mode suggests a bitfield of 11111110 or similar.
+In the original game, sprites move according to 32-bit bitfields. For each 0, the ghost stays in place; for each 1, the ghost moves a pixel. This is done twice a frame, so a ghost may move up to two pixels per frame. (This may not be exactly right...)
 
-Likely bitfields:
-    10010010: 37.5% speed
-    10101010: 50% speed
-    11011010: 62.5% speed
-    11101110: 75% speed
-    11111110: 87.5% speed
-    11111111: 100% speed
-
-For more fine-grained speed adjustment, we can use 16-bit bitfields.
+$55555555 = 01010101010101010101010101010101 = Pac-Man's speed on level 1 (1 pixel/frame) / Cruise Elroy 1 on level 1
+$6AD56AD5 = 01101010110101010110101011010101 = Pac-Man's speed on level 1 after energizer
+$D5556AAA = 11010101010101010110101010101010 = Cruise Elroy 2 on level 1
+$55552AAA = 01010101010101010010101010101010 = Ghost speed on level 1
+$24922492 = 00100100100100100010010010010010 = Scared ghost speed on level 1
+$22222222 = 00100010001000100010001000100010 = Tunnel speed on level 1
 
 Eating a dot causes Pac-Man to stop for one frame; eating an energizer causes him to stop for three frames.
 
@@ -88,3 +89,5 @@ Things to remember
 Ghosts decide which direction they're going to turn some time before they actually turn. The dossier seems to be saying that the decision is made as soon as the ghost enters the tile *before* the intersection. The in-game evidence suggests they make the turn as soon as they arrive at the intersection (their eyes change direction before the turn, but not while they're a whole tile away).
 
 Ghosts always move left upon exiting the ghost house, unless the ghost was in the house during a mode chance, in which case they will move right.
+
+For some levels, Pac-Man speeds up while energizer is active.
