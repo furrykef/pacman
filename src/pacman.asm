@@ -156,10 +156,10 @@ MovePacManTowardCenter:
         beq     @end
         blt     @shift_down
         dec     PacPixelY
-        jmp     @end
+        rts
 @shift_down:
         inc     PacPixelY
-        jmp     @end
+        rts
 @vertical:
         ; Moving vertically; center horizontally
         lda     PacPixelX
@@ -167,7 +167,7 @@ MovePacManTowardCenter:
         beq     @end
         blt     @shift_right
         dec     PacPixelX
-        jmp     @end
+        rts
 @shift_right:
         inc     PacPixelX
 @end:

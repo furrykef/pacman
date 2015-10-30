@@ -10,6 +10,8 @@
 .struct Ghost
         pos_x           .byte               ; center of ghost, not upper left
         pos_y           .byte
+        tile_x          .byte
+        tile_y          .byte
         direction       .byte
         turn_dir        .byte               ; direction ghost has planned to turn in
         speed           .byte
@@ -93,7 +95,7 @@ InitAI:
         sta     Pinky+Ghost::palette
 
         ; Inky
-        lda     #127
+        lda     #111
         sta     Inky+Ghost::pos_x
         lda     #115
         sta     Inky+Ghost::pos_y
@@ -113,7 +115,7 @@ InitAI:
         sta     Inky+Ghost::palette
 
         ; Clyde
-        lda     #127
+        lda     #143
         sta     Clyde+Ghost::pos_x
         lda     #115
         sta     Clyde+Ghost::pos_y
@@ -185,6 +187,14 @@ MoveOneGhost:
         and     #$07
         sta     PixelY
 
+        ; Needed since Inky's targeting depends on Blinky's position
+        lda     TileX
+        ldy     #Ghost::tile_x
+        sta     (GhostL),y
+        lda     TileY
+        iny
+        sta     (GhostL),y
+
         ; @TODO@ -- if TileX and TileY match Pac-Man's, kill Pac-Man
 
         ; JSR to Ghost::get_target_tile
@@ -239,17 +249,77 @@ GetPinkyTargetTile:
         rts
 
 GetInkyTargetTile:
-        lda     #0
+        ; Target X is computed as follows:
+        ; First, find the tile two tiles in front of Pac-Man.
+        ; Let's call its X coordinate SubtargetX.
+        ; TargetX = SubtargetX*2 - Blinky's X
+        ; This is akin to drawing a line from Blinky to SubtargetX,
+        ; then doubling the length of the line.
+        ldx     PacDirection
+        lda     PacTileX
+        add     DeltaX2Tbl,x
+        asl
+        sub     Blinky+Ghost::tile_x
         sta     TargetTileX
+        ; Target Y is computed the same way.
+        lda     PacTileY
+        add     DeltaY2Tbl,x
+        asl
+        sub     Blinky+Ghost::tile_y
         sta     TargetTileY
         rts
 
 GetClydeTargetTile:
-        lda     #31
+        lda     TileX
+        sub     PacTileX
+        bpl     @positive_x
+        eor     #$ff
+        add     #1
+@positive_x:
+        cmp     #9
+        bge     @chase
+        tax
+        lda     Squares,x
+        tay                                 ; save square of horizontal distance
+        lda     TileY
+        sub     PacTileY
+        bpl     @positive_y
+        eor     #$ff
+        add     #1
+@positive_y:
+        cmp     #9
+        bge     @chase
+        tax
+        tya                                 ; get square of horizontal distance back
+        add     Squares,x
+        ; A is now the square of the distance between Clyde and Pac-Man
+        cmp     #65                         ; 8**2 = 64
+        bge     @chase
+        ; Clyde is within 8 tiles of Pac-Man
+        ; Retreat to lower left corner of the maze
+        lda     #2
         sta     TargetTileX
-        lda     #0
+        lda     #32
         sta     TargetTileY
         rts
+@chase:
+        lda     PacTileX
+        sta     TargetTileX
+        lda     PacTileY
+        sta     TargetTileY
+        rts
+
+DeltaX2Tbl:
+        .byte   -2                          ; left
+        .byte   0                           ; up
+        .byte   0                           ; down
+        .byte   2                           ; right
+
+DeltaY2Tbl:
+        .byte   0                           ; left
+        .byte   -2                          ; up
+        .byte   2                           ; down
+        .byte   0                           ; right
 
 DeltaX4Tbl:
         .byte   -4                          ; left
@@ -262,6 +332,17 @@ DeltaY4Tbl:
         .byte   -4                          ; up
         .byte   4                           ; down
         .byte   0                           ; right
+
+Squares:
+        .byte   0                           ; 0*0
+        .byte   1                           ; 1*1
+        .byte   4                           ; 2*2
+        .byte   9                           ; 3*3
+        .byte   16                          ; 4*4
+        .byte   25                          ; 5*5
+        .byte   36                          ; 6*6
+        .byte   49                          ; 7*7
+        .byte   64                          ; 8*8
 
 
 ComputeTurn:
