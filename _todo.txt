@@ -4,6 +4,8 @@ The upper-left corner of the maze is considered (0, 0). This can cause underflow
 
 With the previous bug, when Pac-Man is at the very top of the maze and facing up, Pinky's target square should go way below the bottom of the maze. This means Pinky should retreat to the bottom in this situation. He does not. Thus, while Pinky *looks* like he's behaving sensibly by staying near Pac-Man, there may be a bug in his steering. The steering algo uses quasi-signed numbers, though; maybe an overflow winds up correcting the issue.
 
+I'm not sure the two bugs fully cancel out; Pinky's score for "northish" might be too high. If so, this would remove "westish" and "eastish" from the steering computation.
+
 
 To be implemented
 -----------------

@@ -1,3 +1,19 @@
+A problem
+---------
+Bad Things can happen when a ghost reverses direction or when it becomes un-scared if we're not careful.
+
+Consider this situation (x = wall):
+
+    x x
+    x xx
+    xG
+    xxxx
+
+Ghost G has entered its location from above and is forced to turn right. Just before it leaves this tile, it reverses direction, so it's now going left. If its eyes are naively set left, the ghost will go through the wall!
+
+Potential solution: when ghost reaches center of tile, check if it's about to collide with a wall and turn if so, ignoring the direction of its eyes.
+
+
 Pac-Man's movement algorithm
 ----------------------------
 Here's how the yellow guy moves:

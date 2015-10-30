@@ -7,12 +7,16 @@ PacX:               .res 1
 PacY:               .res 1
 PacTileX:           .res 1
 PacTileY:           .res 1
+PacPixelX:          .res 1
+PacPixelY:          .res 1
 PacDirection:       .res 1
 
 PacTryX:            .res 1
 PacTryY:            .res 1
 PacTryTileX:        .res 1
 PacTryTileY:        .res 1
+PacTryPixelX:       .res 1
+PacTryPixelY:       .res 1
 PacTryDirection:    .res 1
 
 
@@ -41,19 +45,27 @@ MovePacMan:
         lda     PacX
         add     DeltaXTbl,x
         sta     PacTryX
+        pha
         lsr
         lsr
         lsr
         sta     PacTryTileX
         tay                                 ; Will be passed to IsTileEnterable
+        pla
+        and     #$07
+        sta     PacTryPixelX
         lda     PacY
         add     DeltaYTbl,x
         sta     PacTryY
+        pha
         lsr
         lsr
         lsr
         sta     PacTryTileY
-        tax
+        tax                                 ; Will be passed to IsTileEnterable
+        pla
+        and     #$07
+        sta     PacTryPixelY
         jsr     IsTileEnterable
         bne     @reject_move
         ; Move is OK; make it so
@@ -67,6 +79,11 @@ MovePacMan:
         sta     PacTileX
         lda     PacTryTileY
         sta     PacTileY
+        lda     PacTryPixelX
+        sta     PacPixelX
+        lda     PacTryPixelY
+        sta     PacPixelY
+        jsr     MovePacManTowardCenter
 @reject_move:
         rts
 
@@ -87,6 +104,43 @@ JoyDirTbl:                                  ; RLDU (right, left, down, up)
         .byte   Direction::right            ; 1101
         .byte   Direction::right            ; 1110
         .byte   Direction::right            ; 1111
+
+
+; Bumps Pac-Man toward center of his lane
+MovePacManTowardCenter:
+        lda     PacDirection
+        cmp     #Direction::up
+        beq     @vertical
+        cmp     #Direction::down
+        beq     @vertical
+        ; Moving horizontally; center vertically
+        lda     PacPixelY
+        ldx     PacY
+        cmp     #3
+        beq     @end
+        blt     @shift_down
+        dex
+        stx     PacY
+        jmp     @end
+@shift_down:
+        inx
+        stx     PacY
+        jmp     @end
+@vertical:
+        ; Moving vertically; center horizontally
+        lda     PacPixelX
+        ldx     PacX
+        cmp     #3
+        beq     @end
+        blt     @shift_right
+        dex
+        stx     PacX
+        jmp     @end
+@shift_right:
+        inx
+        stx     PacX
+@end:
+        rts
 
 
 DrawPacMan:
