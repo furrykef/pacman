@@ -3,16 +3,12 @@ PacManOAM = MyOAM
 
 .segment "ZEROPAGE"
 
-PacX:               .res 1
-PacY:               .res 1
 PacTileX:           .res 1
 PacTileY:           .res 1
-PacPixelX:          .res 1                  ; outside code should not rely on this
-PacPixelY:          .res 1                  ; or this
+PacPixelX:          .res 1
+PacPixelY:          .res 1
 PacDirection:       .res 1
 
-PacTryX:            .res 1
-PacTryY:            .res 1
 PacTryTileX:        .res 1
 PacTryTileY:        .res 1
 PacTryPixelX:       .res 1
@@ -23,65 +19,59 @@ PacTryDirection:    .res 1
 .segment "CODE"
 
 MovePacMan:
-        ; @TODO@ -- move this somewhere more appropriate
-        ; (We do this again at the end of the routine, but we also need good values before it)
-        ; ***
-        lda     PacX
-        tax
-        lsr
-        lsr
-        lsr
-        sta     PacTileX
-        txa
-        and     #$07
-        sta     PacPixelX
-        lda     PacY
-        tax
-        lsr
-        lsr
-        lsr
-        sta     PacTileY
-        txa
-        and     #$07
-        sta     PacPixelY
-        ; ***
-
         jsr     TryTurningPacMan
 
         ; Now try to move
-        lda     PacDirection
-        tax
-        lda     PacX
-        add     DeltaXTbl,x
-        sta     PacTryX
-        pha
-        lsr
-        lsr
-        lsr
+        lda     PacTileX
         sta     PacTryTileX
-        tay                                 ; Will be passed to IsTileEnterable
-        pla
-        and     #$07
-        sta     PacTryPixelX
-        lda     PacY
-        add     DeltaYTbl,x
-        sta     PacTryY
-        pha
-        lsr
-        lsr
-        lsr
+        lda     PacTileY
         sta     PacTryTileY
-        tax                                 ; Will be passed to IsTileEnterable
-        pla
-        and     #$07
+        lda     PacPixelX
+        sta     PacTryPixelX
+        lda     PacPixelY
         sta     PacTryPixelY
+
+        ldx     PacDirection
+        lda     PacPixelX
+        add     DeltaXTbl,x
+        bmi     @dec_tile_x
+        cmp     #$08
+        beq     @inc_tile_x
+        sta     PacTryPixelX
+        jmp     @move_y
+@dec_tile_x:
+        dec     PacTryTileX
+        lda     #7
+        sta     PacTryPixelX
+        jmp     @move_y
+@inc_tile_x:
+        inc     PacTryTileX
+        lda     #0
+        sta     PacTryPixelX
+@move_y:
+        lda     PacPixelY
+        add     DeltaYTbl,x
+        bmi     @dec_tile_y
+        cmp     #$08
+        beq     @inc_tile_y
+        sta     PacTryPixelY
+        jmp     @end_move
+@dec_tile_y:
+        dec     PacTryTileY
+        lda     #7
+        sta     PacTryPixelY
+        jmp     @end_move
+@inc_tile_y:
+        inc     PacTryTileY
+        lda     #0
+        sta     PacTryPixelY
+@end_move:
+
+        ldy     PacTryTileX
+        ldx     PacTryTileY
         jsr     IsTileEnterable
         bne     @reject_move
         ; Move is OK; make it so
-        lda     PacTryX
-        sta     PacX
-        lda     PacTryY
-        sta     PacY
         lda     PacTryTileX
         sta     PacTileX
         lda     PacTryTileY
@@ -154,7 +144,6 @@ JoyDirTbl:                                  ; RLDU (right, left, down, up)
 
 
 ; Bumps Pac-Man toward center of his lane
-; Does not update PacPixelX or PacPixelY
 MovePacManTowardCenter:
         lda     PacDirection
         cmp     #Direction::up
@@ -163,37 +152,35 @@ MovePacManTowardCenter:
         beq     @vertical
         ; Moving horizontally; center vertically
         lda     PacPixelY
-        ldx     PacY
         cmp     #3
         beq     @end
         blt     @shift_down
-        dex
-        stx     PacY
+        dec     PacPixelY
         jmp     @end
 @shift_down:
-        inx
-        stx     PacY
+        inc     PacPixelY
         jmp     @end
 @vertical:
         ; Moving vertically; center horizontally
         lda     PacPixelX
-        ldx     PacX
         cmp     #3
         beq     @end
         blt     @shift_right
-        dex
-        stx     PacX
+        dec     PacPixelX
         jmp     @end
 @shift_right:
-        inx
-        stx     PacX
+        inc     PacPixelX
 @end:
         rts
 
 
 DrawPacMan:
         ; Y position
-        lda     PacY
+        lda     PacTileY
+        asl
+        asl
+        asl
+        ora     PacPixelY
         sub     #8
         sub     VScroll
         sta     PacManOAM
@@ -208,7 +195,11 @@ DrawPacMan:
         sta     PacManOAM+2
         sta     PacManOAM+6
         ; X position
-        lda     PacX
+        lda     PacTileX
+        asl
+        asl
+        asl
+        ora     PacPixelX
         sub     #7
         sta     PacManOAM+3
         add     #8

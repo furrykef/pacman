@@ -135,7 +135,11 @@ forever:
         jsr     MoveGhosts
         jsr     MovePacMan
         ; Set scroll
-        lda     PacY
+        lda     PacTileY
+        asl
+        asl
+        asl
+        ora     PacPixelY
         sub     #112
         bcc     @too_high
         cmp     #32
@@ -157,10 +161,14 @@ forever:
 
 InitLife:
         jsr     InitAI
-        lda     #127
-        sta     PacX
-        lda     #187
-        sta     PacY
+        lda     #15
+        sta     PacTileX
+        lda     #7
+        sta     PacPixelX
+        lda     #23
+        sta     PacTileY
+        lda     #3
+        sta     PacPixelY
         lda     #Direction::left
         sta     PacDirection
         rts
