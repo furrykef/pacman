@@ -81,7 +81,41 @@ MovePacMan:
         lda     PacTryPixelY
         sta     PacPixelY
         jsr     MovePacManTowardCenter
+
+        ; Draw space where Pac-Man is
+        ; (eat dots)
+        ldx     DisplayListIndex
+        lda     #1
+        sta     DisplayList,x               ; size of chunk
+        inx
+        lda     #0
+        sta     TmpL
+        lda     PacTileY
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        ora     PacTileX
+        tay                                 ; this will be the LSB; keep for later
+        lda     TmpL
+        add     #$20                        ; first nametable
+        sta     DisplayList,x               ; PPU address MSB
+        inx
+        tya
+        sta     DisplayList,x               ; PPU address LSB
+        inx
+        lda     #$20                        ; space
+        sta     DisplayList,x
+        inx
+        stx     DisplayListIndex
 @reject_move:
+
         rts
 
 

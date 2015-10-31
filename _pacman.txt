@@ -2,6 +2,11 @@ dasm of Pac-Man: http://web.archive.org/web/20091003171028/http://www.lomont.org
 dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.20080621.asm
 
 
+Scroll bug
+----------
+Negative scroll values are bad. Rewrite maze loading code not to rely on them, or just implement your status area so you won't need to scroll above 0.
+
+
 A problem
 ---------
 Bad Things can happen when a ghost reverses direction or when it becomes un-scared if we're not careful.

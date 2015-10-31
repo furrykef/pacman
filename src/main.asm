@@ -22,6 +22,7 @@
 .export ComputeTurn
 .export MovePacMan
 .export MoveGhosts
+.export DisplayList
 
 
 MyOAM = $200
@@ -29,18 +30,24 @@ MyOAM = $200
 
 .segment "ZEROPAGE"
 
-TmpL:           .res 1
-TmpH:           .res 1
-Tmp2L:          .res 1
-Tmp2H:          .res 1
-FrameCounter:   .res 1
-fRenderOff:     .res 1                      ; tells vblank handler not to mess with VRAM if nonzero
-Joy1State:      .res 1
-Joy2State:      .res 1
-HScroll:        .res 1
-VScroll:        .res 1
-JsrIndAddrL:    .res 1                      ; Since we're on the zero page,
-JsrIndAddrH:    .res 1                      ; we won't get bit by the $xxFF JMP bug
+TmpL:               .res 1
+TmpH:               .res 1
+Tmp2L:              .res 1
+Tmp2H:              .res 1
+FrameCounter:       .res 1
+fRenderOff:         .res 1                  ; tells vblank handler not to mess with VRAM if nonzero
+DisplayListIndex:   .res 1
+Joy1State:          .res 1
+Joy2State:          .res 1
+HScroll:            .res 1
+VScroll:            .res 1
+JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
+JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
+
+
+.segment "BSS"
+
+DisplayList:        .res 256                ; can shrink and move to zero page if we need a perfomance boost
 
 
 .segment "CODE"
@@ -103,6 +110,7 @@ Main:
         sta     FrameCounter
         sta     HScroll
         sta     VScroll
+        sta     DisplayListIndex
         lda     #1
         sta     fRenderOff
 
@@ -251,6 +259,29 @@ HandleVblank:
         lda     #$30
         sta     PPUDATA
 
+        ; Render display list
+        ldx     #0
+@display_list_loop:
+        ldy     DisplayList,x               ; size of chunk to copy
+        beq     @display_list_end           ; size of zero means end of display list
+        inx
+        lda     DisplayList,x               ; PPU address LSB
+        sta     PPUADDR
+        inx
+        lda     DisplayList,x               ; PPU address MSB
+        sta     PPUADDR
+        inx
+@copy_block:
+        lda     DisplayList,x
+        sta     PPUDATA
+        inx
+        dey
+        bne     @copy_block
+        jmp     @display_list_loop
+@display_list_end:
+        lda     #0
+        sta     DisplayListIndex
+
         ; Set scroll
         lda     #$a0                        ; NMI on, 8x16 sprites
         sta     PPUCTRL
@@ -268,6 +299,9 @@ HandleVblank:
         rti
 
 WaitForVblank:
+        lda     #0
+        ldx     DisplayListIndex
+        sta     DisplayList,x
         lda     FrameCounter
 @loop:
         cmp     FrameCounter
