@@ -114,6 +114,27 @@ Main:
         lda     #1
         sta     fRenderOff
 
+        ; Load display list for palette
+        ldx     DisplayListIndex
+        lda     #PaletteSize
+        sta     DisplayList,x
+        inx
+        lda     #$3f
+        sta     DisplayList,x
+        inx
+        lda     #$00
+        sta     DisplayList,x
+        inx
+        ldy     #0
+@copy_palette:
+        lda     Palette,y
+        sta     DisplayList,x
+        inx
+        iny
+        cpy     #PaletteSize
+        bne     @copy_palette
+        stx     DisplayListIndex
+
         ; Second wait for vblank
 @vblank2:
         bit     PPUSTATUS
@@ -187,68 +208,6 @@ HandleVblank:
         sta     OAMADDR
         lda     #>MyOAM
         sta     OAMDMA
-
-        ; Load BG palettes
-        lda     #$3f
-        sta     PPUADDR
-        lda     #$00
-        sta     PPUADDR
-
-        ; Palette 1 (maze)
-        lda     #$0f
-        sta     PPUDATA
-        lda     #$12
-        sta     PPUDATA
-        lda     #$36
-        sta     PPUDATA
-        lda     #$35
-        sta     PPUDATA
-
-        ; Load sprite palettes
-        lda     #$3f
-        sta     PPUADDR
-        lda     #$10
-        sta     PPUADDR
-
-        ; Palette 0 (Blinky)
-        lda     #$0f
-        sta     PPUDATA
-        lda     #$16
-        sta     PPUDATA
-        lda     #$12
-        sta     PPUDATA
-        lda     #$30
-        sta     PPUDATA
-
-        ; Palette 1 (Pinky)
-        lda     #$0f
-        sta     PPUDATA
-        lda     #$35
-        sta     PPUDATA
-        lda     #$12
-        sta     PPUDATA
-        lda     #$30
-        sta     PPUDATA
-
-        ; Palette 2 (Inky)
-        lda     #$0f
-        sta     PPUDATA
-        lda     #$31
-        sta     PPUDATA
-        lda     #$12
-        sta     PPUDATA
-        lda     #$30
-        sta     PPUDATA
-
-        ; Palette 3 (Clyde/Pac-Man)
-        lda     #$0f
-        sta     PPUDATA
-        lda     #$27
-        sta     PPUDATA
-        lda     #$12
-        sta     PPUDATA
-        lda     #$30
-        sta     PPUDATA
 
         ; Render display list
         ldx     #0
@@ -379,6 +338,11 @@ DeltaYTbl:
         .byte   -1                          ; up
         .byte   1                           ; down
         .byte   0                           ; right
+
+
+Palette:
+.incbin "../assets/palette.dat"
+PaletteSize = * - Palette
 
 
 ; Indirect JSR
