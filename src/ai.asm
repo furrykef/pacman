@@ -63,9 +63,9 @@ InitAI:
         sta     fScatter
 
         ; *** TEST ***
-        lda     #<(1*60)
+        lda     #<(7*60)
         sta     ModeClockL
-        lda     #>(1*60)
+        lda     #>(7*60)
         sta     ModeClockH
         ; ***
 
@@ -298,13 +298,29 @@ MoveOneGhost:
 
 
 GetBlinkyTargetTile:
+        ; @TODO@ -- do not scatter while Elroy once Clyde has left house
+        lda     fScatter
+        bne     @scatter
+
         lda     PacTileX
         sta     TargetTileX
         lda     PacTileY
         sta     TargetTileY
         rts
 
+@scatter:
+        ; Go to upper right of the maze
+        lda     #27
+        sta     TargetTileX
+        lda     #-3
+        sta     TargetTileY
+        rts
+
+
 GetPinkyTargetTile:
+        lda     fScatter
+        bne     @scatter
+
         ldx     PacDirection
         lda     PacTileX
         add     DeltaX4Tbl,x
@@ -314,7 +330,19 @@ GetPinkyTargetTile:
         sta     TargetTileY
         rts
 
+@scatter:
+        ; Go to upper left corner of the maze
+        lda     #4
+        sta     TargetTileX
+        lda     #-3
+        sta     TargetTileY
+        rts
+
+
 GetInkyTargetTile:
+        lda     fScatter
+        bne     @scatter
+
         ; Target X is computed as follows:
         ; First, find the tile two tiles in front of Pac-Man.
         ; Let's call its X coordinate SubtargetX.
@@ -335,7 +363,19 @@ GetInkyTargetTile:
         sta     TargetTileY
         rts
 
+@scatter:
+        ; Go to lower right corner of the maze
+        lda     #29
+        sta     TargetTileX
+        lda     #32
+        sta     TargetTileY
+        rts
+
+
 GetClydeTargetTile:
+        lda     fScatter
+        bne     @scatter
+
         lda     TileX
         sub     PacTileX
         bpl     @positive_x
@@ -359,21 +399,24 @@ GetClydeTargetTile:
         tya                                 ; get square of horizontal distance back
         add     SquareTbl,x
         ; A is now the square of the distance between Clyde and Pac-Man
+        ; Retreat to corner if too close
         cmp     #65                         ; 8**2 = 64
-        bge     @chase
-        ; Clyde is within 8 tiles of Pac-Man
-        ; Retreat to lower left corner of the maze
-        lda     #2
-        sta     TargetTileX
-        lda     #32
-        sta     TargetTileY
-        rts
+        blt     @scatter
 @chase:
         lda     PacTileX
         sta     TargetTileX
         lda     PacTileY
         sta     TargetTileY
         rts
+
+@scatter:
+        ; Go to lower left corner of the maze
+        lda     #2
+        sta     TargetTileX
+        lda     #32
+        sta     TargetTileY
+        rts
+
 
 DeltaX2Tbl:
         .byte   -2                          ; left
