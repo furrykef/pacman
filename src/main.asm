@@ -169,16 +169,7 @@ forever:
 
 InitLife:
         jsr     InitAI
-        lda     #15
-        sta     PacTileX
-        lda     #7
-        sta     PacPixelX
-        lda     #23
-        sta     PacTileY
-        lda     #3
-        sta     PacPixelY
-        lda     #Direction::left
-        sta     PacDirection
+        jsr     InitPacMan
         rts
 
 

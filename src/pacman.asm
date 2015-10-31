@@ -15,8 +15,26 @@ PacTryPixelX:       .res 1
 PacTryPixelY:       .res 1
 PacTryDirection:    .res 1
 
+PacFrame:           .res 1                  ; used for animation; increments by $20
+
 
 .segment "CODE"
+
+InitPacMan:
+        lda     #15
+        sta     PacTileX
+        lda     #7
+        sta     PacPixelX
+        lda     #23
+        sta     PacTileY
+        lda     #3
+        sta     PacPixelY
+        lda     #Direction::left
+        sta     PacDirection
+        lda     #0
+        sta     PacFrame
+        rts
+
 
 MovePacMan:
         jsr     TryTurningPacMan
@@ -82,38 +100,8 @@ MovePacMan:
         sta     PacPixelY
         jsr     MovePacManTowardCenter
 
-        ; Draw space where Pac-Man is
-        ; (eat dots)
-        ldx     DisplayListIndex
-        lda     #1
-        sta     DisplayList,x               ; size of chunk
-        inx
-        lda     #0
-        sta     TmpL
-        lda     PacTileY
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        ora     PacTileX
-        tay                                 ; this will be the LSB; keep for later
-        lda     TmpL
-        add     #$20                        ; first nametable
-        sta     DisplayList,x               ; PPU address MSB
-        inx
-        tya
-        sta     DisplayList,x               ; PPU address LSB
-        inx
-        lda     #$20                        ; space
-        sta     DisplayList,x
-        inx
-        stx     DisplayListIndex
+        jsr     EatDot
+        jsr     AnimatePacMan
 @reject_move:
 
         rts
@@ -208,6 +196,53 @@ MovePacManTowardCenter:
         rts
 
 
+EatDot:
+        ; Draw space where Pac-Man is
+        ldx     DisplayListIndex
+        lda     #1
+        sta     DisplayList,x               ; size of chunk
+        inx
+        lda     #0
+        sta     TmpL
+        lda     PacTileY
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        asl
+        rol     TmpL
+        ora     PacTileX
+        tay                                 ; this will be the LSB; keep for later
+        lda     TmpL
+        add     #$20                        ; first nametable
+        sta     DisplayList,x               ; PPU address MSB
+        inx
+        tya
+        sta     DisplayList,x               ; PPU address LSB
+        inx
+        lda     #$20                        ; space
+        sta     DisplayList,x
+        inx
+        stx     DisplayListIndex
+        rts
+
+
+AnimatePacMan:
+        lda     FrameCounter
+        and     #$01
+        beq     @end
+        lda     PacFrame
+        add     #$20
+        and     #$7f
+        sta     PacFrame
+@end:
+        rts
+
+
 DrawPacMan:
         ; Y position
         lda     PacTileY
@@ -220,9 +255,13 @@ DrawPacMan:
         sta     PacManOAM
         sta     PacManOAM+4
         ; Pattern index
-        lda     #$81
+        lda     PacDirection
+        asl
+        asl
+        add     PacFrame
+        add     #$81
         sta     PacManOAM+1
-        lda     #$83
+        add     #2
         sta     PacManOAM+5
         ; Attributes
         lda     #$03
