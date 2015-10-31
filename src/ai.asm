@@ -16,6 +16,7 @@
         turn_dir        .byte               ; direction ghost has planned to turn in
         speed           .byte
         state           .byte
+        reverse         .byte
         get_target_tile .addr
         oam_offset      .byte
         palette         .byte
@@ -50,10 +51,24 @@ ScoreLeft:      .res 1
 GhostOamL:      .res 1
 GhostOamH:      .res 1
 
+fScatter:       .res 1
+ModeClockL:     .res 1
+ModeClockH:     .res 1
+
 
 .segment "CODE"
 
 InitAI:
+        lda     #1
+        sta     fScatter
+
+        ; *** TEST ***
+        lda     #<(1*60)
+        sta     ModeClockL
+        lda     #>(1*60)
+        sta     ModeClockH
+        ; ***
+
         ; Blinky
         lda     #127
         sta     Blinky+Ghost::pos_x
@@ -65,6 +80,8 @@ InitAI:
         ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Blinky+Ghost::state
+        lda     #0
+        sta     Blinky+Ghost::reverse
         lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile
         lda     #>GetBlinkyTargetTile
@@ -85,6 +102,8 @@ InitAI:
         ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Pinky+Ghost::state
+        lda     #0
+        sta     Pinky+Ghost::reverse
         lda     #<GetPinkyTargetTile
         sta     Pinky+Ghost::get_target_tile
         lda     #>GetPinkyTargetTile
@@ -105,6 +124,8 @@ InitAI:
         ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Inky+Ghost::state
+        lda     #0
+        sta     Inky+Ghost::reverse
         lda     #<GetInkyTargetTile
         sta     Inky+Ghost::get_target_tile
         lda     #>GetInkyTargetTile
@@ -125,6 +146,8 @@ InitAI:
         ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Clyde+Ghost::state
+        lda     #0
+        sta     Clyde+Ghost::reverse
         lda     #<GetClydeTargetTile
         sta     Clyde+Ghost::get_target_tile
         lda     #>GetClydeTargetTile
@@ -137,6 +160,37 @@ InitAI:
         rts
 
 MoveGhosts:
+        lda     ModeClockL
+        sub     #1
+        sta     ModeClockL
+        beq     @clock_lsb_zero
+        lda     ModeClockH
+        sbc     #0
+        sta     ModeClockH
+        jmp     :+
+@clock_lsb_zero:
+        lda     ModeClockH
+        beq     @toggle_mode
+        sbc     #0
+        sta     ModeClockH
+        jmp     :+
+@toggle_mode:
+        lda     fScatter
+        eor     #$01
+        sta     fScatter
+        lda     #1
+        sta     Blinky+Ghost::reverse
+        sta     Pinky+Ghost::reverse
+        sta     Inky+Ghost::reverse
+        sta     Clyde+Ghost::reverse
+        ; *** TEST ***
+        lda     #<(10*60)
+        sta     ModeClockL
+        lda     #>(10*60)
+        sta     ModeClockH
+        ; ***
+:
+
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
@@ -206,16 +260,28 @@ MoveOneGhost:
         sta     JsrIndAddrH
         jsr     JsrInd
 
-        ; If ghost is centered in tile, have it turn if necessary
-        ; and compute next turn
+        ; If ghost is centered in tile, have it turn or reverse if necessary
+        ; Then compute next turn
         lda     PixelX
         cmp     #$03
         bne     @not_centered
         lda     PixelY
         cmp     #$03
         bne     @not_centered
+        ldy     #Ghost::reverse
+        lda     (GhostL),y
+        beq     @no_reverse
+        ; Reversing direction
+        lda     #0                          ; clear reverse flag
+        sta     (GhostL),y
+        ldy     #Ghost::direction
+        lda     (GhostL),y
+        eor     #$03
+        jmp     @changed_direction
+@no_reverse:
         ldy     #Ghost::turn_dir
         lda     (GhostL),y
+@changed_direction:
         ldy     #Ghost::direction
         sta     (GhostL),y
         tax

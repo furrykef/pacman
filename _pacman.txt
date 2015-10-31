@@ -12,20 +12,14 @@ Scroll wrap bug
 When the screen is scrolled all the way down, ghosts at the top of the maze may peek out from the bottom of the screen.
 
 
-A problem
----------
-Bad Things can happen when a ghost reverses direction or when it becomes un-scared if we're not careful.
+Tunnel bug
+----------
+On the extreme left and right ends of the tunnels, ghosts may get the idea they're allowed to turn.
 
-Consider this situation (x = wall):
 
-    x x
-    x xx
-    xG
-    xxxx
-
-Ghost G has entered its location from above and is forced to turn right. Just before it leaves this tile, it reverses direction, so it's now going left. If its eyes are naively set left, the ghost will go through the wall!
-
-The original game seems to wait until the ghost is centered in its tile before reversing direction. So we have a flag for when the ghost reverses direction, and if it's set, set direction to EOR $03 of its current direction instead of its eye direction. Should also compute turn and set new eye direction after reversing, just as if the reverse flag hadn't been set.
+Tunnel wrapping
+---------------
+I spent about 21-23 frames behind the black when wrapping in tunnels in the arcade version.
 
 
 Pac-Man's movement algorithm

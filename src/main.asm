@@ -114,27 +114,6 @@ Main:
         lda     #1
         sta     fRenderOff
 
-        ; Load display list for palette
-        ldx     DisplayListIndex
-        lda     #PaletteSize
-        sta     DisplayList,x
-        inx
-        lda     #$3f
-        sta     DisplayList,x
-        inx
-        lda     #$00
-        sta     DisplayList,x
-        inx
-        ldy     #0
-@copy_palette:
-        lda     Palette,y
-        sta     DisplayList,x
-        inx
-        iny
-        cpy     #PaletteSize
-        bne     @copy_palette
-        stx     DisplayListIndex
-
         ; Second wait for vblank
 @vblank2:
         bit     PPUSTATUS
@@ -143,6 +122,7 @@ Main:
         ; Let's get started!
         lda     #1
         sta     fRenderOff
+        jsr     LoadPalette
         jsr     LoadBoard
         lda     #0
         sta     fRenderOff
@@ -193,6 +173,22 @@ forever:
 InitLife:
         jsr     InitAI
         jsr     InitPacMan
+        rts
+
+
+LoadPalette:
+        ; Load palette
+        lda     #$3f
+        sta     PPUADDR
+        lda     #$00
+        sta     PPUADDR
+        ldx     #0
+@copy_palette:
+        lda     Palette,x
+        sta     PPUDATA
+        inx
+        cpx     #PaletteSize
+        bne     @copy_palette
         rts
 
 
