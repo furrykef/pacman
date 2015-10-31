@@ -148,10 +148,12 @@ Main:
         sta     fRenderOff
 
         ; Turn display back on
-        bit     PPUSTATUS                   ; Always do this before enabling NMI
+@wait_vblank_end:
+        bit     PPUSTATUS
+        bmi     @wait_vblank_end
         lda     #$a0                        ; NMI on, 8x16 sprites
         sta     PPUCTRL
-        lda     #$18                        ; render everything
+        lda     #$1e                        ; render everything
         sta     PPUMASK
 
 ;*** BEGIN TEST ***
@@ -249,7 +251,7 @@ HandleVblank:
         rti
 
 WaitForVblank:
-        lda     #0
+        lda     #0                          ; mark end of display list
         ldx     DisplayListIndex
         sta     DisplayList,x
         lda     FrameCounter

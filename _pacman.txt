@@ -7,6 +7,11 @@ Scroll bug
 Negative scroll values are bad. Rewrite maze loading code not to rely on them, or just implement your status area so you won't need to scroll above 0.
 
 
+Scroll wrap bug
+---------------
+When the screen is scrolled all the way down, ghosts at the top of the maze may peek out from the bottom of the screen.
+
+
 A problem
 ---------
 Bad Things can happen when a ghost reverses direction or when it becomes un-scared if we're not careful.
@@ -20,7 +25,7 @@ Consider this situation (x = wall):
 
 Ghost G has entered its location from above and is forced to turn right. Just before it leaves this tile, it reverses direction, so it's now going left. If its eyes are naively set left, the ghost will go through the wall!
 
-The original game sees to wait until the ghost is centered in its tile before reversing direction. So we have a flag for when the ghost reverses direction, and if it's set, set direction to EOR $03 of its current direction instead of its eye direction. Should also compute turn and set new eye direction after reversing, just as if the reverse flag hadn't been set.
+The original game seems to wait until the ghost is centered in its tile before reversing direction. So we have a flag for when the ghost reverses direction, and if it's set, set direction to EOR $03 of its current direction instead of its eye direction. Should also compute turn and set new eye direction after reversing, just as if the reverse flag hadn't been set.
 
 
 Pac-Man's movement algorithm
