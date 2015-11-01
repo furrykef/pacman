@@ -54,20 +54,47 @@ GhostOamH:      .res 1
 fScatter:       .res 1
 ModeClockL:     .res 1
 ModeClockH:     .res 1
+ModeCount:      .res 1
 
 
 .segment "CODE"
+
+; Times are guessed based on Pac-Man Dossier
+Lvl1Modes:
+        .word   $01a0                       ; 0 (scatter) - 7 secs
+        .word   $04b0                       ; 1 (chase) - 20 secs
+        .word   $01a0                       ; 2 (scatter) - 7 secs
+        .word   $04b0                       ; 3 (chase) - 20 secs
+        .word   $0130                       ; 4 (scatter) - 5 secs
+        .word   $04b0                       ; 5 (chase) - 20 secs
+        .word   $0130                       ; 6 (scatter) - 5 secs
+
+Lvl2Modes:
+        .word   $01a0                       ; 0 (scatter) - 7 secs
+        .word   $04b0                       ; 1 (chase) - 20 secs
+        .word   $01a0                       ; 2 (scatter) - 7 secs
+        .word   $04b0                       ; 3 (chase) - 20 secs
+        .word   $0130                       ; 4 (scatter) - 5 secs
+        .word   $f220                       ; 5 (chase) - 1033 secs
+        .word   $0001                       ; 6 (scatter) - 1/60 sec
+
+Lvl5Modes:
+        .word   $0130                       ; 0 (scatter) - 5 secs
+        .word   $04b0                       ; 1 (chase) - 20 secs
+        .word   $0130                       ; 2 (scatter) - 5 secs
+        .word   $04b0                       ; 3 (chase) - 20 secs
+        .word   $0130                       ; 4 (scatter) - 5 secs
+        .word   $f300                       ; 5 (chase) - 1037 secs
+        .word   $0001                       ; 6 (scatter) - 1/60 sec
+
 
 InitAI:
         lda     #1
         sta     fScatter
 
-        ; *** TEST ***
-        lda     #<(7*60)
-        sta     ModeClockL
-        lda     #>(7*60)
-        sta     ModeClockH
-        ; ***
+        lda     #0
+        sta     ModeCount
+        jsr     SetModeClock
 
         ; Blinky
         lda     #127
@@ -160,37 +187,7 @@ InitAI:
         rts
 
 MoveGhosts:
-        lda     ModeClockL
-        sub     #1
-        sta     ModeClockL
-        beq     @clock_lsb_zero
-        lda     ModeClockH
-        sbc     #0
-        sta     ModeClockH
-        jmp     :+
-@clock_lsb_zero:
-        lda     ModeClockH
-        beq     @toggle_mode
-        sbc     #0
-        sta     ModeClockH
-        jmp     :+
-@toggle_mode:
-        lda     fScatter
-        eor     #$01
-        sta     fScatter
-        lda     #1
-        sta     Blinky+Ghost::reverse
-        sta     Pinky+Ghost::reverse
-        sta     Inky+Ghost::reverse
-        sta     Clyde+Ghost::reverse
-        ; *** TEST ***
-        lda     #<(10*60)
-        sta     ModeClockL
-        lda     #>(10*60)
-        sta     ModeClockH
-        ; ***
-:
-
+        jsr     ModeClockTick
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
@@ -211,6 +208,50 @@ MoveGhosts:
         lda     #>Clyde
         sta     GhostH
         jmp     MoveOneGhost
+
+ModeClockTick:
+        lda     ModeCount
+        cmp     #7
+        beq     @end                        ; only 7 mode changes
+        lda     ModeClockL
+        sub     #1
+        sta     ModeClockL
+        beq     @clock_lsb_zero
+        lda     ModeClockH
+        sbc     #0
+        sta     ModeClockH
+        rts
+@clock_lsb_zero:
+        lda     ModeClockH
+        beq     @toggle_mode
+        sbc     #0
+        sta     ModeClockH
+        rts
+@toggle_mode:
+        lda     fScatter
+        eor     #$01
+        sta     fScatter
+        lda     #1
+        sta     Blinky+Ghost::reverse
+        sta     Pinky+Ghost::reverse
+        sta     Inky+Ghost::reverse
+        sta     Clyde+Ghost::reverse
+        inc     ModeCount
+        jsr     SetModeClock
+@end:
+        rts
+
+SetModeClock:
+        ; @TODO@ -- choose table based on level number
+        lda     ModeCount
+        asl
+        tax
+        lda     Lvl1Modes,x
+        sta     ModeClockL
+        inx
+        lda     Lvl1Modes,x
+        sta     ModeClockH
+        rts
 
 MoveOneGhost:
         ldy     #Ghost::direction 
