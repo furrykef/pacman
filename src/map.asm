@@ -125,8 +125,8 @@ ClearAttr:
 ; Yes, I know it's backwards!
 ;
 ; Output:
-;   EQ if so, NE if not
-IsTileEnterable:
+;   A = the tile
+GetTile:
         ; Set Tmp to the appropriate row of CurrentBoard
         lda     CurrentBoardRowAddrL,x
         sta     TmpL
@@ -134,6 +134,16 @@ IsTileEnterable:
         sta     TmpH
         ; Now check if the tile can be entered or not
         lda     (TmpL),y
+        rts
+
+
+; Input:
+;   A = tile ID
+;
+; Output:
+;   EQ if so, NE if not
+IsTileEnterable:
+        jsr     GetTile
         cmp     #$20                        ; space
         beq     @done
         cmp     #$92                        ; dot

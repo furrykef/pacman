@@ -540,6 +540,7 @@ ComputeTurn:
         ldy     NextTileX
         ldx     NextTileY
         dex
+        jsr     GetTile
         jsr     IsTileEnterable
         bne     @no_up
         lda     ScoreUp
@@ -558,6 +559,7 @@ ComputeTurn:
         ldy     NextTileX
         dey
         ldx     NextTileY
+        jsr     GetTile
         jsr     IsTileEnterable
         bne     @no_left
         lda     ScoreLeft
@@ -576,6 +578,7 @@ ComputeTurn:
         ldy     NextTileX
         ldx     NextTileY
         inx
+        jsr     GetTile
         jsr     IsTileEnterable
         bne     @no_down
         lda     ScoreDown
@@ -594,6 +597,7 @@ ComputeTurn:
         ldy     NextTileX
         iny
         ldx     NextTileY
+        jsr     GetTile
         jsr     IsTileEnterable
         bne     @no_right
         lda     ScoreRight

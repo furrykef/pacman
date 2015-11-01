@@ -103,6 +103,7 @@ MovePacMan:
 
         ldy     PacTryTileX
         ldx     PacTryTileY
+        jsr     GetTile
         jsr     IsTileEnterable
         bne     @reject_move
         ; Move is OK; make it so
@@ -153,6 +154,7 @@ TryTurningPacMan:
         lda     PacTileY
         add     DeltaYTbl,x
         tax
+        jsr     GetTile
         jsr     IsTileEnterable
         bne     @end                        ; reject turn if not enterable
         ; accept turn
