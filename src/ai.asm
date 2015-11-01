@@ -646,6 +646,15 @@ DrawOneGhost:
         lda     (GhostL),y
         sub     #8
         sub     VScroll
+        bcs     @scroll_ok
+        ; *** Can remove this bit after we remove negative scrolling
+        ldx     VScroll
+        bmi     @scroll_ok
+        ; ***
+        ; Sprite has gone off the top of the screen and wrapped around
+        ; Hide it so it won't peek up from the bottom
+        lda     #$ff
+@scroll_ok:
         ldy     #0
         sta     (GhostOamL),y
         ldy     #4

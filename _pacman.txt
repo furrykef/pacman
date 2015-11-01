@@ -2,14 +2,16 @@ dasm of Pac-Man: http://web.archive.org/web/20091003171028/http://www.lomont.org
 dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.20080621.asm
 
 
+Ghost behavior quirk
+--------------------
+Park Pac-Man at the right side of the joint of the T above the ghost house. In the arcade version, Blinky will never go down to get Pac-Man if Blinky approaches from the right. (He will if he approaches from the left.) In my demo, he does. Why?
+
+Hmm... I didn't get the turn order quite right. It should accept a turn only if it's > MaxScore, not >= MaxScore.
+
+
 Scroll bug
 ----------
 Negative scroll values are bad. Rewrite maze loading code not to rely on them, or just implement your status area so you won't need to scroll above 0.
-
-
-Scroll wrap bug
----------------
-When the screen is scrolled all the way down, ghosts at the top of the maze may peek out from the bottom of the screen.
 
 
 Pac-Man's movement algorithm
