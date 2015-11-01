@@ -1,3 +1,8 @@
+SPACE           = $20                       ; enterable
+DOT             = $92
+ENERGIZER       = $95
+
+
 .segment "BSS"
 
 CurrentBoard:   .res 32*31

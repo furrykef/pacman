@@ -216,8 +216,16 @@ MovePacManTowardCenter:
 
 
 EatDot:
+        ldy     PacTileX
+        ldx     PacTileY
+        jsr     GetTile
+        cmp     #DOT
+        beq     @eat
+        cmp     #ENERGIZER
+        beq     @eat
         rts
 
+@eat:
         ; Draw space where Pac-Man is
         ldx     DisplayListIndex
         lda     #1
@@ -245,7 +253,7 @@ EatDot:
         tya
         sta     DisplayList,x               ; PPU address LSB
         inx
-        lda     #$20                        ; space
+        lda     #SPACE                      ; space
         sta     DisplayList,x
         inx
         stx     DisplayListIndex
