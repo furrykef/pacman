@@ -85,11 +85,28 @@ MovePacMan:
         sta     PacTryPixelY
 @end_move:
 
+        ; Handle tunnel wrapping
+        lda     PacTryTileX
+        bmi     @wrap_to_right
+        cmp     #32
+        beq     @wrap_to_left
+        jmp     @no_wrap
+@wrap_to_left:
+        lda     #0
+        sta     PacTryTileX
+        jmp     @accept_move
+@wrap_to_right:
+        lda     #31
+        sta     PacTryTileX
+        jmp     @accept_move
+@no_wrap:
+
         ldy     PacTryTileX
         ldx     PacTryTileY
         jsr     IsTileEnterable
         bne     @reject_move
         ; Move is OK; make it so
+@accept_move:
         lda     PacTryTileX
         sta     PacTileX
         lda     PacTryTileY
@@ -108,7 +125,7 @@ MovePacMan:
 
 
 TryTurningPacMan:
-; Figure out direction we're trying to go in
+        ; Figure out direction we're trying to go in
         ; Upper four bits of joy state are directions
         lda     Joy1State
         lsr
