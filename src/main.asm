@@ -64,7 +64,7 @@ Main:
         stx     PPUCTRL                     ; no NMI
         stx     PPUMASK                     ; rendering off
         stx     DMCFREQ                     ; no DMC IRQs
-        ; @TODO@ -- disable mapper IRQs
+        stx     $e000                       ; no MMC3 IRQs
 
         ; First wait for vblank
         bit     PPUSTATUS
@@ -104,6 +104,42 @@ Main:
         bne     @clear_vram
         dey
         bne     @clear_vram
+
+        ; Init mapper
+        ; Set CHR banks
+        ldx     #$c0
+        stx     $8000
+        inx
+        ldy     #4
+        sty     $8001
+        iny
+        iny
+        stx     $8000
+        sty     $8001
+        ldx     #$c2
+        stx     $8000
+        inx
+        ldy     #0
+        sty     $8001
+        iny
+        stx     $8000
+        inx
+        sty     $8001
+        iny
+        stx     $8000
+        inx
+        sty     $8001
+        iny
+        stx     $8000
+        sty     $8001
+
+        ; Vertical mirroring
+        lda     #$01
+        sta     $a000
+
+        ; Protect PRG-RAM
+        lda     #$40
+        sta     $a001
 
         ; Init variables
         lda     #0
@@ -158,9 +194,7 @@ forever:
         lda     #32                         ; scroll is >32; snap to 32
         jmp     @scroll_ok
 @too_high:
-        cmp     #-16
-        bge     @scroll_ok
-        lda     #-16
+        lda     #0
 @scroll_ok:
         sta     VScroll
         ; Now that we've set the scroll, we can put stuff in OAM

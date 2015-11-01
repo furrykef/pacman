@@ -10,8 +10,7 @@
 .byte 1
 
 ; Mirroring, save RAM, trainer, mapper low nybble
-;.byte $40                                   ; mapper 4 (MMC3)
-.byte $00                                   ; mapper 0
+.byte $40                                   ; mapper 4 (MMC3)
 
 ; Vs., PlayChoice-10, NES 2.0, mapper high nybble
 .byte $00
