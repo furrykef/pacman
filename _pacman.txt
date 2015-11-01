@@ -12,11 +12,6 @@ Scroll wrap bug
 When the screen is scrolled all the way down, ghosts at the top of the maze may peek out from the bottom of the screen.
 
 
-Tunnel bug
-----------
-On the extreme left and right ends of the tunnels, ghosts may get the idea they're allowed to turn.
-
-
 Tunnel wrapping
 ---------------
 I spent about 21-23 frames behind the black when wrapping in tunnels in the arcade version.

@@ -223,7 +223,7 @@ ModeClockTick:
         rts
 @clock_lsb_zero:
         lda     ModeClockH
-        beq     @toggle_mode
+        beq     @toggle_mode                ; branch if clock hit $0000
         sbc     #0
         sta     ModeClockH
         rts
@@ -496,6 +496,16 @@ SquareTbl:
 
 
 ComputeTurn:
+        ; First check if we're at the edges of the tunnels, and reject turn if so
+        lda     TileX
+        cmp     #2
+        blt     @at_edge
+        cmp     #30
+        blt     @not_at_edge
+@at_edge:
+        rts
+@not_at_edge:
+
         ; Scores here will be $00..$ff, but think of $00 = -128, $01 = -127 ... $ff = 127
         ; This is called excess-128 representation (a form of excess-K, a.k.a. offset binary).
         ; This is done because signed comparisons suck on 6502.
