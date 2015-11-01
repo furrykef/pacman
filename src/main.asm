@@ -321,6 +321,8 @@ IsTileEnterable:
         cmp     #$92                        ; dot
         beq     @done
         cmp     #$95                        ; energizer
+        beq     @done
+        cmp     #$90                        ; enterable mask
 @done:
         rts
 

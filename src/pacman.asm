@@ -214,6 +214,8 @@ MovePacManTowardCenter:
 
 
 EatDot:
+        rts
+
         ; Draw space where Pac-Man is
         ldx     DisplayListIndex
         lda     #1
@@ -271,6 +273,7 @@ DrawPacMan:
         sub     VScroll
         sta     PacManOAM
         sta     PacManOAM+4
+
         ; Pattern index
         lda     PacDirection
         asl
@@ -280,10 +283,22 @@ DrawPacMan:
         sta     PacManOAM+1
         add     #2
         sta     PacManOAM+5
+
         ; Attributes
         lda     #$03
+        ; Flip priority if Pac-Man is at edges of tunnel
+        ldx     PacTileX
+        cpx     #3
+        blt     @flip
+        cpx     #29
+        blt     @no_flip
+@flip:
+        lda     #$23
+@no_flip:
+
         sta     PacManOAM+2
         sta     PacManOAM+6
+
         ; X position
         lda     PacTileX
         asl

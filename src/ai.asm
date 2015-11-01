@@ -646,6 +646,7 @@ DrawOneGhost:
         sta     (GhostOamL),y
         ldy     #4
         sta     (GhostOamL),y
+
         ; Pattern index
         ; Toggle between two frames
         lda     FrameCounter
@@ -665,13 +666,26 @@ DrawOneGhost:
         add     #2
         ldy     #5
         sta     (GhostOamL),y
+
         ; Attributes
-        ldy     #Ghost::palette
+        ldy     #Ghost::tile_x
         lda     (GhostL),y
+        tax
+        ldy     #Ghost::palette
+        lda     (GhostL),y                  ; get palette
+        ; Flip priority if ghost is at edges of tunnel
+        cpx     #3
+        blt     @flip
+        cpx     #29
+        blt     @no_flip
+@flip:
+        ora     #$20
+@no_flip:
         ldy     #2
         sta     (GhostOamL),y
         ldy     #6
         sta     (GhostOamL),y
+
         ; X position
         ldy     #Ghost::pos_x
         lda     (GhostL),y
