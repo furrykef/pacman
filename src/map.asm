@@ -118,6 +118,33 @@ ClearAttr:
         rts
 
 
+; Input:
+;   Y = X coordinate
+;   X = Y coordinate
+;
+; Yes, I know it's backwards!
+;
+; Output:
+;   EQ if so, NE if not
+IsTileEnterable:
+        ; Set Tmp to the appropriate row of CurrentBoard
+        lda     CurrentBoardRowAddrL,x
+        sta     TmpL
+        lda     CurrentBoardRowAddrH,x
+        sta     TmpH
+        ; Now check if the tile can be entered or not
+        lda     (TmpL),y
+        cmp     #$20                        ; space
+        beq     @done
+        cmp     #$92                        ; dot
+        beq     @done
+        cmp     #$95                        ; energizer
+        beq     @done
+        cmp     #$90                        ; enterable mask
+@done:
+        rts
+
+
 ; Some codes:
 ;   $00 = blank, non-enterable
 ;   $20 = blank, enterable
