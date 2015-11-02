@@ -186,7 +186,7 @@ forever:
         asl
         asl
         ora     PacPixelY
-        sub     #112
+        sub     #99
         bcc     @too_high
         cmp     #64 + 1
         blt     @scroll_ok                  ; OK if scroll is 0-64
