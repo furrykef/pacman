@@ -18,7 +18,7 @@
         state           .byte
         reverse         .byte
         get_target_tile .addr
-        oam_offset      .byte
+        priority        .byte
         palette         .byte
 .endstruct
 
@@ -113,8 +113,8 @@ InitAI:
         sta     Blinky+Ghost::get_target_tile
         lda     #>GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile+1
-        lda     #$08
-        sta     Blinky+Ghost::oam_offset
+        lda     #0
+        sta     Blinky+Ghost::priority
         lda     #$00
         sta     Blinky+Ghost::palette
 
@@ -135,8 +135,8 @@ InitAI:
         sta     Pinky+Ghost::get_target_tile
         lda     #>GetPinkyTargetTile
         sta     Pinky+Ghost::get_target_tile+1
-        lda     #$10
-        sta     Pinky+Ghost::oam_offset
+        lda     #1
+        sta     Pinky+Ghost::priority
         lda     #$01
         sta     Pinky+Ghost::palette
 
@@ -157,8 +157,8 @@ InitAI:
         sta     Inky+Ghost::get_target_tile
         lda     #>GetInkyTargetTile
         sta     Inky+Ghost::get_target_tile+1
-        lda     #$18
-        sta     Inky+Ghost::oam_offset
+        lda     #2
+        sta     Inky+Ghost::priority
         lda     #$02
         sta     Inky+Ghost::palette
 
@@ -179,8 +179,8 @@ InitAI:
         sta     Clyde+Ghost::get_target_tile
         lda     #>GetClydeTargetTile
         sta     Clyde+Ghost::get_target_tile+1
-        lda     #$20
-        sta     Clyde+Ghost::oam_offset
+        lda     #3
+        sta     Clyde+Ghost::priority
         lda     #$03
         sta     Clyde+Ghost::palette
 
@@ -635,8 +635,13 @@ DrawGhosts:
 
 DrawOneGhost:
         ; Update ghost in OAM
-        ldy     #Ghost::oam_offset
+        ldy     #Ghost::priority
         lda     (GhostL),y
+        asl
+        asl
+        asl
+        asl
+        add     #8
         sta     GhostOamL
         lda     #>MyOAM
         sta     GhostOamH
