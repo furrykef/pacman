@@ -279,7 +279,7 @@ DrawPacMan:
         asl
         asl
         ora     PacPixelY
-        sub     #8
+        add     #24                         ; -8 to convert center to edge, +32 for status area
         sub     VScroll
         sta     PacManOAM
         sta     PacManOAM+4

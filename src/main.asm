@@ -18,6 +18,7 @@
 
 ; Exports for easy debugging
 .export HandleVblank
+.export HandleIrq
 .export ReadJoys
 .export ComputeTurn
 .export MovePacMan
@@ -39,7 +40,6 @@ fRenderOff:         .res 1                  ; tells vblank handler not to mess w
 DisplayListIndex:   .res 1
 Joy1State:          .res 1
 Joy2State:          .res 1
-HScroll:            .res 1
 VScroll:            .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
@@ -144,7 +144,6 @@ Main:
         ; Init variables
         lda     #0
         sta     FrameCounter
-        sta     HScroll
         sta     VScroll
         sta     DisplayListIndex
         lda     #1
@@ -160,6 +159,7 @@ Main:
         sta     fRenderOff
         jsr     LoadPalette
         jsr     LoadBoard
+        jsr     LoadStatusBar
         lda     #0
         sta     fRenderOff
 
@@ -167,10 +167,9 @@ Main:
 @wait_vblank_end:
         bit     PPUSTATUS
         bmi     @wait_vblank_end
-        lda     #$a0                        ; NMI on, 8x16 sprites
+        cli
+        lda     #$80                        ; NMI on
         sta     PPUCTRL
-        lda     #$1e                        ; render everything
-        sta     PPUMASK
 
 ;*** BEGIN TEST ***
         jsr     InitLife
@@ -189,9 +188,9 @@ forever:
         ora     PacPixelY
         sub     #112
         bcc     @too_high
-        cmp     #32
+        cmp     #64
         blt     @scroll_ok                  ; OK if scroll is 0-32
-        lda     #32                         ; scroll is >32; snap to 32
+        lda     #64                         ; scroll is >32; snap to 32
         jmp     @scroll_ok
 @too_high:
         lda     #0
@@ -226,6 +225,22 @@ LoadPalette:
         rts
 
 
+LoadStatusBar:
+        lda     #$2b
+        sta     PPUADDR
+        lda     #$40
+        sta     PPUADDR
+        ldx     #0
+@loop:
+        lda     StatusBar,x
+        beq     @end
+        sta     PPUDATA
+        inx
+        jmp     @loop
+@end:
+        rts
+
+
 HandleVblank:
         pha
         txa
@@ -240,6 +255,12 @@ HandleVblank:
         sta     OAMADDR
         lda     #>MyOAM
         sta     OAMDMA
+
+        ; Enable IRQ for split screen
+        lda     #31                         ; number of scanlines before IRQ
+        sta     $c000
+        sta     $c001                       ; reload IRQ counter (value irrelevant)
+        sta     $e001                       ; enable IRQ (value irrelevant)
 
         ; Render display list
         ldx     #0
@@ -265,12 +286,17 @@ HandleVblank:
         sta     DisplayListIndex
 
         ; Set scroll
-        lda     #$a0                        ; NMI on, 8x16 sprites
+        lda     #$a2                        ; NMI on, 8x16 sprites, second nametable (where status bar is)
         sta     PPUCTRL
-        lda     HScroll
+        lda     #0
         sta     PPUSCROLL
-        lda     VScroll
+        lda     #208
         sta     PPUSCROLL
+
+        ; BG on, sprites off
+        lda     #$08
+        sta     PPUMASK
+
 @end:
         inc     FrameCounter
         pla
@@ -292,6 +318,31 @@ WaitForVblank:
 
 
 HandleIrq:
+        pha
+        sta     $e000                       ; acknowledge and disable IRQ (value irrelevant)
+
+        ; Wait until we're nearly at hblank
+.repeat 34
+        nop
+.endrepeat
+
+        ; See: http://wiki.nesdev.com/w/index.php/PPU_scrolling#Split_X.2FY_scroll
+        ; NES hardware is weird, man
+        lda     #0
+        sta     PPUADDR
+        lda     VScroll
+        sta     PPUSCROLL
+        lda     #0
+        sta     PPUSCROLL
+        lda     VScroll
+        and     #$f8
+        asl
+        asl
+        sta     PPUADDR
+        ; BG and sprites on
+        lda     #$18
+        sta     PPUMASK
+        pla
         rti
 
 
@@ -346,6 +397,13 @@ DeltaYTbl:
         .byte   1                           ; down
         .byte   0                           ; right
 
+
+StatusBar:
+        .byte   "                                "
+        .byte   "                                "
+        .byte   "        1UP   HIGH SCORE        "
+        .byte   "      000000    000000          "
+        .byte   0
 
 Palette:
 .incbin "../assets/palette.dat"
