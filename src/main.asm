@@ -36,6 +36,7 @@ TmpH:               .res 1
 Tmp2L:              .res 1
 Tmp2H:              .res 1
 FrameCounter:       .res 1
+fSpriteOverflow:    .res 1                  ; true values won't necessarily be $01
 fRenderOff:         .res 1                  ; tells vblank handler not to mess with VRAM if nonzero
 DisplayListIndex:   .res 1
 Joy1State:          .res 1
@@ -251,6 +252,8 @@ HandleVblank:
         beq     :+
         jmp     @end
 :
+
+        ; OAM DMA
         lda     #$00
         sta     OAMADDR
         lda     #>MyOAM
@@ -261,6 +264,11 @@ HandleVblank:
         sta     $c000
         sta     $c001                       ; reload IRQ counter (value irrelevant)
         sta     $e001                       ; enable IRQ (value irrelevant)
+
+        ; Check if sprites overflowed on previous frame
+        lda     PPUSTATUS
+        and     #$20
+        sta     fSpriteOverflow
 
         ; Render display list
         ldx     #0

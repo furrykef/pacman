@@ -612,6 +612,27 @@ ComputeTurn:
 
 
 DrawGhosts:
+        lda     fSpriteOverflow
+        beq     @no_overflow
+        ; More than 8 hardware sprites/scanline on previous frame; cycle priorities
+        lda     Blinky+Ghost::priority
+        add     #1
+        and     #$03
+        sta     Blinky+Ghost::priority
+        lda     Pinky+Ghost::priority
+        add     #1
+        and     #$03
+        sta     Pinky+Ghost::priority
+        lda     Inky+Ghost::priority
+        add     #1
+        and     #$03
+        sta     Inky+Ghost::priority
+        lda     Clyde+Ghost::priority
+        add     #1
+        and     #$03
+        sta     Clyde+Ghost::priority
+@no_overflow:
+
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
