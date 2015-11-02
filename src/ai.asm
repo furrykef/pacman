@@ -644,14 +644,20 @@ DrawOneGhost:
         ; Y position
         ldy     #Ghost::pos_y
         lda     (GhostL),y
-        sub     #8                          ; convert center to edge
+        add     #24                         ; -8 to get top edge, +32 to compensate for status
+        bcc     @not_too_low
+        ; Carry here means ghost is at very bottom of the maze and its
+        ; Y coordinate is >= 256. This means it has not wrapped around
+        ; and will not need to be hidden
+        sub     VScroll
+        jmp     @scroll_ok
+@not_too_low:
         sub     VScroll
         bcs     @scroll_ok
         ; Sprite has gone off the top of the screen and wrapped around
         ; Hide it so it won't peek up from the bottom
-        lda     #$ff - 32                   ; -32 to compensate for the following add
+        lda     #$ff
 @scroll_ok:
-        add     #32                         ; compensate for status area
         ldy     #0
         sta     (GhostOamL),y
         ldy     #4

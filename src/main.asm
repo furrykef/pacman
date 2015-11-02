@@ -188,9 +188,9 @@ forever:
         ora     PacPixelY
         sub     #112
         bcc     @too_high
-        cmp     #64
-        blt     @scroll_ok                  ; OK if scroll is 0-32
-        lda     #64                         ; scroll is >32; snap to 32
+        cmp     #64 + 1
+        blt     @scroll_ok                  ; OK if scroll is 0-64
+        lda     #64                         ; scroll is >64; snap to 64
         jmp     @scroll_ok
 @too_high:
         lda     #0
