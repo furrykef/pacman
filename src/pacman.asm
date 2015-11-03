@@ -118,7 +118,7 @@ MovePacMan:
         sta     PacPixelY
         jsr     MovePacManTowardCenter
 
-        jsr     EatDot
+        jsr     EatStuff
         jsr     AnimatePacMan
 @reject_move:
 
@@ -215,17 +215,34 @@ MovePacManTowardCenter:
         rts
 
 
-EatDot:
+EatStuff:
         ldy     PacTileX
         ldx     PacTileY
         jsr     GetTile
         cmp     #DOT
-        beq     @eat
+        beq     @eat_dot
         cmp     #ENERGIZER
-        beq     @eat
+        beq     @eat_energizer
         rts
 
-@eat:
+@eat_dot:
+        ; @XXX@
+        jmp     @eat_object
+
+@eat_energizer:
+        ; @XXX@
+        lda     #1
+        sta     Blinky+Ghost::reverse
+        sta     Pinky+Ghost::reverse
+        sta     Inky+Ghost::reverse
+        sta     Clyde+Ghost::reverse
+        jmp     @eat_object
+
+@eat_object:
+        ; Remove object from maze
+        lda     #SPACE
+        sta     (RowAddrL),y
+
         ; Draw space where Pac-Man is
         ldx     DisplayListIndex
         lda     #1

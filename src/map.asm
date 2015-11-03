@@ -3,6 +3,12 @@ DOT             = $92
 ENERGIZER       = $95
 
 
+.segment "ZEROPAGE"
+
+RowAddrL:       .res 1
+RowAddrH:       .res 1
+
+
 .segment "BSS"
 
 CurrentBoard:   .res 32*31
@@ -131,14 +137,16 @@ ClearAttr:
 ;
 ; Output:
 ;   A = the tile
+;   Y = unchanged (column of tile)
+;   RowAddr = address of row of tile
 GetTile:
-        ; Set Tmp to the appropriate row of CurrentBoard
+        ; Set RowAddr to the appropriate row of CurrentBoard
         lda     CurrentBoardRowAddrL,x
-        sta     TmpL
+        sta     RowAddrL
         lda     CurrentBoardRowAddrH,x
-        sta     TmpH
+        sta     RowAddrH
         ; Now check if the tile can be entered or not
-        lda     (TmpL),y
+        lda     (RowAddrL),y
         rts
 
 
