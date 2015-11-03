@@ -15,6 +15,7 @@ PacTryPixelX:       .res 1
 PacTryPixelY:       .res 1
 PacTryDirection:    .res 1
 
+PacDelay:           .res 1
 PacFrame:           .res 1                  ; used for animation; increments by $20
 
 
@@ -32,11 +33,20 @@ InitPacMan:
         lda     #Direction::left
         sta     PacDirection
         lda     #0
+        sta     PacDelay
         sta     PacFrame
         rts
 
 
 MovePacMan:
+        dec     PacDelay
+        bmi     @no_delay
+        ; Delay Pac-Man
+        rts
+@no_delay:
+        lda     #0
+        sta     PacDelay
+
         jsr     TryTurningPacMan
 
         ; Now try to move
@@ -226,10 +236,14 @@ EatStuff:
         rts
 
 @eat_dot:
+        lda     #1
+        sta     PacDelay
         ; @XXX@
         jmp     @eat_object
 
 @eat_energizer:
+        lda     #3
+        sta     PacDelay
         ; @XXX@
         jsr     StartEnergizer
         jmp     @eat_object
