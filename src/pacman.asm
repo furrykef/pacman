@@ -16,7 +16,6 @@ PacTryPixelY:       .res 1
 PacTryDirection:    .res 1
 
 PacDelay:           .res 1
-PacFrame:           .res 1                  ; used for animation; increments by $20
 
 
 .segment "CODE"
@@ -34,7 +33,6 @@ InitPacMan:
         sta     PacDirection
         lda     #0
         sta     PacDelay
-        sta     PacFrame
         rts
 
 
@@ -129,7 +127,6 @@ MovePacMan:
         jsr     MovePacManTowardCenter
 
         jsr     EatStuff
-        jsr     AnimatePacMan
 @reject_move:
 
         rts
@@ -287,18 +284,6 @@ EatStuff:
         rts
 
 
-AnimatePacMan:
-        lda     FrameCounter
-        and     #$01
-        beq     @end
-        lda     PacFrame
-        add     #$20
-        and     #$7f
-        sta     PacFrame
-@end:
-        rts
-
-
 DrawPacMan:
         ; Y position
         lda     PacTileY
@@ -313,9 +298,27 @@ DrawPacMan:
 
         ; Pattern index
         lda     PacDirection
+        cmp     #Direction::left
+        beq     @horizontal
+        cmp     #Direction::right
+        beq     @horizontal
+        lda     PacPixelY
+        jmp     :+
+@horizontal:
+        lda     PacPixelX
+:
+        lsr
+        and     #$03
         asl
         asl
-        add     PacFrame
+        asl
+        asl
+        asl
+        sta     TmpL
+        lda     PacDirection
+        asl
+        asl
+        ora     TmpL
         add     #$81
         sta     PacManOAM+1
         add     #2

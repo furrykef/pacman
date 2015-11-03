@@ -73,3 +73,5 @@ Ghosts decide which direction they're going to turn some time before they actual
 Ghosts always move left upon exiting the ghost house, unless the ghost was in the house during a mode chance, in which case they will move right.
 
 For some levels, Pac-Man speeds up while energizer is active.
+
+Pac-Man's mouth position should depend on his X coordinate (when moving horizontally) or Y coordinate (when moving vertically). This way he appears to be closing his mouth over the dots, even in slow motion.
