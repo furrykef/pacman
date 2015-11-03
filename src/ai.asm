@@ -16,6 +16,7 @@
         turn_dir        .byte               ; direction ghost has planned to turn in
         speed           .byte
         state           .byte
+        scared          .byte
         reverse         .byte
         get_target_tile .addr
         priority        .byte
@@ -109,6 +110,7 @@ InitAI:
         sta     Blinky+Ghost::state
         lda     #0
         sta     Blinky+Ghost::reverse
+        sta     Blinky+Ghost::scared
         lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::get_target_tile
         lda     #>GetBlinkyTargetTile
@@ -131,6 +133,7 @@ InitAI:
         sta     Pinky+Ghost::state
         lda     #0
         sta     Pinky+Ghost::reverse
+        sta     Pinky+Ghost::scared
         lda     #<GetPinkyTargetTile
         sta     Pinky+Ghost::get_target_tile
         lda     #>GetPinkyTargetTile
@@ -153,6 +156,7 @@ InitAI:
         sta     Inky+Ghost::state
         lda     #0
         sta     Inky+Ghost::reverse
+        sta     Inky+Ghost::scared
         lda     #<GetInkyTargetTile
         sta     Inky+Ghost::get_target_tile
         lda     #>GetInkyTargetTile
@@ -175,6 +179,7 @@ InitAI:
         sta     Clyde+Ghost::state
         lda     #0
         sta     Clyde+Ghost::reverse
+        sta     Clyde+Ghost::scared
         lda     #<GetClydeTargetTile
         sta     Clyde+Ghost::get_target_tile
         lda     #>GetClydeTargetTile
@@ -608,6 +613,19 @@ ComputeTurn:
         ldy     #Ghost::turn_dir
         sta     (GhostL),y
 @no_right:
+        rts
+
+
+StartEnergizer:
+        lda     #1
+        sta     Blinky+Ghost::reverse
+        sta     Blinky+Ghost::scared
+        sta     Pinky+Ghost::reverse
+        sta     Pinky+Ghost::scared
+        sta     Inky+Ghost::reverse
+        sta     Inky+Ghost::scared
+        sta     Clyde+Ghost::reverse
+        sta     Clyde+Ghost::scared
         rts
 
 

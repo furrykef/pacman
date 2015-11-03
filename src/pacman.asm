@@ -231,11 +231,7 @@ EatStuff:
 
 @eat_energizer:
         ; @XXX@
-        lda     #1
-        sta     Blinky+Ghost::reverse
-        sta     Pinky+Ghost::reverse
-        sta     Inky+Ghost::reverse
-        sta     Clyde+Ghost::reverse
+        jsr     StartEnergizer
         jmp     @eat_object
 
 @eat_object:
