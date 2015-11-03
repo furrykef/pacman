@@ -711,13 +711,21 @@ DrawOneGhost:
         lda     FrameCounter
         and     #$08
         beq     @first_frame                ; This will store $00 to TmpL
-        lda     #$10                        ; Second frame is $10 tiles after frame
+        lda     #$10                        ; Second frame is $10 tiles after first frame
 @first_frame:
         sta     TmpL
+        ldy     #Ghost::scared
+        lda     (GhostL),y
+        bne     @scared
+        ; Ghost is not scared
         ldy     #Ghost::turn_dir
         lda     (GhostL),y
         asl
         asl
+        jmp     :+
+@scared:
+        lda     #$20
+:
         ora     #$01                        ; Use $1000 bank of PPU memory
         add     TmpL
         ldy     #1
