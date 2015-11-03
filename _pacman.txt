@@ -20,6 +20,11 @@ Here's how the yellow guy moves:
 ** Reject the turn if the next tile in his path is not enterable.
 
 
+Scared ghost movement
+---------------------
+Generate a random score from 0 to 255 for each valid direction the ghost can go in, and pick the direction with the highest score.
+
+
 Bitfields for motion
 --------------------
 In the original game, sprites move according to 32-bit bitfields. For each 0, the ghost stays in place; for each 1, the ghost moves a pixel. This is done twice a frame, so a ghost may move up to two pixels per frame. (This may not be exactly right...)
@@ -59,20 +64,6 @@ Algorithm:
     IF can go west
         max_score = west_score
         max_direction = west
-
-
-Cropping sprites at tunnel edges
---------------------------------
-Done by setting sprite priority to background when (and only when) a sprite's X coordinate is too high or too low. Since there are no dots or other BG tiles inside the tunnel, the priority flip will not be visible to the player. At the edges of the tunnel will be black BG tiles (i.e. black as a foreground color); Pac-Man and the ghosts will go behind these tiles and seem to disappear.
-
-Note that there seems to be one full tile off each edge of the screen that Pac-Man can appear (or rather not appear) in. After Pac-Man disappears in one end of the tunnel, there is some time before he comes out the other end.
-
-
-Flickering
-----------
-Pac-Man does not flicker.
-
-When the sprite overflow flag is set, cycle the priorities for the ghosts so they all flicker equally.
 
 
 Things to remember

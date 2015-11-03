@@ -661,7 +661,6 @@ DrawOneGhost:
         asl
         asl
         asl
-        asl
         add     #8
         sta     GhostOamL
         lda     #>MyOAM
@@ -701,7 +700,7 @@ DrawOneGhost:
         lda     (GhostL),y
         asl
         asl
-        ora     #$01                        ; Use $1000 bank of VRAM
+        ora     #$01                        ; Use $1000 bank of PPU memory
         add     TmpL
         ldy     #1
         sta     (GhostOamL),y
