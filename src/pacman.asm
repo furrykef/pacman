@@ -307,9 +307,7 @@ DrawPacMan:
 @horizontal:
         lda     PacPixelX
 :
-        lsr
-        and     #$03
-        asl
+        and     #$06
         asl
         asl
         asl
