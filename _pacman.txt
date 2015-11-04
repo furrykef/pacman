@@ -27,7 +27,7 @@ Generate a random score from 0 to 255 for each valid direction the ghost can go 
 
 Bitfields for motion
 --------------------
-In the original game, sprites move according to 32-bit bitfields. For each 0, the ghost stays in place; for each 1, the ghost moves a pixel. This is done twice a frame, so a ghost may move up to two pixels per frame. (This may not be exactly right...)
+In the original game, sprites move according to 32-bit bitfields. For each 0, the ghost stays in place; for each 1, the ghost moves a pixel. This is done twice a frame, so a ghost may move up to two pixels per frame.
 
 $55555555 = 01010101010101010101010101010101 = Pac-Man's speed on level 1 (1 pixel/frame) / Cruise Elroy 1 on level 1
 $6AD56AD5 = 01101010110101010110101011010101 = Pac-Man's speed on level 1 after energizer

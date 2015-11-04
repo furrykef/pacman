@@ -14,7 +14,10 @@
         tile_y          .byte
         direction       .byte
         turn_dir        .byte               ; direction ghost has planned to turn in
-        speed           .byte
+        speed1          .byte
+        speed2          .byte
+        speed3          .byte
+        speed4          .byte
         state           .byte
         scared          .byte
         reverse         .byte
@@ -105,7 +108,6 @@ InitAI:
         lda     #Direction::left
         sta     Blinky+Ghost::direction
         sta     Blinky+Ghost::turn_dir
-        ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Blinky+Ghost::state
         lda     #0
@@ -128,7 +130,6 @@ InitAI:
         lda     #Direction::left
         sta     Pinky+Ghost::direction
         sta     Pinky+Ghost::turn_dir
-        ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Pinky+Ghost::state
         lda     #0
@@ -151,7 +152,6 @@ InitAI:
         lda     #Direction::left
         sta     Inky+Ghost::direction
         sta     Inky+Ghost::turn_dir
-        ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Inky+Ghost::state
         lda     #0
@@ -174,7 +174,6 @@ InitAI:
         lda     #Direction::left
         sta     Clyde+Ghost::direction
         sta     Clyde+Ghost::turn_dir
-        ; @TODO@ -- speed
         lda     #GhostState::active
         sta     Clyde+Ghost::state
         lda     #0
@@ -189,6 +188,27 @@ InitAI:
         lda     #$03
         sta     Clyde+Ghost::palette
 
+        ; Speed
+        ; @TODO@ -- change depending on level
+        lda     #$55
+        sta     Blinky+Ghost::speed1
+        sta     Blinky+Ghost::speed2
+        sta     Pinky+Ghost::speed1
+        sta     Pinky+Ghost::speed2
+        sta     Inky+Ghost::speed1
+        sta     Inky+Ghost::speed2
+        sta     Clyde+Ghost::speed1
+        sta     Clyde+Ghost::speed2
+        lda     #$2a
+        sta     Blinky+Ghost::speed3
+        sta     Pinky+Ghost::speed3
+        sta     Inky+Ghost::speed3
+        sta     Clyde+Ghost::speed3
+        lda     #$aa
+        sta     Blinky+Ghost::speed4
+        sta     Pinky+Ghost::speed4
+        sta     Inky+Ghost::speed4
+        sta     Clyde+Ghost::speed4
         rts
 
 MoveGhosts:
@@ -197,22 +217,22 @@ MoveGhosts:
         sta     GhostL
         lda     #>Blinky
         sta     GhostH
-        jsr     MoveOneGhost
+        jsr     HandleOneGhost
         lda     #<Pinky
         sta     GhostL
         lda     #>Pinky
         sta     GhostH
-        jsr     MoveOneGhost
+        jsr     HandleOneGhost
         lda     #<Inky
         sta     GhostL
         lda     #>Inky
         sta     GhostH
-        jsr     MoveOneGhost
+        jsr     HandleOneGhost
         lda     #<Clyde
         sta     GhostL
         lda     #>Clyde
         sta     GhostH
-        jmp     MoveOneGhost
+        jmp     HandleOneGhost
 
 ModeClockTick:
         lda     ModeCount
@@ -258,6 +278,39 @@ SetModeClock:
         sta     ModeClockH
         rts
 
+HandleOneGhost:
+.repeat 2
+        ; Get least significant bit of speed value so we can rotate it in
+        ldy     #Ghost::speed1
+        lda     (GhostL),y
+        asl                                 ; put the bit in the carry flag
+
+        ldy     #Ghost::speed4
+        lda     (GhostL),y
+        rol
+        sta     (GhostL),y
+        dey
+        lda     (GhostL),y
+        rol
+        sta     (GhostL),y
+        dey
+        lda     (GhostL),y
+        rol
+        sta     (GhostL),y
+        dey
+        lda     (GhostL),y
+        rol
+        sta     (GhostL),y
+        bcc     :+
+        jsr     MoveOneGhost
+:
+.endrepeat
+
+        ; @TODO@ -- check collisions
+
+        rts
+
+
 MoveOneGhost:
         ldy     #Ghost::direction 
         lda     (GhostL),y
@@ -294,8 +347,6 @@ MoveOneGhost:
         lda     TileY
         iny
         sta     (GhostL),y
-
-        ; @TODO@ -- if TileX and TileY match Pac-Man's, kill Pac-Man
 
         ; JSR to Ghost::get_target_tile
         ldy     #Ghost::get_target_tile
