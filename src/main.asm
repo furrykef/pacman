@@ -43,6 +43,8 @@ Joy1State:          .res 1
 Joy2State:          .res 1
 VScroll:            .res 1
 IrqVScroll:         .res 1
+RngSeedL:           .res 1
+RngSeedH:           .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
@@ -152,6 +154,11 @@ Main:
         sta     VScroll
         sta     DisplayListIndex
         sta     fRenderOn
+
+        ; @TODO@ -- better way to init this?
+        lda     #%11001001
+        sta     RngSeedL
+        sta     RngSeedH
 
         ; Second wait for vblank
 @vblank2:
@@ -484,6 +491,22 @@ ReadJoyImpl:
         ror
         dex
         bne     @loop
+        rts
+
+
+; http://wiki.nesdev.com/w/index.php/Random_number_generator
+Rand:
+        ldx     #8                          ; iteration count: controls entropy quality (max 8,7,4,2,1 min)
+        lda     RngSeedL
+@loop:
+        asl                                 ; shift the register
+        rol     RngSeedH
+        bcc     :+
+        eor     #$2D                        ; apply XOR feedback whenever a 1 bit is shifted out
+:
+        dex
+        bne     @loop
+        sta     RngSeedL
         rts
 
 

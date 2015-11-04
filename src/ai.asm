@@ -551,6 +551,37 @@ SquareTbl:
         .byte   64                          ; 8*8
 
 
+.macro EvalDirection dir, score
+.local end
+        ldy     #Ghost::direction           ; Disallow if going the opposite direction
+        lda     (GhostL),y
+        cmp     #dir ^ $03
+        beq     end
+        ldy     NextTileX
+.if dir = Direction::left
+        dey
+.elseif dir = Direction::right
+        iny
+.endif
+        ldx     NextTileY
+.if dir = Direction::up
+        dex
+.elseif dir = Direction::down
+        inx
+.endif
+        jsr     GetTile
+        jsr     IsTileEnterable
+        bne     end
+        lda     score
+        cmp     MaxScore
+        blt     end
+        sta     MaxScore
+        lda     #dir
+        ldy     #Ghost::turn_dir
+        sta     (GhostL),y
+end:
+.endmacro
+
 ComputeTurn:
         ; First check if we're at the edges of the tunnels, and reject turn if so
         lda     TileX
@@ -588,82 +619,11 @@ ComputeTurn:
         adc     #$80
         sta     ScoreDown
 
-        ; Will we be able to go up?
-        ldy     #Ghost::direction           ; Disallow if going down
-        lda     (GhostL),y
-        cmp     #Direction::down
-        beq     @no_up
-        ldy     NextTileX
-        ldx     NextTileY
-        dex
-        jsr     GetTile
-        jsr     IsTileEnterable
-        bne     @no_up
-        lda     ScoreUp
-        ;cmp     MaxScore
-        ;blt     @no_up
-        sta     MaxScore
-        lda     #Direction::up
-        ldy     #Ghost::turn_dir
-        sta     (GhostL),y
-@no_up:
-        ; Try left
-        ldy     #Ghost::direction           ; Disallow if going right
-        lda     (GhostL),y
-        cmp     #Direction::right
-        beq     @no_left
-        ldy     NextTileX
-        dey
-        ldx     NextTileY
-        jsr     GetTile
-        jsr     IsTileEnterable
-        bne     @no_left
-        lda     ScoreLeft
-        cmp     MaxScore
-        blt     @no_left
-        sta     MaxScore
-        lda     #Direction::left
-        ldy     #Ghost::turn_dir
-        sta     (GhostL),y
-@no_left:
-        ; Try down
-        ldy     #Ghost::direction           ; Disallow if going up
-        lda     (GhostL),y
-        cmp     #Direction::up
-        beq     @no_down
-        ldy     NextTileX
-        ldx     NextTileY
-        inx
-        jsr     GetTile
-        jsr     IsTileEnterable
-        bne     @no_down
-        lda     ScoreDown
-        cmp     MaxScore
-        blt     @no_down
-        sta     MaxScore
-        lda     #Direction::down
-        ldy     #Ghost::turn_dir
-        sta     (GhostL),y
-@no_down:
-        ; Try right
-        ldy     #Ghost::direction           ; Disallow if going left
-        lda     (GhostL),y
-        cmp     #Direction::left
-        beq     @no_right
-        ldy     NextTileX
-        iny
-        ldx     NextTileY
-        jsr     GetTile
-        jsr     IsTileEnterable
-        bne     @no_right
-        lda     ScoreRight
-        cmp     MaxScore
-        blt     @no_right
-        ;sta     MaxScore
-        lda     #Direction::right
-        ldy     #Ghost::turn_dir
-        sta     (GhostL),y
-@no_right:
+        EvalDirection Direction::up, ScoreUp
+        EvalDirection Direction::left, ScoreLeft
+        EvalDirection Direction::down, ScoreDown
+        EvalDirection Direction::right, ScoreRight
+
         rts
 
 
