@@ -235,13 +235,15 @@ EatStuff:
 @eat_dot:
         lda     #1
         sta     PacDelay
-        ; @XXX@
+        dec     NumDots
+        ; @XXx@ add points
         jmp     @eat_object
 
 @eat_energizer:
         lda     #3
         sta     PacDelay
-        ; @XXX@
+        dec     NumDots
+        ; @XXX@ add points
         jsr     StartEnergizer
         jmp     @eat_object
 

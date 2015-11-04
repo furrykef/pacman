@@ -37,13 +37,15 @@ Tmp2L:              .res 1
 Tmp2H:              .res 1
 FrameCounter:       .res 1
 fSpriteOverflow:    .res 1                  ; true values won't necessarily be $01
-fRenderOff:         .res 1                  ; tells vblank handler not to mess with VRAM if nonzero
+fRenderOn:          .res 1                  ; tells vblank handler not to mess with VRAM if zero
 DisplayListIndex:   .res 1
 Joy1State:          .res 1
 Joy2State:          .res 1
 VScroll:            .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
+
+NumDots:            .res 1
 
 
 .segment "BSS"
@@ -147,40 +149,63 @@ Main:
         sta     FrameCounter
         sta     VScroll
         sta     DisplayListIndex
-        lda     #1
-        sta     fRenderOff
+        sta     fRenderOn
 
         ; Second wait for vblank
 @vblank2:
         bit     PPUSTATUS
         bpl     @vblank2
 
-        ; Let's get started!
-        lda     #1
-        sta     fRenderOff
-        jsr     LoadPalette
-        jsr     LoadBoard
-        jsr     LoadStatusBar
-        lda     #0
-        sta     fRenderOff
-
-        ; Turn display back on
+        ; Enable interrupts and NMIs
+        cli
 @wait_vblank_end:
         bit     PPUSTATUS
         bmi     @wait_vblank_end
-        cli
         lda     #$80                        ; NMI on
         sta     PPUCTRL
 
-;*** BEGIN TEST ***
+PlayRound:
+        lda     #0
+        sta     fRenderOn
+        sta     PPUMASK
+        jsr     LoadPalette
+        jsr     LoadBoard
+        jsr     LoadStatusBar
+        lda     #1
+        sta     fRenderOn
+        lda     #$80
+        sta     PPUCTRL
+
+        lda     #244
+        sta     NumDots
+
         jsr     InitLife
-forever:
+        jsr     Render
+        ldy     #60
+        jsr     WaitFrames
+@game_loop:
         jsr     WaitForVblank
         jsr     ReadJoys
         ; Must move ghosts *before* Pac-Man since collision detection
         ; is done inside MoveGhosts.
         jsr     MoveGhosts
         jsr     MovePacMan
+        jsr     Render
+        lda     NumDots
+        bne     @game_loop
+        ; Round has been won
+        ldy     #120
+        jsr     WaitFrames
+        jmp     PlayRound
+
+
+InitLife:
+        jsr     InitAI
+        jsr     InitPacMan
+        rts
+
+
+Render:
         ; Set scroll
         lda     PacTileY
         asl
@@ -199,15 +224,7 @@ forever:
         sta     VScroll
         ; Now that we've set the scroll, we can put stuff in OAM
         jsr     DrawGhosts
-        jsr     DrawPacMan
-        jmp     forever
-;*** END TEST ***
-
-
-InitLife:
-        jsr     InitAI
-        jsr     InitPacMan
-        rts
+        jmp     DrawPacMan
 
 
 LoadPalette:
@@ -248,8 +265,8 @@ HandleVblank:
         pha
         tya
         pha
-        lda     fRenderOff
-        beq     :+
+        lda     fRenderOn
+        bne     :+
         jmp     @end
 :
 
@@ -314,6 +331,7 @@ HandleVblank:
         pla
         rti
 
+; Won't touch Y
 WaitForVblank:
         lda     #0                          ; mark end of display list
         ldx     DisplayListIndex
@@ -322,6 +340,14 @@ WaitForVblank:
 @loop:
         cmp     FrameCounter
         beq     @loop
+        rts
+
+; Input:
+;   Y = number of frames to wait (0 = 256)
+WaitFrames:
+        jsr     WaitForVblank
+        dey
+        bne     WaitFrames
         rts
 
 
