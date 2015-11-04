@@ -2,6 +2,11 @@ dasm of Pac-Man: http://web.archive.org/web/20091003171028/http://www.lomont.org
 dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.20080621.asm
 
 
+To fix
+------
+I think ghosts aren't supposed to change direction when going into scatter mode while frightened.
+
+
 Ghost behavior quirk
 --------------------
 Park Pac-Man at the right side of the joint of the T above the ghost house. In the arcade version, Blinky will never go down to get Pac-Man if Blinky approaches from the right. (He will if he approaches from the left.) In my demo, he does. Why?
@@ -29,12 +34,15 @@ Bitfields for motion
 --------------------
 In the original game, sprites move according to 32-bit bitfields. For each 0, the ghost stays in place; for each 1, the ghost moves a pixel. This is done twice a frame, so a ghost may move up to two pixels per frame.
 
-$55555555 = 01010101010101010101010101010101 = Pac-Man's speed on level 1 (1 pixel/frame) / Cruise Elroy 1 on level 1
-$6AD56AD5 = 01101010110101010110101011010101 = Pac-Man's speed on level 1 after energizer
-$D5556AAA = 11010101010101010110101010101010 = Cruise Elroy 2 on level 1
-$55552AAA = 01010101010101010010101010101010 = Ghost speed on level 1
-$24922492 = 00100100100100100010010010010010 = Scared ghost speed on level 1
-$22222222 = 00100010001000100010001000100010 = Tunnel speed on level 1
+$55555555 = 01010101010101010101010101010101 = 80% = Pac-Man's speed on level 1 (1 pixel/frame) / Cruise Elroy 1 on level 1
+$6AD56AD5 = 01101010110101010110101011010101 = 90% = Pac-Man's speed on level 1 after energizer
+$D5556AAA = 11010101010101010110101010101010 = 85% = Cruise Elroy 2 on level 1
+$55552AAA = 01010101010101010010101010101010 = 75% = Ghost speed on level 1
+$24922492 = 00100100100100100010010010010010 = 50% = Scared ghost speed on level 1
+$22222222 = 00100010001000100010001000100010 = 40% = Tunnel speed on level 1
+
+Remember to store these as little-endian (although it probably won't make a significant difference).
+
 
 Eating a dot causes Pac-Man to stop for one frame; eating an energizer causes him to stop for three frames.
 
@@ -64,6 +72,13 @@ Algorithm:
     IF can go west
         max_score = west_score
         max_direction = west
+
+
+Fright
+------
+The fright times in the Pac-Man Dossier are exact; there are no fractions of seconds involved.
+
+When flashing: 14 frames to change from blue to white or vice versa, but white to normal may take less than 14 frames (9 frames on level 1, 6 on level 2).
 
 
 Things to remember

@@ -240,13 +240,11 @@ EatStuff:
         sta     TmpL
         lda     #>Points10
         sta     TmpH
-        pha
         tya
         pha
         jsr     AddPoints
         pla
         tay
-        pla
         jmp     @eat_object
 
 @eat_energizer:
@@ -257,14 +255,12 @@ EatStuff:
         sta     TmpL
         lda     #>Points50
         sta     TmpH
-        pha
         tya
         pha
         jsr     AddPoints
         jsr     StartEnergizer
         pla
         tay
-        pla
         jmp     @eat_object
 
 @eat_object:
