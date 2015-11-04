@@ -283,23 +283,23 @@ HandleOneGhost:
         ; Get least significant bit of speed value so we can rotate it in
         ldy     #Ghost::speed1
         lda     (GhostL),y
-        asl                                 ; put the bit in the carry flag
+        lsr                                 ; put the bit in the carry flag
 
         ldy     #Ghost::speed4
         lda     (GhostL),y
-        rol
+        ror
         sta     (GhostL),y
         dey
         lda     (GhostL),y
-        rol
+        ror
         sta     (GhostL),y
         dey
         lda     (GhostL),y
-        rol
+        ror
         sta     (GhostL),y
         dey
         lda     (GhostL),y
-        rol
+        ror
         sta     (GhostL),y
         bcc     :+
         jsr     MoveOneGhost
