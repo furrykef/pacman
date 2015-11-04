@@ -552,7 +552,7 @@ SquareTbl:
 
 
 .macro EvalDirection dir, score
-.local end
+.local end, is_scared, not_scared
         ldy     #Ghost::direction           ; Disallow if going the opposite direction
         lda     (GhostL),y
         cmp     #dir ^ $03
@@ -572,7 +572,19 @@ SquareTbl:
         jsr     GetTile
         jsr     IsTileEnterable
         bne     end
+        ldy     #Ghost::scared
+        lda     (GhostL),y
+        bne     is_scared
         lda     score
+        jmp     not_scared
+is_scared:
+        jsr     Rand
+        ; Don't allow a score of 0 (reserved for invalid directions)
+        cmp     #0
+        bne     :+
+        adc     #0                          ; carry was set by the CMP
+:
+not_scared:
         cmp     MaxScore
         blt     end
         sta     MaxScore
