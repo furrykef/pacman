@@ -46,6 +46,7 @@ JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
 NumDots:            .res 1
+Score:              .res 5                  ; 5-digit BCD
 
 
 .segment "BSS"
@@ -163,6 +164,16 @@ Main:
         bmi     @wait_vblank_end
         lda     #$80                        ; NMI on
         sta     PPUCTRL
+        ; FALL THROUGH to NewGame
+
+NewGame:
+        lda     #0
+        sta     Score
+        sta     Score+1
+        sta     Score+2
+        sta     Score+3
+        sta     Score+4
+        ; FALL THROUGH to PlayRound
 
 PlayRound:
         lda     #0
@@ -205,6 +216,32 @@ InitLife:
         rts
 
 
+; Input:
+;   TmpL,H = address of number of points to add
+.macro AddDigit num
+.local end
+        lda     Score+(4-num)
+        adc     (TmpL),y
+        dey
+        cmp     #10
+        blt     end                         ; carry flag will be clear
+        sub     #10
+        ; carry flag will be set
+end:
+        sta     Score+(4-num)
+.endmacro
+
+AddPoints:
+        ldy     #4
+        clc
+        AddDigit 0
+        AddDigit 1
+        AddDigit 2
+        AddDigit 3
+        AddDigit 4
+        rts
+
+
 Render:
         ; Set scroll
         lda     PacTileY
@@ -224,7 +261,30 @@ Render:
         sta     VScroll
         ; Now that we've set the scroll, we can put stuff in OAM
         jsr     DrawGhosts
-        jmp     DrawPacMan
+        jsr     DrawPacMan
+        jmp     DrawScore
+
+
+DrawScore:
+        ldx     DisplayListIndex
+        lda     #5
+        sta     DisplayList,x
+        inx
+        lda     #$2b
+        sta     DisplayList,x
+        inx
+        lda     #$a6
+        sta     DisplayList,x
+        inx
+        clc
+.repeat 5, I
+        lda     Score+I
+        adc     #'0'
+        sta     DisplayList,x
+        inx
+.endrepeat
+        stx     DisplayListIndex
+        rts
 
 
 LoadPalette:
@@ -436,8 +496,12 @@ StatusBar:
         .byte   "                                "
         .byte   "                                "
         .byte   "        1UP   HIGH SCORE        "
-        .byte   "      000000    000000          "
+        .byte   "           0         0          "
         .byte   0
+
+
+Points10:   .byte   0,0,0,0,1
+Points50:   .byte   0,0,0,0,5
 
 Palette:
 .incbin "../assets/palette.dat"

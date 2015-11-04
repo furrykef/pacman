@@ -236,15 +236,35 @@ EatStuff:
         lda     #1
         sta     PacDelay
         dec     NumDots
-        ; @XXx@ add points
+        lda     #<Points10
+        sta     TmpL
+        lda     #>Points10
+        sta     TmpH
+        pha
+        tya
+        pha
+        jsr     AddPoints
+        pla
+        tay
+        pla
         jmp     @eat_object
 
 @eat_energizer:
         lda     #3
         sta     PacDelay
         dec     NumDots
-        ; @XXX@ add points
+        lda     #<Points50
+        sta     TmpL
+        lda     #>Points50
+        sta     TmpH
+        pha
+        tya
+        pha
+        jsr     AddPoints
         jsr     StartEnergizer
+        pla
+        tay
+        pla
         jmp     @eat_object
 
 @eat_object:
