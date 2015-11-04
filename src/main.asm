@@ -3,11 +3,11 @@
 
 
 ; This ordering is used so that you can reverse direction using EOR #$03
-.enum Direction
-        left
-        up
-        down
-        right
+.enum
+        WEST
+        NORTH
+        SOUTH
+        EAST
 .endenum
 
 
@@ -511,16 +511,16 @@ Rand:
 
 
 DeltaXTbl:
-        .byte   -1                          ; left
-        .byte   0                           ; up
-        .byte   0                           ; down
-        .byte   1                           ; right
+        .byte   -1                          ; west
+        .byte   0                           ; north
+        .byte   0                           ; south
+        .byte   1                           ; east
 
 DeltaYTbl:
-        .byte   0                           ; left
-        .byte   -1                          ; up
-        .byte   1                           ; down
-        .byte   0                           ; right
+        .byte   0                           ; west
+        .byte   -1                          ; north
+        .byte   1                           ; south
+        .byte   0                           ; east
 
 
 StatusBar:

@@ -29,7 +29,7 @@ InitPacMan:
         sta     PacTileY
         lda     #3
         sta     PacPixelY
-        lda     #Direction::left
+        lda     #WEST
         sta     PacDirection
         lda     #0
         sta     PacDelay
@@ -173,29 +173,29 @@ TryTurningPacMan:
 ; Converts D-pad state to a direction
 JoyDirTbl:                                  ; RLDU (right, left, down, up)
         .byte   0                           ; 0000 (dummy entry)
-        .byte   Direction::up               ; 0001
-        .byte   Direction::down             ; 0010
-        .byte   Direction::down             ; 0011
-        .byte   Direction::left             ; 0100
-        .byte   Direction::left             ; 0101
-        .byte   Direction::left             ; 0110
-        .byte   Direction::left             ; 0111
-        .byte   Direction::right            ; 1000
-        .byte   Direction::right            ; 1001
-        .byte   Direction::right            ; 1010
-        .byte   Direction::right            ; 1011
-        .byte   Direction::right            ; 1100
-        .byte   Direction::right            ; 1101
-        .byte   Direction::right            ; 1110
-        .byte   Direction::right            ; 1111
+        .byte   NORTH                       ; 0001
+        .byte   SOUTH                       ; 0010
+        .byte   SOUTH                       ; 0011
+        .byte   WEST                        ; 0100
+        .byte   WEST                        ; 0101
+        .byte   WEST                        ; 0110
+        .byte   WEST                        ; 0111
+        .byte   EAST                        ; 1000
+        .byte   EAST                        ; 1001
+        .byte   EAST                        ; 1010
+        .byte   EAST                        ; 1011
+        .byte   EAST                        ; 1100
+        .byte   EAST                        ; 1101
+        .byte   EAST                        ; 1110
+        .byte   EAST                        ; 1111
 
 
 ; Bumps Pac-Man toward center of his lane
 MovePacManTowardCenter:
         lda     PacDirection
-        cmp     #Direction::up
+        cmp     #NORTH
         beq     @vertical
-        cmp     #Direction::down
+        cmp     #SOUTH
         beq     @vertical
         ; Moving horizontally; center vertically
         lda     PacPixelY
@@ -315,9 +315,9 @@ DrawPacMan:
 
         ; Pattern index
         lda     PacDirection
-        cmp     #Direction::left
+        cmp     #WEST
         beq     @horizontal
-        cmp     #Direction::right
+        cmp     #EAST
         beq     @horizontal
         lda     PacPixelY
         jmp     :+

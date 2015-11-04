@@ -7,13 +7,6 @@ To fix
 The chase/scatter mode timer should be paused while an energizer is active.
 
 
-Ghost behavior quirk
---------------------
-Park Pac-Man at the right side of the joint of the T above the ghost house. In the arcade version, Blinky will never go down to get Pac-Man if Blinky approaches from the right. (He will if he approaches from the left.) In my demo, he does. Why?
-
-Hmm... I didn't get the turn order quite right. It should accept a turn only if it's > MaxScore, not >= MaxScore.
-
-
 Pac-Man's movement algorithm
 ----------------------------
 Here's how the yellow guy moves:

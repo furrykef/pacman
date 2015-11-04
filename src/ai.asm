@@ -47,10 +47,10 @@ TargetTileX:    .res 1
 TargetTileY:    .res 1
 
 MaxScore:       .res 1
-ScoreUp:        .res 1
-ScoreRight:     .res 1
-ScoreDown:      .res 1
-ScoreLeft:      .res 1
+ScoreNorth:     .res 1
+ScoreEast:      .res 1
+ScoreSouth:     .res 1
+ScoreWest:      .res 1
 
 GhostOamL:      .res 1
 GhostOamH:      .res 1
@@ -105,7 +105,7 @@ InitAI:
         sta     Blinky+Ghost::pos_x
         lda     #91
         sta     Blinky+Ghost::pos_y
-        lda     #Direction::left
+        lda     #WEST
         sta     Blinky+Ghost::direction
         sta     Blinky+Ghost::turn_dir
         lda     #GhostState::active
@@ -127,7 +127,7 @@ InitAI:
         sta     Pinky+Ghost::pos_x
         lda     #115
         sta     Pinky+Ghost::pos_y
-        lda     #Direction::left
+        lda     #WEST
         sta     Pinky+Ghost::direction
         sta     Pinky+Ghost::turn_dir
         lda     #GhostState::active
@@ -149,7 +149,7 @@ InitAI:
         sta     Inky+Ghost::pos_x
         lda     #115
         sta     Inky+Ghost::pos_y
-        lda     #Direction::left
+        lda     #WEST
         sta     Inky+Ghost::direction
         sta     Inky+Ghost::turn_dir
         lda     #GhostState::active
@@ -171,7 +171,7 @@ InitAI:
         sta     Clyde+Ghost::pos_x
         lda     #115
         sta     Clyde+Ghost::pos_y
-        lda     #Direction::left
+        lda     #WEST
         sta     Clyde+Ghost::direction
         sta     Clyde+Ghost::turn_dir
         lda     #GhostState::active
@@ -406,7 +406,7 @@ GetBlinkyTargetTile:
         rts
 
 @scatter:
-        ; Go to upper right of the maze
+        ; Go to northeast of the maze
         lda     #27
         sta     TargetTileX
         lda     #-3
@@ -428,7 +428,7 @@ GetPinkyTargetTile:
         rts
 
 @scatter:
-        ; Go to upper left corner of the maze
+        ; Go to northwest corner of the maze
         lda     #4
         sta     TargetTileX
         lda     #-3
@@ -461,7 +461,7 @@ GetInkyTargetTile:
         rts
 
 @scatter:
-        ; Go to lower right corner of the maze
+        ; Go to southeast corner of the maze
         lda     #29
         sta     TargetTileX
         lda     #32
@@ -507,7 +507,7 @@ GetClydeTargetTile:
         rts
 
 @scatter:
-        ; Go to lower left corner of the maze
+        ; Go to southwest corner of the maze
         lda     #2
         sta     TargetTileX
         lda     #32
@@ -516,28 +516,28 @@ GetClydeTargetTile:
 
 
 DeltaX2Tbl:
-        .byte   -2                          ; left
-        .byte   0                           ; up
-        .byte   0                           ; down
-        .byte   2                           ; right
+        .byte   -2                          ; west
+        .byte   0                           ; north
+        .byte   0                           ; south
+        .byte   2                           ; east
 
 DeltaY2Tbl:
-        .byte   0                           ; left
-        .byte   -2                          ; up
-        .byte   2                           ; down
-        .byte   0                           ; right
+        .byte   0                           ; west
+        .byte   -2                          ; north
+        .byte   2                           ; south
+        .byte   0                           ; east
 
 DeltaX4Tbl:
-        .byte   -4                          ; left
-        .byte   0                           ; up
-        .byte   0                           ; down
-        .byte   4                           ; right
+        .byte   -4                          ; west
+        .byte   0                           ; north
+        .byte   0                           ; south
+        .byte   4                           ; east
 
 DeltaY4Tbl:
-        .byte   0                           ; left
-        .byte   -4                          ; up
-        .byte   4                           ; down
-        .byte   0                           ; right
+        .byte   0                           ; west
+        .byte   -4                          ; north
+        .byte   4                           ; south
+        .byte   0                           ; east
 
 SquareTbl:
         .byte   0                           ; 0*0
@@ -558,15 +558,15 @@ SquareTbl:
         cmp     #dir ^ $03
         beq     end
         ldy     NextTileX
-.if dir = Direction::left
+.if dir = WEST
         dey
-.elseif dir = Direction::right
+.elseif dir = EAST
         iny
 .endif
         ldx     NextTileY
-.if dir = Direction::up
+.if dir = NORTH
         dex
-.elseif dir = Direction::down
+.elseif dir = SOUTH
         inx
 .endif
         jsr     GetTile
@@ -587,6 +587,7 @@ is_scared:
 not_scared:
         cmp     MaxScore
         blt     end
+        beq     end
         sta     MaxScore
         lda     #dir
         ldy     #Ghost::turn_dir
@@ -614,27 +615,27 @@ ComputeTurn:
         sub     TargetTileX
         tax
         add     #$80
-        sta     ScoreLeft
+        sta     ScoreWest
         txa
         eor     #$ff                        ; negate and add $80
         sec
         adc     #$80
-        sta     ScoreRight
+        sta     ScoreEast
         lda     NextTileY
         sub     TargetTileY
         tax
         add     #$80
-        sta     ScoreUp
+        sta     ScoreNorth
         txa
         eor     #$ff
         sec
         adc     #$80
-        sta     ScoreDown
+        sta     ScoreSouth
 
-        EvalDirection Direction::up, ScoreUp
-        EvalDirection Direction::left, ScoreLeft
-        EvalDirection Direction::down, ScoreDown
-        EvalDirection Direction::right, ScoreRight
+        EvalDirection NORTH, ScoreNorth
+        EvalDirection WEST, ScoreWest
+        EvalDirection SOUTH, ScoreSouth
+        EvalDirection EAST, ScoreEast
 
         rts
 
