@@ -42,6 +42,7 @@ DisplayListIndex:   .res 1
 Joy1State:          .res 1
 Joy2State:          .res 1
 VScroll:            .res 1
+IrqVScroll:         .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
@@ -251,22 +252,23 @@ Render:
         ora     PacPixelY
         sub     #99
         bcc     @too_high
-        cmp     #64 + 1
-        blt     @scroll_ok                  ; OK if scroll is 0-64
-        lda     #64                         ; scroll is >64; snap to 64
+        cmp     #56 + 1
+        blt     @scroll_ok                  ; OK if scroll is 0-56
+        lda     #56                         ; scroll is >56; snap to 56
         jmp     @scroll_ok
 @too_high:
         lda     #0
 @scroll_ok:
         sta     VScroll
-        ; Now that we've set the scroll, we can put stuff in OAM
+        ; Now that we've set the scroll, we can put stuff in MyOAM
         jsr     DrawGhosts
         jsr     DrawPacMan
-        jmp     DrawScore
+        jmp     DrawStatus
 
 
-DrawScore:
+DrawStatus:
         ldx     DisplayListIndex
+        ; Draw score
         lda     #5
         sta     DisplayList,x
         inx
@@ -382,6 +384,12 @@ HandleVblank:
         lda     #$08
         sta     PPUMASK
 
+        ; Save VScroll for IRQ handler
+        ; (IRQ using VScroll directly causes a race condition and IRQ may use
+        ;  the value for the next frame)
+        lda     VScroll
+        sta     IrqVScroll
+
 @end:
         inc     FrameCounter
         pla
@@ -424,11 +432,11 @@ HandleIrq:
         ; NES hardware is weird, man
         lda     #0
         sta     PPUADDR
-        lda     VScroll
+        lda     IrqVScroll
         sta     PPUSCROLL
         lda     #0
         sta     PPUSCROLL
-        lda     VScroll
+        lda     IrqVScroll
         and     #$f8
         asl
         asl
