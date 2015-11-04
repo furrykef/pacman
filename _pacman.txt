@@ -4,7 +4,7 @@ dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.2
 
 To fix
 ------
-I think ghosts aren't supposed to change direction when going into scatter mode while frightened.
+The chase/scatter mode timer should be paused while an energizer is active.
 
 
 Ghost behavior quirk

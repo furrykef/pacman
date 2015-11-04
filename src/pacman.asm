@@ -42,8 +42,7 @@ MovePacMan:
         ; Delay Pac-Man
         rts
 @no_delay:
-        lda     #0
-        sta     PacDelay
+        inc     PacDelay
 
         jsr     TryTurningPacMan
 
