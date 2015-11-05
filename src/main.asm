@@ -379,6 +379,20 @@ HandleVblank:
         lda     #0
         sta     DisplayListIndex
 
+        ; Cycle color 3 of BG palette 0
+        lda     #$3f
+        sta     PPUADDR
+        lda     #$03
+        sta     PPUADDR
+        lda     FrameCounter
+        and     #%00011000
+        lsr
+        lsr
+        lsr
+        tax
+        lda     ColorCycle,x
+        sta     PPUDATA
+
         ; Set scroll
         lda     #$a2                        ; NMI on, 8x16 sprites, second nametable (where status bar is)
         sta     PPUCTRL
@@ -537,6 +551,9 @@ Points50:   .byte   0,0,0,0,5
 Palette:
 .incbin "../assets/palette.dat"
 PaletteSize = * - Palette
+
+ColorCycle:
+        .byte   $0f, $36, $30, $36
 
 
 ; Indirect JSR

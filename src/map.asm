@@ -109,13 +109,26 @@ CopyBoardIntoVram:
 
         ; Attributes for door to ghost house (X=15..16, Y=12)
         ; These use palette 1 instead of palette 0
-        lda     #$23
-        sta     PPUADDR
-        lda     #$db
-        sta     PPUADDR
+        ldx     #$23
+        stx     PPUADDR
+        ldy     #$db
+        sty     PPUADDR
         lda     #1 << 2
         sta     PPUDATA
         lda     #1
+        sta     PPUDATA
+
+        ; Attributes for side tunnels
+        ; Left: X=0..1, Y=13..15
+        ; Right: X=30..31, Y=13..15
+        stx     PPUADDR
+        ldy     #$d8
+        lda     #%01010101
+        sty     PPUADDR
+        sta     PPUDATA
+        stx     PPUADDR
+        ldy     #$df
+        sty     PPUADDR
         sta     PPUDATA
 
         rts
