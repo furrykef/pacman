@@ -42,6 +42,14 @@ MovePacMan:
         jsr     TryTurningPacMan
 
         ; Now try to move
+
+        ; Move always OK if at tunnel edges
+        lda     PacTileX
+        beq     @accept_move
+        cmp     #31
+        beq     @accept_move
+
+        ; Not in a tunnel
         ldx     PacDirection
         cpx     #NORTH
         beq     @vertical
