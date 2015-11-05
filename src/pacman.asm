@@ -3,16 +3,14 @@ PacManOAM = MyOAM
 
 .segment "ZEROPAGE"
 
+PacX:               .res 1
+PacY:               .res 1
 PacTileX:           .res 1
 PacTileY:           .res 1
 PacPixelX:          .res 1
 PacPixelY:          .res 1
 PacDirection:       .res 1
 
-PacTryTileX:        .res 1
-PacTryTileY:        .res 1
-PacTryPixelX:       .res 1
-PacTryPixelY:       .res 1
 PacTryDirection:    .res 1
 
 PacDelay:           .res 1
@@ -21,14 +19,11 @@ PacDelay:           .res 1
 .segment "CODE"
 
 InitPacMan:
-        lda     #15
-        sta     PacTileX
-        lda     #7
-        sta     PacPixelX
-        lda     #23
-        sta     PacTileY
-        lda     #3
-        sta     PacPixelY
+        lda     #127
+        sta     PacX
+        lda     #187
+        sta     PacY
+        jsr     CalcPacCoords
         lda     #WEST
         sta     PacDirection
         lda     #0
@@ -47,87 +42,42 @@ MovePacMan:
         jsr     TryTurningPacMan
 
         ; Now try to move
-        lda     PacTileX
-        sta     PacTryTileX
-        lda     PacTileY
-        sta     PacTryTileY
-        lda     PacPixelX
-        sta     PacTryPixelX
-        lda     PacPixelY
-        sta     PacTryPixelY
-
         ldx     PacDirection
-        lda     PacPixelX
-        add     DeltaXTbl,x
-        bmi     @dec_tile_x
-        cmp     #$08
-        beq     @inc_tile_x
-        sta     PacTryPixelX
-        jmp     @move_y
-@dec_tile_x:
-        dec     PacTryTileX
-        lda     #7
-        sta     PacTryPixelX
-        jmp     @move_y
-@inc_tile_x:
-        inc     PacTryTileX
-        lda     #0
-        sta     PacTryPixelX
-@move_y:
-        lda     PacPixelY
+        cpx     #NORTH
+        beq     @vertical
+        cpx     #SOUTH
+        beq     @vertical
+        ; Moving horizontally; check X coordinate
+        lda     PacX
+        jmp     @got_coord
+@vertical:
+        lda     PacY
+@got_coord:
+        and     #$07
+        cmp     #3                          ; is Pac-Man at center of tile?
+        bne     @accept_move                ; move is OK if not
+        ; Reject the move if he's about to run into a wall
+        lda     PacTileX
+        add     DeltaXTbl,x                 ; X still holds Pac-Man's direction
+        tay
+        lda     PacTileY
         add     DeltaYTbl,x
-        bmi     @dec_tile_y
-        cmp     #$08
-        beq     @inc_tile_y
-        sta     PacTryPixelY
-        jmp     @end_move
-@dec_tile_y:
-        dec     PacTryTileY
-        lda     #7
-        sta     PacTryPixelY
-        jmp     @end_move
-@inc_tile_y:
-        inc     PacTryTileY
-        lda     #0
-        sta     PacTryPixelY
-@end_move:
-
-        ; Handle tunnel wrapping
-        lda     PacTryTileX
-        bmi     @wrap_to_right
-        cmp     #32
-        beq     @wrap_to_left
-        jmp     @no_wrap
-@wrap_to_left:
-        lda     #0
-        sta     PacTryTileX
-        jmp     @accept_move
-@wrap_to_right:
-        lda     #31
-        sta     PacTryTileX
-        jmp     @accept_move
-@no_wrap:
-
-        ldy     PacTryTileX
-        ldx     PacTryTileY
-        jsr     GetTile
+        tax
         jsr     IsTileEnterable
         bne     @reject_move
         ; Move is OK; make it so
 @accept_move:
-        lda     PacTryTileX
-        sta     PacTileX
-        lda     PacTryTileY
-        sta     PacTileY
-        lda     PacTryPixelX
-        sta     PacPixelX
-        lda     PacTryPixelY
-        sta     PacPixelY
+        ldx     PacDirection
+        lda     PacX
+        add     DeltaXTbl,x
+        sta     PacX
+        lda     PacY
+        add     DeltaYTbl,x
+        sta     PacY
         jsr     MovePacManTowardCenter
-
+        jsr     CalcPacCoords
         jsr     EatStuff
 @reject_move:
-
         rts
 
 
@@ -198,25 +148,27 @@ MovePacManTowardCenter:
         cmp     #SOUTH
         beq     @vertical
         ; Moving horizontally; center vertically
-        lda     PacPixelY
+        lda     PacY
+        and     #$07
         cmp     #3
         beq     @end
         blt     @shift_down
-        dec     PacPixelY
+        dec     PacY
         rts
 @shift_down:
-        inc     PacPixelY
+        inc     PacY
         rts
 @vertical:
         ; Moving vertically; center horizontally
-        lda     PacPixelX
+        lda     PacX
+        and     #$07
         cmp     #3
         beq     @end
         blt     @shift_right
-        dec     PacPixelX
+        dec     PacX
         rts
 @shift_right:
-        inc     PacPixelX
+        inc     PacX
 @end:
         rts
 
@@ -301,13 +253,29 @@ EatStuff:
         rts
 
 
+CalcPacCoords:
+        lda     PacX
+        lsr
+        lsr
+        lsr
+        sta     PacTileX
+        lda     PacX
+        and     #$07
+        sta     PacPixelX
+        lda     PacY
+        lsr
+        lsr
+        lsr
+        sta     PacTileY
+        lda     PacY
+        and     #$07
+        sta     PacPixelY
+        rts
+
+
 DrawPacMan:
         ; Y position
-        lda     PacTileY
-        asl
-        asl
-        asl
-        ora     PacPixelY
+        lda     PacY
         add     #24                         ; -8 to convert center to edge, +32 for status area
         sub     VScroll
         sta     PacManOAM
@@ -355,11 +323,7 @@ DrawPacMan:
         sta     PacManOAM+6
 
         ; X position
-        lda     PacTileX
-        asl
-        asl
-        asl
-        ora     PacPixelX
+        lda     PacX
         sub     #7
         sta     PacManOAM+3
         add     #8
