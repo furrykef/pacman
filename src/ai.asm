@@ -1,6 +1,5 @@
 .enum GhostState
         active
-        blue
         eaten
         waiting
         exiting
@@ -8,22 +7,22 @@
 
 
 .struct Ghost
-        pos_x           .byte               ; center of ghost, not upper left
-        pos_y           .byte
-        tile_x          .byte
-        tile_y          .byte
-        direction       .byte
-        turn_dir        .byte               ; direction ghost has planned to turn in
-        speed1          .byte
-        speed2          .byte
-        speed3          .byte
-        speed4          .byte
-        state           .byte
-        scared          .byte
-        reverse         .byte
-        get_target_tile .addr
-        priority        .byte
-        palette         .byte
+        PosX            .byte              ; center of ghost, not upper left
+        PosY            .byte
+        TileX           .byte
+        TileY           .byte
+        Direction       .byte
+        TurnDir         .byte              ; direction ghost has planned to turn in
+        Speed1          .byte
+        Speed2          .byte
+        Speed3          .byte
+        Speed4          .byte
+        State           .byte
+        fScared         .byte
+        fReverse        .byte
+        GetTargetTile   .addr
+        Priority        .byte
+        Palette         .byte
 .endstruct
 
 
@@ -102,113 +101,113 @@ InitAI:
 
         ; Blinky
         lda     #127
-        sta     Blinky+Ghost::pos_x
+        sta     Blinky+Ghost::PosX
         lda     #91
-        sta     Blinky+Ghost::pos_y
+        sta     Blinky+Ghost::PosY
         lda     #WEST
-        sta     Blinky+Ghost::direction
-        sta     Blinky+Ghost::turn_dir
+        sta     Blinky+Ghost::Direction
+        sta     Blinky+Ghost::TurnDir
         lda     #GhostState::active
-        sta     Blinky+Ghost::state
+        sta     Blinky+Ghost::State
         lda     #0
-        sta     Blinky+Ghost::reverse
-        sta     Blinky+Ghost::scared
+        sta     Blinky+Ghost::fReverse
+        sta     Blinky+Ghost::fScared
         lda     #<GetBlinkyTargetTile
-        sta     Blinky+Ghost::get_target_tile
+        sta     Blinky+Ghost::GetTargetTile
         lda     #>GetBlinkyTargetTile
-        sta     Blinky+Ghost::get_target_tile+1
+        sta     Blinky+Ghost::GetTargetTile+1
         lda     #0
-        sta     Blinky+Ghost::priority
+        sta     Blinky+Ghost::Priority
         lda     #$00
-        sta     Blinky+Ghost::palette
+        sta     Blinky+Ghost::Palette
 
         ; Pinky
         lda     #127
-        sta     Pinky+Ghost::pos_x
+        sta     Pinky+Ghost::PosX
         lda     #115
-        sta     Pinky+Ghost::pos_y
+        sta     Pinky+Ghost::PosY
         lda     #WEST
-        sta     Pinky+Ghost::direction
-        sta     Pinky+Ghost::turn_dir
+        sta     Pinky+Ghost::Direction
+        sta     Pinky+Ghost::TurnDir
         lda     #GhostState::active
-        sta     Pinky+Ghost::state
+        sta     Pinky+Ghost::State
         lda     #0
-        sta     Pinky+Ghost::reverse
-        sta     Pinky+Ghost::scared
+        sta     Pinky+Ghost::fReverse
+        sta     Pinky+Ghost::fScared
         lda     #<GetPinkyTargetTile
-        sta     Pinky+Ghost::get_target_tile
+        sta     Pinky+Ghost::GetTargetTile
         lda     #>GetPinkyTargetTile
-        sta     Pinky+Ghost::get_target_tile+1
+        sta     Pinky+Ghost::GetTargetTile+1
         lda     #1
-        sta     Pinky+Ghost::priority
+        sta     Pinky+Ghost::Priority
         lda     #$01
-        sta     Pinky+Ghost::palette
+        sta     Pinky+Ghost::Palette
 
         ; Inky
         lda     #111
-        sta     Inky+Ghost::pos_x
+        sta     Inky+Ghost::PosX
         lda     #115
-        sta     Inky+Ghost::pos_y
+        sta     Inky+Ghost::PosY
         lda     #WEST
-        sta     Inky+Ghost::direction
-        sta     Inky+Ghost::turn_dir
+        sta     Inky+Ghost::Direction
+        sta     Inky+Ghost::TurnDir
         lda     #GhostState::active
-        sta     Inky+Ghost::state
+        sta     Inky+Ghost::State
         lda     #0
-        sta     Inky+Ghost::reverse
-        sta     Inky+Ghost::scared
+        sta     Inky+Ghost::fReverse
+        sta     Inky+Ghost::fScared
         lda     #<GetInkyTargetTile
-        sta     Inky+Ghost::get_target_tile
+        sta     Inky+Ghost::GetTargetTile
         lda     #>GetInkyTargetTile
-        sta     Inky+Ghost::get_target_tile+1
+        sta     Inky+Ghost::GetTargetTile+1
         lda     #2
-        sta     Inky+Ghost::priority
+        sta     Inky+Ghost::Priority
         lda     #$02
-        sta     Inky+Ghost::palette
+        sta     Inky+Ghost::Palette
 
         ; Clyde
         lda     #143
-        sta     Clyde+Ghost::pos_x
+        sta     Clyde+Ghost::PosX
         lda     #115
-        sta     Clyde+Ghost::pos_y
+        sta     Clyde+Ghost::PosY
         lda     #WEST
-        sta     Clyde+Ghost::direction
-        sta     Clyde+Ghost::turn_dir
+        sta     Clyde+Ghost::Direction
+        sta     Clyde+Ghost::TurnDir
         lda     #GhostState::active
-        sta     Clyde+Ghost::state
+        sta     Clyde+Ghost::State
         lda     #0
-        sta     Clyde+Ghost::reverse
-        sta     Clyde+Ghost::scared
+        sta     Clyde+Ghost::fReverse
+        sta     Clyde+Ghost::fScared
         lda     #<GetClydeTargetTile
-        sta     Clyde+Ghost::get_target_tile
+        sta     Clyde+Ghost::GetTargetTile
         lda     #>GetClydeTargetTile
-        sta     Clyde+Ghost::get_target_tile+1
+        sta     Clyde+Ghost::GetTargetTile+1
         lda     #3
-        sta     Clyde+Ghost::priority
+        sta     Clyde+Ghost::Priority
         lda     #$03
-        sta     Clyde+Ghost::palette
+        sta     Clyde+Ghost::Palette
 
         ; Speed
         ; @TODO@ -- change depending on level
         lda     #$55
-        sta     Blinky+Ghost::speed1
-        sta     Blinky+Ghost::speed2
-        sta     Pinky+Ghost::speed1
-        sta     Pinky+Ghost::speed2
-        sta     Inky+Ghost::speed1
-        sta     Inky+Ghost::speed2
-        sta     Clyde+Ghost::speed1
-        sta     Clyde+Ghost::speed2
+        sta     Blinky+Ghost::Speed1
+        sta     Blinky+Ghost::Speed2
+        sta     Pinky+Ghost::Speed1
+        sta     Pinky+Ghost::Speed2
+        sta     Inky+Ghost::Speed1
+        sta     Inky+Ghost::Speed2
+        sta     Clyde+Ghost::Speed1
+        sta     Clyde+Ghost::Speed2
         lda     #$2a
-        sta     Blinky+Ghost::speed3
-        sta     Pinky+Ghost::speed3
-        sta     Inky+Ghost::speed3
-        sta     Clyde+Ghost::speed3
+        sta     Blinky+Ghost::Speed3
+        sta     Pinky+Ghost::Speed3
+        sta     Inky+Ghost::Speed3
+        sta     Clyde+Ghost::Speed3
         lda     #$aa
-        sta     Blinky+Ghost::speed4
-        sta     Pinky+Ghost::speed4
-        sta     Inky+Ghost::speed4
-        sta     Clyde+Ghost::speed4
+        sta     Blinky+Ghost::Speed4
+        sta     Pinky+Ghost::Speed4
+        sta     Inky+Ghost::Speed4
+        sta     Clyde+Ghost::Speed4
         rts
 
 MoveGhosts:
@@ -257,10 +256,10 @@ ModeClockTick:
         eor     #$01
         sta     fScatter
         lda     #1
-        sta     Blinky+Ghost::reverse
-        sta     Pinky+Ghost::reverse
-        sta     Inky+Ghost::reverse
-        sta     Clyde+Ghost::reverse
+        sta     Blinky+Ghost::fReverse
+        sta     Pinky+Ghost::fReverse
+        sta     Inky+Ghost::fReverse
+        sta     Clyde+Ghost::fReverse
         inc     ModeCount
         jsr     SetModeClock
 @end:
@@ -281,11 +280,11 @@ SetModeClock:
 HandleOneGhost:
 .repeat 2
         ; Get least significant bit of speed value so we can rotate it in
-        ldy     #Ghost::speed1
+        ldy     #Ghost::Speed1
         lda     (GhostL),y
         lsr                                 ; put the bit in the carry flag
 
-        ldy     #Ghost::speed4
+        ldy     #Ghost::Speed4
         lda     (GhostL),y
         ror
         sta     (GhostL),y
@@ -312,10 +311,10 @@ HandleOneGhost:
 
 
 MoveOneGhost:
-        ldy     #Ghost::direction 
+        ldy     #Ghost::Direction 
         lda     (GhostL),y
         tax
-        ldy     #Ghost::pos_x
+        ldy     #Ghost::PosX
         lda     (GhostL),y
         add     DeltaXTbl,x
         sta     (GhostL),y
@@ -327,7 +326,7 @@ MoveOneGhost:
         tya
         and     #$07
         sta     PixelX
-        ldy     #Ghost::pos_y
+        ldy     #Ghost::PosY
         lda     (GhostL),y
         add     DeltaYTbl,x
         sta     (GhostL),y
@@ -342,14 +341,14 @@ MoveOneGhost:
 
         ; Needed since Inky's targeting depends on Blinky's position
         lda     TileX
-        ldy     #Ghost::tile_x
+        ldy     #Ghost::TileX
         sta     (GhostL),y
         lda     TileY
         iny
         sta     (GhostL),y
 
-        ; JSR to Ghost::get_target_tile
-        ldy     #Ghost::get_target_tile
+        ; JSR to Ghost::GetTargetTile
+        ldy     #Ghost::GetTargetTile
         lda     (GhostL),y
         sta     JsrIndAddrL
         iny
@@ -365,21 +364,21 @@ MoveOneGhost:
         lda     PixelY
         cmp     #$03
         bne     @not_centered
-        ldy     #Ghost::reverse
+        ldy     #Ghost::fReverse
         lda     (GhostL),y
         beq     @no_reverse
         ; Reversing direction
         lda     #0                          ; clear reverse flag
         sta     (GhostL),y
-        ldy     #Ghost::direction
+        ldy     #Ghost::Direction
         lda     (GhostL),y
         eor     #$03
         jmp     @changed_direction
 @no_reverse:
-        ldy     #Ghost::turn_dir
+        ldy     #Ghost::TurnDir
         lda     (GhostL),y
 @changed_direction:
-        ldy     #Ghost::direction
+        ldy     #Ghost::Direction
         sta     (GhostL),y
         tax
         lda     TileX
@@ -450,13 +449,13 @@ GetInkyTargetTile:
         lda     PacTileX
         add     DeltaX2Tbl,x
         asl
-        sub     Blinky+Ghost::tile_x
+        sub     Blinky+Ghost::TileX
         sta     TargetTileX
         ; Target Y is computed the same way.
         lda     PacTileY
         add     DeltaY2Tbl,x
         asl
-        sub     Blinky+Ghost::tile_y
+        sub     Blinky+Ghost::TileY
         sta     TargetTileY
         rts
 
@@ -553,7 +552,7 @@ SquareTbl:
 
 .macro EvalDirection dir, score
 .local end, is_scared, not_scared
-        ldy     #Ghost::direction           ; Disallow if going the opposite direction
+        ldy     #Ghost::Direction           ; Disallow if going the opposite direction
         lda     (GhostL),y
         cmp     #dir ^ $03
         beq     end
@@ -572,7 +571,7 @@ SquareTbl:
         jsr     GetTile
         jsr     IsTileEnterable
         bne     end
-        ldy     #Ghost::scared
+        ldy     #Ghost::fScared
         lda     (GhostL),y
         bne     is_scared
         lda     score
@@ -582,7 +581,7 @@ is_scared:
         ; Don't allow a score of 0 (reserved for invalid directions)
         cmp     #0
         bne     :+
-        adc     #0                          ; carry was set by the CMP
+        lda     #1
 :
 not_scared:
         cmp     MaxScore
@@ -590,7 +589,7 @@ not_scared:
         beq     end
         sta     MaxScore
         lda     #dir
-        ldy     #Ghost::turn_dir
+        ldy     #Ghost::TurnDir
         sta     (GhostL),y
 end:
 .endmacro
@@ -642,14 +641,14 @@ ComputeTurn:
 
 StartEnergizer:
         lda     #1
-        sta     Blinky+Ghost::reverse
-        sta     Blinky+Ghost::scared
-        sta     Pinky+Ghost::reverse
-        sta     Pinky+Ghost::scared
-        sta     Inky+Ghost::reverse
-        sta     Inky+Ghost::scared
-        sta     Clyde+Ghost::reverse
-        sta     Clyde+Ghost::scared
+        sta     Blinky+Ghost::fReverse
+        sta     Blinky+Ghost::fScared
+        sta     Pinky+Ghost::fReverse
+        sta     Pinky+Ghost::fScared
+        sta     Inky+Ghost::fReverse
+        sta     Inky+Ghost::fScared
+        sta     Clyde+Ghost::fReverse
+        sta     Clyde+Ghost::fScared
         rts
 
 
@@ -657,22 +656,22 @@ DrawGhosts:
         lda     fSpriteOverflow
         beq     @no_overflow
         ; More than 8 hardware sprites/scanline on previous frame; cycle priorities
-        lda     Blinky+Ghost::priority
+        lda     Blinky+Ghost::Priority
         add     #1
         and     #$03
-        sta     Blinky+Ghost::priority
-        lda     Pinky+Ghost::priority
+        sta     Blinky+Ghost::Priority
+        lda     Pinky+Ghost::Priority
         add     #1
         and     #$03
-        sta     Pinky+Ghost::priority
-        lda     Inky+Ghost::priority
+        sta     Pinky+Ghost::Priority
+        lda     Inky+Ghost::Priority
         add     #1
         and     #$03
-        sta     Inky+Ghost::priority
-        lda     Clyde+Ghost::priority
+        sta     Inky+Ghost::Priority
+        lda     Clyde+Ghost::Priority
         add     #1
         and     #$03
-        sta     Clyde+Ghost::priority
+        sta     Clyde+Ghost::Priority
 @no_overflow:
 
         lda     #<Blinky
@@ -698,7 +697,7 @@ DrawGhosts:
 
 DrawOneGhost:
         ; Update ghost in OAM
-        ldy     #Ghost::priority
+        ldy     #Ghost::Priority
         lda     (GhostL),y
         asl
         asl
@@ -709,7 +708,7 @@ DrawOneGhost:
         sta     GhostOamH
 
         ; Y position
-        ldy     #Ghost::pos_y
+        ldy     #Ghost::PosY
         lda     (GhostL),y
         add     #24                         ; -8 to get top edge, +32 to compensate for status
         bcc     @not_too_low
@@ -738,11 +737,11 @@ DrawOneGhost:
         lda     #$10                        ; Second frame is $10 tiles after first frame
 @first_frame:
         sta     TmpL
-        ldy     #Ghost::scared
+        ldy     #Ghost::fScared
         lda     (GhostL),y
         bne     @scared
         ; Ghost is not scared
-        ldy     #Ghost::turn_dir
+        ldy     #Ghost::TurnDir
         lda     (GhostL),y
         asl
         asl
@@ -759,10 +758,10 @@ DrawOneGhost:
         sta     (GhostOamL),y
 
         ; Attributes
-        ldy     #Ghost::tile_x
+        ldy     #Ghost::TileX
         lda     (GhostL),y
         tax
-        ldy     #Ghost::palette
+        ldy     #Ghost::Palette
         lda     (GhostL),y                  ; get palette
         ; Flip priority if ghost is at edges of tunnel
         cpx     #3
@@ -778,7 +777,7 @@ DrawOneGhost:
         sta     (GhostOamL),y
 
         ; X position
-        ldy     #Ghost::pos_x
+        ldy     #Ghost::PosX
         lda     (GhostL),y
         sub     #7
         ldy     #3
