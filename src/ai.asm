@@ -539,15 +539,9 @@ DeltaY4Tbl:
         .byte   0                           ; east
 
 SquareTbl:
-        .byte   0                           ; 0*0
-        .byte   1                           ; 1*1
-        .byte   4                           ; 2*2
-        .byte   9                           ; 3*3
-        .byte   16                          ; 4*4
-        .byte   25                          ; 5*5
-        .byte   36                          ; 6*6
-        .byte   49                          ; 7*7
-        .byte   64                          ; 8*8
+.repeat 9, I
+        .byte   I*I
+.endrepeat
 
 
 .macro EvalDirection dir, score
