@@ -38,9 +38,14 @@ Tmp2H:              .res 1
 FrameCounter:       .res 1
 fSpriteOverflow:    .res 1                  ; true values won't necessarily be $01
 fRenderOn:          .res 1                  ; tells vblank handler not to mess with VRAM if zero
+fPaused:            .res 1
 DisplayListIndex:   .res 1
 Joy1State:          .res 1
-Joy2State:          .res 1
+Joy2State:          .res 1                  ; must immediately follow Joy1State
+Joy1PrevState:      .res 1
+Joy2PrevState:      .res 1                  ; must immediately follow Joy1PrevState
+Joy1Down:           .res 1
+Joy2Down:           .res 1                  ; must immediately follow Joy1Down
 VScroll:            .res 1
 IrqVScroll:         .res 1
 RngSeedL:           .res 1
@@ -154,6 +159,9 @@ Main:
         sta     VScroll
         sta     DisplayListIndex
         sta     fRenderOn
+        sta     fPaused
+        sta     Joy1State
+        sta     Joy2State
 
         ; @TODO@ -- better way to init this?
         lda     #%11001001
@@ -205,6 +213,11 @@ PlayRound:
 @game_loop:
         jsr     WaitForVblank
         jsr     ReadJoys
+        lda     #JOY_START
+        bit     Joy1Down
+        beq     :+
+        jsr     Pause
+:
         ; Must move ghosts *before* Pac-Man since collision detection
         ; is done inside MoveGhosts.
         jsr     MoveGhosts
@@ -247,6 +260,20 @@ AddPoints:
         AddDigit 2
         AddDigit 3
         AddDigit 4
+        rts
+
+
+Pause:
+        lda     #1
+        sta     fPaused
+@loop:
+        jsr     WaitForVblank
+        jsr     ReadJoys
+        lda     #JOY_START
+        bit     Joy1Down
+        beq     @loop
+        lda     #0
+        sta     fPaused
         rts
 
 
@@ -345,6 +372,21 @@ HandleVblank:
         lda     #>MyOAM
         sta     OAMDMA
 
+        ; Cycle color 3 of BG palette 0
+        ; This must be done before enabling IRQ
+        lda     #$3f
+        sta     PPUADDR
+        lda     #$03
+        sta     PPUADDR
+        lda     FrameCounter
+        and     #%00011000
+        lsr
+        lsr
+        lsr
+        tax
+        lda     ColorCycle,x
+        sta     PPUDATA
+
         ; Enable IRQ for split screen
         lda     #31                         ; number of scanlines before IRQ
         sta     $c000
@@ -379,20 +421,6 @@ HandleVblank:
         lda     #0
         sta     DisplayListIndex
 
-        ; Cycle color 3 of BG palette 0
-        lda     #$3f
-        sta     PPUADDR
-        lda     #$03
-        sta     PPUADDR
-        lda     FrameCounter
-        and     #%00011000
-        lsr
-        lsr
-        lsr
-        tax
-        lda     ColorCycle,x
-        sta     PPUDATA
-
         ; Set scroll
         lda     #$a2                        ; NMI on, 8x16 sprites, second nametable (where status bar is)
         sta     PPUCTRL
@@ -401,8 +429,11 @@ HandleVblank:
         lda     #208
         sta     PPUSCROLL
 
-        ; BG on, sprites off
-        lda     #$08
+        lda     #$08                        ; BG on, sprites off
+        ldx     fPaused
+        beq     @not_paused
+        ora     #$e0                        ; color emphasis bits on
+@not_paused:
         sta     PPUMASK
 
         ; Save VScroll for IRQ handler
@@ -442,10 +473,15 @@ WaitFrames:
 
 HandleIrq:
         pha
+        txa
+        pha
         sta     $e000                       ; acknowledge and disable IRQ (value irrelevant)
 
+        lda     fRenderOn
+        beq     @end
+
         ; Wait until we're nearly at hblank
-.repeat 34
+.repeat 30
         nop
 .endrepeat
 
@@ -462,9 +498,16 @@ HandleIrq:
         asl
         asl
         sta     PPUADDR
-        ; BG and sprites on
-        lda     #$18
+        lda     #$18                        ; BG and sprites on
+        ldx     fPaused
+        beq     @not_paused
+        ora     #$e0                        ; color emphasis bits on
+@not_paused:
         sta     PPUMASK
+
+@end:
+        pla
+        tax
         pla
         rti
 
@@ -479,14 +522,21 @@ ReadJoys:
 ;   Y = number of controller to read (0 = controller 1)
 ;
 ; Expects Joy2State to follow Joy1State in memory
+; Expects Joy2PrevState to follow Joy1PrevState in memory
+; Expects Joy2Down to follow Joy1Down in memory
 ; Expects controllers to already have been strobed
 ReadOneJoy:
+        lda     Joy1State,y
+        sta     Joy1PrevState,y
         jsr     ReadJoyImpl
 @no_match:
         sta     Joy1State,y
         jsr     ReadJoyImpl
         cmp     Joy1State,y
         bne     @no_match
+        eor     Joy1PrevState,y             ; get buttons that have changed
+        and     Joy1State,y                 ; filter out buttons not currently pressed
+        sta     Joy1Down,y
         rts
 
 ReadJoyImpl:
