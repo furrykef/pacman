@@ -11,7 +11,7 @@
 .endenum
 
 
-.include "ai.asm"
+.include "ghosts.asm"
 .include "pacman.asm"
 .include "map.asm"
 
