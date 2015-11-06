@@ -175,7 +175,7 @@ Main:
         sta     RngSeedH
 
         ; Unlock PRG RAM
-        lda     #$00
+        lda     #$80
         sta     $a001
 
         ; Check if save data is initialized, and initialize it if not
@@ -206,7 +206,7 @@ Main:
 @cookie_ok:
 
         ; Lock PRG RAM
-        lda     #$40
+        lda     #$00
         sta     $a001
 
         ; Second wait for vblank
@@ -312,7 +312,7 @@ AddPoints:
         blt     @end                        ; branch if Score < HiScore
         ; Update high score
         ; Unlock PRG RAM first
-        lda     #$00
+        lda     #$80
         sta     $a001
         ; Write the score
 .repeat NUM_SCORE_DIGITS, I
@@ -320,7 +320,7 @@ AddPoints:
         sta     HiScore+I
 .endrepeat
         ; Lock PRG RAM
-        lda     #$40
+        lda     #$00
         sta     $a001
 @end:
         rts
