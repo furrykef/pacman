@@ -2,27 +2,6 @@ dasm of Pac-Man: http://web.archive.org/web/20091003171028/http://www.lomont.org
 dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.20080621.asm
 
 
-To fix
-------
-The chase/scatter mode timer should be paused while an energizer is active.
-
-
-Pac-Man's movement algorithm
-----------------------------
-Here's how the yellow guy moves:
-* Pac-Man stays horizontally centered in his tile while moving vertically. If not centered, bump him one pixel toward the center.
-* Pac-Man stays vertically centered in his tile while moving horizontally. If not centered, bump him one pixel toward the center.
-* When Pac-Man reaches the center of a tile:
-** Stop him if the next tile in his path is not enterable.
-* When Pac-Man tries to turn:
-** Reject the turn if the next tile in his path is not enterable.
-
-
-Scared ghost movement
----------------------
-Generate a random score from 0 to 255 for each valid direction the ghost can go in, and pick the direction with the highest score.
-
-
 Bitfields for motion
 --------------------
 In the original game, sprites move according to 32-bit bitfields. For each 0, the ghost stays in place; for each 1, the ghost moves a pixel. This is done twice a frame, so a ghost may move up to two pixels per frame.
@@ -40,33 +19,6 @@ Remember to store these as little-endian (although it probably won't make a sign
 Eating a dot causes Pac-Man to stop for one frame; eating an energizer causes him to stop for three frames.
 
 
-Calculating turns
------------------
-A ghost approaching an intersection will have to choose one of up to three directions to turn. It examines the north, east, south, and west tiles around the intersection (discarding the direction it's coming from) and moves into the one that is closest to the target tile. Which one is closest? Let's suppose we have a ghost moving north and it reaches a three-way intersection (north, east, or west). It scores each of these turns depending on how northish, eastish, or westish the target tile is relative to the intersection. If the target is further east than north or west, turn east; if it's further north than east or west, keep going north; etc.
-
-This should be equivalent to, but much faster and simpler than, computing the Euclidean distance to the target from each tile neighboring the intersection.
-
-Algorithm:
-
-    max_score = -INFINITY
-    north_score = ghost_y - target_y
-    south_score = -north_score
-    west_score = ghost_x - target_x
-    east_score = -west_score
-    IF can go north
-        max_score = north_score
-        max_direction = north
-    IF can go east AND east_score > max_score
-        max_score = east_score
-        max_direction = east
-    IF can go south
-        max_score = south_score
-        max_direction = south
-    IF can go west
-        max_score = west_score
-        max_direction = west
-
-
 Fright
 ------
 The fright times in the Pac-Man Dossier are exact; there are no fractions of seconds involved.
@@ -76,10 +28,6 @@ When flashing: 14 frames to change from blue to white or vice versa, but white t
 
 Things to remember
 ------------------
-Ghosts decide which direction they're going to turn some time before they actually turn. The dossier seems to be saying that the decision is made as soon as the ghost enters the tile *before* the intersection. The in-game evidence suggests they make the turn as soon as they arrive at the intersection (their eyes change direction before the turn, but not while they're a whole tile away).
-
 Ghosts always move left upon exiting the ghost house, unless the ghost was in the house during a mode chance, in which case they will move right.
 
 For some levels, Pac-Man speeds up while energizer is active.
-
-Pac-Man's mouth position should depend on his X coordinate (when moving horizontally) or Y coordinate (when moving vertically). This way he appears to be closing his mouth over the dots, even in slow motion.

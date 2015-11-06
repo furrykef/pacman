@@ -9,8 +9,12 @@ I'm not sure the two bugs fully cancel out; Pinky's score for "northish" might b
 
 To be implemented
 -----------------
-Ghosts don't slow down in tunnels.
+Ghosts will turn north in areas they should not be able to.
 
-Ghost speed should be adjustable.
+Ghosts don't slow down in tunnels or when frightened.
 
 Pac-Man's speed should be adjustable.
+
+Cruise Elroy.
+
+The chase/scatter mode timer should be paused while an energizer is active.

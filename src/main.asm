@@ -37,7 +37,7 @@ Tmp2L:              .res 1
 Tmp2H:              .res 1
 FrameCounter:       .res 1
 fSpriteOverflow:    .res 1                  ; true values won't necessarily be $01
-fRenderOn:          .res 1                  ; tells vblank handler not to mess with VRAM if zero
+fRenderOn:          .res 1                  ; tells vblank handler not to mess with PPU memory if zero
 fPaused:            .res 1
 DisplayListIndex:   .res 1
 Joy1State:          .res 1
@@ -55,6 +55,7 @@ JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP 
 
 NumDots:            .res 1
 Score:              .res 5                  ; 5-digit BCD
+HiScore:            .res 5                  ; 5-digit BCD
 
 
 .segment "BSS"
@@ -162,6 +163,9 @@ Main:
         sta     fPaused
         sta     Joy1State
         sta     Joy2State
+.repeat 5, I
+        sta     HiScore+I
+.endrepeat
 
         ; @TODO@ -- better way to init this?
         lda     #%11001001
@@ -184,11 +188,9 @@ Main:
 
 NewGame:
         lda     #0
-        sta     Score
-        sta     Score+1
-        sta     Score+2
-        sta     Score+3
-        sta     Score+4
+.repeat 5, I
+        sta     Score+I
+.endrepeat
         ; FALL THROUGH to PlayRound
 
 PlayRound:
@@ -255,11 +257,25 @@ end:
 AddPoints:
         ldy     #4
         clc
-        AddDigit 0
-        AddDigit 1
-        AddDigit 2
-        AddDigit 3
-        AddDigit 4
+.repeat 5, I
+        AddDigit I
+.endrepeat
+        ; Update high score if necessary
+.repeat 5, I
+        lda     Score+I
+        cmp     HiScore+I
+        bne     @scores_differ
+.endrepeat
+        ; Scores are the same!
+        rts
+@scores_differ:
+        blt     @end                        ; branch if Score < HiScore
+        ; Update high score
+.repeat 5, I
+        lda     Score+I
+        sta     HiScore+I
+.endrepeat
+@end:
         rts
 
 
@@ -319,6 +335,22 @@ DrawStatus:
         sta     DisplayList,x
         inx
 .endrepeat
+        ; Draw high score
+        lda     #5
+        sta     DisplayList,x
+        inx
+        lda     #$2b
+        sta     DisplayList,x
+        inx
+        lda     #$b0
+        sta     DisplayList,x
+        inx
+.repeat 5, I
+        lda     HiScore+I
+        adc     #'0'
+        sta     DisplayList,x
+        inx
+.endrepeat        
         stx     DisplayListIndex
         rts
 
@@ -372,27 +404,6 @@ HandleVblank:
         lda     #>MyOAM
         sta     OAMDMA
 
-        ; Cycle color 3 of BG palette 0
-        ; This must be done before enabling IRQ
-        lda     #$3f
-        sta     PPUADDR
-        lda     #$03
-        sta     PPUADDR
-        lda     FrameCounter
-        and     #%00011000
-        lsr
-        lsr
-        lsr
-        tax
-        lda     ColorCycle,x
-        sta     PPUDATA
-
-        ; Enable IRQ for split screen
-        lda     #31                         ; number of scanlines before IRQ
-        sta     $c000
-        sta     $c001                       ; reload IRQ counter (value irrelevant)
-        sta     $e001                       ; enable IRQ (value irrelevant)
-
         ; Check if sprites overflowed on previous frame
         lda     PPUSTATUS
         and     #$20
@@ -421,6 +432,20 @@ HandleVblank:
         lda     #0
         sta     DisplayListIndex
 
+        ; Cycle color 3 of BG palette 0
+        lda     #$3f
+        sta     PPUADDR
+        lda     #$03
+        sta     PPUADDR
+        lda     FrameCounter
+        and     #%00011000
+        lsr
+        lsr
+        lsr
+        tax
+        lda     ColorCycle,x
+        sta     PPUDATA
+
         ; Set scroll
         lda     #$a2                        ; NMI on, 8x16 sprites, second nametable (where status bar is)
         sta     PPUCTRL
@@ -441,6 +466,13 @@ HandleVblank:
         ;  the value for the next frame)
         lda     VScroll
         sta     IrqVScroll
+
+        ; Enable IRQ for split screen
+        ; This has to be done after we're done messing with PPU memory
+        lda     #31                         ; number of scanlines before IRQ
+        sta     $c000
+        sta     $c001                       ; reload IRQ counter (value irrelevant)
+        sta     $e001                       ; enable IRQ (value irrelevant)
 
 @end:
         inc     FrameCounter
