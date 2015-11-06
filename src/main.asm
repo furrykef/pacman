@@ -2,6 +2,9 @@
 .include "header.inc"
 
 
+NUM_SCORE_DIGITS = 6
+
+
 ; This ordering is used so that you can reverse direction using EOR #$03
 .enum
         WEST
@@ -54,8 +57,8 @@ JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
 NumDots:            .res 1
-Score:              .res 5                  ; 5-digit BCD
-HiScore:            .res 5                  ; 5-digit BCD
+Score:              .res NUM_SCORE_DIGITS   ; BCD
+HiScore:            .res NUM_SCORE_DIGITS   ; BCD
 
 
 .segment "BSS"
@@ -107,7 +110,7 @@ Main:
         ; Clear VRAM ($2000-2fff)
         lda     #$20
         sta     PPUADDR
-        lda     #$00
+        lda     #' '
         sta     PPUADDR
         tax                                 ; X := 0
         ldy     #$10
@@ -163,7 +166,7 @@ Main:
         sta     fPaused
         sta     Joy1State
         sta     Joy2State
-.repeat 5, I
+.repeat NUM_SCORE_DIGITS, I
         sta     HiScore+I
 .endrepeat
 
@@ -188,7 +191,7 @@ Main:
 
 NewGame:
         lda     #0
-.repeat 5, I
+.repeat NUM_SCORE_DIGITS, I
         sta     Score+I
 .endrepeat
         ; FALL THROUGH to PlayRound
@@ -243,7 +246,7 @@ InitLife:
 ;   TmpL,H = address of number of points to add
 .macro AddDigit num
 .local end
-        lda     Score+(4-num)
+        lda     Score+(NUM_SCORE_DIGITS-num-1)
         adc     (TmpL),y
         dey
         cmp     #10
@@ -251,17 +254,17 @@ InitLife:
         sub     #10
         ; carry flag will be set
 end:
-        sta     Score+(4-num)
+        sta     Score+(NUM_SCORE_DIGITS-num-1)
 .endmacro
 
 AddPoints:
-        ldy     #4
+        ldy     #NUM_SCORE_DIGITS-1
         clc
-.repeat 5, I
+.repeat NUM_SCORE_DIGITS, I
         AddDigit I
 .endrepeat
         ; Update high score if necessary
-.repeat 5, I
+.repeat NUM_SCORE_DIGITS, I
         lda     Score+I
         cmp     HiScore+I
         bne     @scores_differ
@@ -271,7 +274,7 @@ AddPoints:
 @scores_differ:
         blt     @end                        ; branch if Score < HiScore
         ; Update high score
-.repeat 5, I
+.repeat NUM_SCORE_DIGITS, I
         lda     Score+I
         sta     HiScore+I
 .endrepeat
@@ -319,7 +322,7 @@ Render:
 DrawStatus:
         ldx     DisplayListIndex
         ; Draw score
-        lda     #5
+        lda     #NUM_SCORE_DIGITS
         sta     DisplayList,x
         inx
         lda     #$2b
@@ -328,15 +331,13 @@ DrawStatus:
         lda     #$a6
         sta     DisplayList,x
         inx
-        clc
-.repeat 5, I
+.repeat NUM_SCORE_DIGITS, I
         lda     Score+I
-        adc     #'0'
         sta     DisplayList,x
         inx
 .endrepeat
         ; Draw high score
-        lda     #5
+        lda     #NUM_SCORE_DIGITS
         sta     DisplayList,x
         inx
         lda     #$2b
@@ -345,12 +346,11 @@ DrawStatus:
         lda     #$b0
         sta     DisplayList,x
         inx
-.repeat 5, I
+.repeat NUM_SCORE_DIGITS, I
         lda     HiScore+I
-        adc     #'0'
         sta     DisplayList,x
         inx
-.endrepeat        
+.endrepeat
         stx     DisplayListIndex
         rts
 
@@ -623,12 +623,12 @@ StatusBar:
         .byte   "                                "
         .byte   "                                "
         .byte   "        1UP   HIGH SCORE        "
-        .byte   "           0         0          "
+        .byte   "                                "
         .byte   0
 
 
-Points10:   .byte   0,0,0,0,1
-Points50:   .byte   0,0,0,0,5
+Points10:   .byte   0,0,0,0,1,0
+Points50:   .byte   0,0,0,0,5,0
 
 Palette:
 .incbin "../assets/palette.dat"
