@@ -301,6 +301,9 @@ AddPoints:
         AddDigit I
 .endrepeat
         ; Update high score if necessary
+        ; Unlock PRG RAM first
+        lda     #$80
+        sta     $a001
 .repeat NUM_SCORE_DIGITS, I
         lda     Score+I
         cmp     HiScore+I
@@ -311,18 +314,14 @@ AddPoints:
 @scores_differ:
         blt     @end                        ; branch if Score < HiScore
         ; Update high score
-        ; Unlock PRG RAM first
-        lda     #$80
-        sta     $a001
-        ; Write the score
 .repeat NUM_SCORE_DIGITS, I
         lda     Score+I
         sta     HiScore+I
 .endrepeat
+@end:
         ; Lock PRG RAM
         lda     #$00
         sta     $a001
-@end:
         rts
 
 
@@ -381,6 +380,9 @@ DrawStatus:
         inx
 .endrepeat
         ; Draw high score
+        ; Unlock PRG RAM, read-only
+        lda     #$c0
+        sta     $a001
         lda     #NUM_SCORE_DIGITS
         sta     DisplayList,x
         inx
@@ -395,6 +397,9 @@ DrawStatus:
         sta     DisplayList,x
         inx
 .endrepeat
+        ; Lock PRG RAM
+        lda     #$00
+        sta     $a001
         stx     DisplayListIndex
         rts
 
