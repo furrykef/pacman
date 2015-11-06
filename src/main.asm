@@ -4,6 +4,7 @@
 
 NUM_SCORE_DIGITS = 6
 
+.define MAGIC_COOKIE "You're a dirty cheater, aren't you?"
 
 ; This ordering is used so that you can reverse direction using EOR #$03
 .enum
@@ -58,12 +59,17 @@ JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP 
 
 NumDots:            .res 1
 Score:              .res NUM_SCORE_DIGITS   ; BCD
-HiScore:            .res NUM_SCORE_DIGITS   ; BCD
 
 
 .segment "BSS"
 
 DisplayList:        .res 256                ; can shrink and move to zero page if we need a perfomance boost
+
+
+.segment "SAVE"
+
+SaveMagicCookie:    .res .strlen(MAGIC_COOKIE)
+HiScore:            .res NUM_SCORE_DIGITS   ; BCD
 
 
 .segment "CODE"
@@ -153,10 +159,6 @@ Main:
         lda     #$01
         sta     $a000
 
-        ; Protect PRG-RAM
-        lda     #$40
-        sta     $a001
-
         ; Init variables
         lda     #0
         sta     FrameCounter
@@ -166,14 +168,46 @@ Main:
         sta     fPaused
         sta     Joy1State
         sta     Joy2State
-.repeat NUM_SCORE_DIGITS, I
-        sta     HiScore+I
-.endrepeat
 
         ; @TODO@ -- better way to init this?
         lda     #%11001001
         sta     RngSeedL
         sta     RngSeedH
+
+        ; Unlock PRG RAM
+        lda     #$00
+        sta     $a001
+
+        ; Check if save data is initialized, and initialize it if not
+        ldx     #0
+@check_cookie:
+        lda     MagicCookie,x
+        cmp     SaveMagicCookie,x
+        bne     @bad_cookie
+        inx
+        cpx     #.strlen(MAGIC_COOKIE)
+        bne     @check_cookie
+        jmp     @cookie_ok
+@bad_cookie:
+        ; Initialize magic cookie
+        ldx     #0
+@save_cookie:
+        lda     MagicCookie,x
+        sta     SaveMagicCookie,x
+        inx
+        cpx     #.strlen(MAGIC_COOKIE)
+        bne     @save_cookie
+        ; Clear high score
+        lda     #0
+@clear_high_score:
+.repeat NUM_SCORE_DIGITS, I
+        sta     HiScore+I
+.endrepeat
+@cookie_ok:
+
+        ; Lock PRG RAM
+        lda     #$40
+        sta     $a001
 
         ; Second wait for vblank
 @vblank2:
@@ -244,6 +278,9 @@ InitLife:
 
 ; Input:
 ;   TmpL,H = address of number of points to add
+;
+; Output:
+;   carry flag
 .macro AddDigit num
 .local end
         lda     Score+(NUM_SCORE_DIGITS-num-1)
@@ -274,10 +311,17 @@ AddPoints:
 @scores_differ:
         blt     @end                        ; branch if Score < HiScore
         ; Update high score
+        ; Unlock PRG RAM first
+        lda     #$00
+        sta     $a001
+        ; Write the score
 .repeat NUM_SCORE_DIGITS, I
         lda     Score+I
         sta     HiScore+I
 .endrepeat
+        ; Lock PRG RAM
+        lda     #$40
+        sta     $a001
 @end:
         rts
 
@@ -636,6 +680,9 @@ PaletteSize = * - Palette
 
 ColorCycle:
         .byte   $0f, $36, $30, $36
+
+MagicCookie:
+        .byte   MAGIC_COOKIE
 
 
 ; Indirect JSR
