@@ -17,6 +17,18 @@
         Speed2          .byte
         Speed3          .byte
         Speed4          .byte
+        WaitingSpeed1   .byte
+        WaitingSpeed2   .byte
+        WaitingSpeed3   .byte
+        WaitingSpeed4   .byte
+        TunnelSpeed1    .byte
+        TunnelSpeed2    .byte
+        TunnelSpeed3    .byte
+        TunnelSpeed4    .byte
+        ScaredSpeed1    .byte
+        ScaredSpeed2    .byte
+        ScaredSpeed3    .byte
+        ScaredSpeed4    .byte
         State           .byte
         fScared         .byte
         fReverse        .byte
@@ -93,6 +105,7 @@ Lvl5Modes:
         .word   $0001                       ; 6 (scatter) - 1/60 sec
 
 
+; @TODO@ -- init TileX and TileY
 InitAI:
         lda     #1
         sta     fScatter
@@ -198,24 +211,83 @@ InitAI:
         ; Speed
         ; @TODO@ -- change depending on level
         lda     #$55
-        sta     Blinky+Ghost::Speed1
-        sta     Blinky+Ghost::Speed2
-        sta     Pinky+Ghost::Speed1
-        sta     Pinky+Ghost::Speed2
-        sta     Inky+Ghost::Speed1
-        sta     Inky+Ghost::Speed2
-        sta     Clyde+Ghost::Speed1
-        sta     Clyde+Ghost::Speed2
-        lda     #$2a
-        sta     Blinky+Ghost::Speed3
-        sta     Pinky+Ghost::Speed3
-        sta     Inky+Ghost::Speed3
-        sta     Clyde+Ghost::Speed3
-        lda     #$aa
         sta     Blinky+Ghost::Speed4
+        sta     Blinky+Ghost::Speed3
         sta     Pinky+Ghost::Speed4
+        sta     Pinky+Ghost::Speed3
         sta     Inky+Ghost::Speed4
+        sta     Inky+Ghost::Speed3
         sta     Clyde+Ghost::Speed4
+        sta     Clyde+Ghost::Speed3
+        lda     #$2a
+        sta     Blinky+Ghost::Speed2
+        sta     Pinky+Ghost::Speed2
+        sta     Inky+Ghost::Speed2
+        sta     Clyde+Ghost::Speed2
+        lda     #$aa
+        sta     Blinky+Ghost::Speed1
+        sta     Pinky+Ghost::Speed1
+        sta     Inky+Ghost::Speed1
+        sta     Clyde+Ghost::Speed1
+
+        ; Waiting speed
+        lda     #$22
+        sta     Blinky+Ghost::WaitingSpeed4
+        sta     Blinky+Ghost::WaitingSpeed3
+        sta     Blinky+Ghost::WaitingSpeed2
+        sta     Blinky+Ghost::WaitingSpeed1
+        sta     Pinky+Ghost::WaitingSpeed4
+        sta     Pinky+Ghost::WaitingSpeed3
+        sta     Pinky+Ghost::WaitingSpeed2
+        sta     Pinky+Ghost::WaitingSpeed1
+        sta     Inky+Ghost::WaitingSpeed4
+        sta     Inky+Ghost::WaitingSpeed3
+        sta     Inky+Ghost::WaitingSpeed2
+        sta     Inky+Ghost::WaitingSpeed1
+        sta     Clyde+Ghost::WaitingSpeed4
+        sta     Clyde+Ghost::WaitingSpeed3
+        sta     Clyde+Ghost::WaitingSpeed2
+        sta     Clyde+Ghost::WaitingSpeed1
+
+        ; Tunnel speed
+        lda     #$22
+        sta     Blinky+Ghost::TunnelSpeed4
+        sta     Blinky+Ghost::TunnelSpeed3
+        sta     Blinky+Ghost::TunnelSpeed2
+        sta     Blinky+Ghost::TunnelSpeed1
+        sta     Pinky+Ghost::TunnelSpeed4
+        sta     Pinky+Ghost::TunnelSpeed3
+        sta     Pinky+Ghost::TunnelSpeed2
+        sta     Pinky+Ghost::TunnelSpeed1
+        sta     Inky+Ghost::TunnelSpeed4
+        sta     Inky+Ghost::TunnelSpeed3
+        sta     Inky+Ghost::TunnelSpeed2
+        sta     Inky+Ghost::TunnelSpeed1
+        sta     Clyde+Ghost::TunnelSpeed4
+        sta     Clyde+Ghost::TunnelSpeed3
+        sta     Clyde+Ghost::TunnelSpeed2
+        sta     Clyde+Ghost::TunnelSpeed1
+
+        ; Scared speed
+        lda     #$24
+        sta     Blinky+Ghost::ScaredSpeed4
+        sta     Blinky+Ghost::ScaredSpeed2
+        sta     Pinky+Ghost::ScaredSpeed4
+        sta     Pinky+Ghost::ScaredSpeed2
+        sta     Inky+Ghost::ScaredSpeed4
+        sta     Inky+Ghost::ScaredSpeed2
+        sta     Clyde+Ghost::ScaredSpeed4
+        sta     Clyde+Ghost::ScaredSpeed2
+        lda     #$92
+        sta     Blinky+Ghost::ScaredSpeed3
+        sta     Blinky+Ghost::ScaredSpeed1
+        sta     Pinky+Ghost::ScaredSpeed3
+        sta     Pinky+Ghost::ScaredSpeed1
+        sta     Inky+Ghost::ScaredSpeed3
+        sta     Inky+Ghost::ScaredSpeed1
+        sta     Clyde+Ghost::ScaredSpeed3
+        sta     Clyde+Ghost::ScaredSpeed1
+
         rts
 
 MoveGhosts:
@@ -287,12 +359,13 @@ SetModeClock:
 
 HandleOneGhost:
 .repeat 2
+        jsr     GetSpeed
         ; Get least significant bit of speed value so we can rotate it in
-        ldy     #Ghost::Speed1
         lda     (GhostL),y
         lsr                                 ; put the bit in the carry flag
-
-        ldy     #Ghost::Speed4
+        iny                                 ; point y at MSB
+        iny
+        iny
         lda     (GhostL),y
         ror
         sta     (GhostL),y
@@ -315,6 +388,43 @@ HandleOneGhost:
 
         ; @TODO@ -- check collisions
 
+        rts
+
+
+; Output:
+;   Y = points to first byte of the ghost's speed
+GetSpeed:
+        ldy     #Ghost::State
+        lda     (GhostL),y
+        cmp     #GhostState::waiting
+        beq     @in_house
+        cmp     #GhostState::exiting
+        beq     @in_house
+        ldy     #Ghost::TileY
+        lda     (GhostL),y
+        cmp     #14
+        bne     @not_in_tunnel
+        ldy     #Ghost::TileX
+        lda     (GhostL),y
+        cmp     #8
+        blt     @in_tunnel
+        cmp     #24
+        bge     @in_tunnel
+@not_in_tunnel:
+        ldy     #Ghost::fScared
+        lda     (GhostL),y
+        bne     @scared
+        ; No special conditions apply
+        ldy     #Ghost::Speed1
+        rts
+@in_house:
+        ldy     #Ghost::WaitingSpeed1
+        rts
+@in_tunnel:
+        ldy     #Ghost::TunnelSpeed1
+        rts
+@scared:
+        ldy     #Ghost::ScaredSpeed1
         rts
 
 
