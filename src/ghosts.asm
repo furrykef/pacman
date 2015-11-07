@@ -73,6 +73,9 @@ ModeClockL:     .res 1
 ModeClockH:     .res 1
 ModeCount:      .res 1
 
+DotTimeout:     .res 1
+DotClock:       .res 1
+
 
 .segment "CODE"
 
@@ -286,10 +289,16 @@ InitAI:
         sta     Clyde+Ghost::ScaredSpeed3
         sta     Clyde+Ghost::ScaredSpeed1
 
+        ; @TODO@ -- depends on level
+        lda     #240
+        sta     DotTimeout
+        sta     DotClock
+
         rts
 
 MoveGhosts:
         jsr     ModeClockTick
+        jsr     DotClockTick
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
@@ -354,6 +363,38 @@ SetModeClock:
         lda     Lvl1Modes,x
         sta     ModeClockH
         rts
+
+; @TODO@ -- don't use this if global dot counter is active
+DotClockTick:
+        ldx     DotClock
+        beq     @release_ghost
+        dex
+        stx     DotClock
+        rts
+@release_ghost:
+        lda     DotTimeout
+        sta     DotClock
+        ldx     #GhostState::exiting
+        lda     Pinky+Ghost::State
+        cmp     #GhostState::waiting
+        beq     @release_pinky
+        lda     Inky+Ghost::State
+        cmp     #GhostState::waiting
+        beq     @release_inky
+        lda     Clyde+Ghost::State
+        cmp     #GhostState::waiting
+        beq     @release_clyde
+        rts
+@release_pinky:
+        stx     Pinky+Ghost::State          ; GhostState::exiting
+        rts
+@release_inky:
+        stx     Inky+Ghost::State
+        rts
+@release_clyde:
+        stx     Clyde+Ghost::State
+        rts
+
 
 HandleOneGhost:
 .repeat 2
@@ -887,6 +928,9 @@ StartEnergizer:
 
 
 GhostHandleDot:
+        lda     DotTimeout
+        sta     DotClock
+
         lda     Inky+Ghost::State
         cmp     #GhostState::waiting
         bne     @try_clyde

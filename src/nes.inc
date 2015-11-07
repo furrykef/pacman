@@ -1,4 +1,3 @@
-.smart
 .macpack generic
 .feature force_range
 
