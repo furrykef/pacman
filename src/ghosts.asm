@@ -105,7 +105,17 @@ Lvl5Modes:
         .word   $0001                       ; 6 (scatter) - 1/60 sec
 
 
-; @TODO@ -- init TileX and TileY
+.macro InitGhostPos ghost, pos_x, pos_y
+        lda     #pos_x
+        sta     ghost+Ghost::PosX
+        lda     #pos_y
+        sta     ghost+Ghost::PosY
+        lda     #pos_x / 8
+        sta     ghost+Ghost::TileX
+        lda     #pos_y / 8
+        sta     ghost+Ghost::TileY
+.endmacro
+
 InitAI:
         lda     #1
         sta     fScatter
@@ -115,10 +125,7 @@ InitAI:
         jsr     SetModeClock
 
         ; Blinky
-        lda     #127
-        sta     Blinky+Ghost::PosX
-        lda     #91
-        sta     Blinky+Ghost::PosY
+        InitGhostPos Blinky, 127, 91
         lda     #WEST
         sta     Blinky+Ghost::Direction
         sta     Blinky+Ghost::TurnDir
@@ -138,10 +145,7 @@ InitAI:
         sta     Blinky+Ghost::Palette
 
         ; Pinky
-        lda     #127
-        sta     Pinky+Ghost::PosX
-        lda     #115
-        sta     Pinky+Ghost::PosY
+        InitGhostPos Pinky, 127, 115
         lda     #NORTH
         sta     Pinky+Ghost::Direction
         sta     Pinky+Ghost::TurnDir
@@ -161,10 +165,7 @@ InitAI:
         sta     Pinky+Ghost::Palette
 
         ; Inky
-        lda     #111
-        sta     Inky+Ghost::PosX
-        lda     #115
-        sta     Inky+Ghost::PosY
+        InitGhostPos Inky, 111, 115
         lda     #SOUTH
         sta     Inky+Ghost::Direction
         sta     Inky+Ghost::TurnDir
@@ -185,10 +186,7 @@ InitAI:
         sta     Inky+Ghost::Palette
 
         ; Clyde
-        lda     #143
-        sta     Clyde+Ghost::PosX
-        lda     #115
-        sta     Clyde+Ghost::PosY
+        InitGhostPos Clyde, 143, 115
         lda     #SOUTH
         sta     Clyde+Ghost::Direction
         sta     Clyde+Ghost::TurnDir
@@ -549,7 +547,6 @@ MoveOneGhostNormal:
         and     #$07
         sta     PixelY
 
-        ; Needed since Inky's targeting depends on Blinky's position
         lda     TileX
         ldy     #Ghost::TileX
         sta     (GhostL),y
@@ -846,6 +843,26 @@ ComputeScores:
         sec
         adc     #$80
         sta     ScoreSouth
+
+        ; Ban northward turns in certain regions of the maze
+        ldy     #Ghost::TileY
+        lda     (GhostL),y
+        cmp     #11
+        beq     @maybe_restricted
+        cmp     #23
+        beq     @maybe_restricted
+        jmp     @north_ok
+@maybe_restricted:
+        ldy     #Ghost::TileX
+        lda     (GhostL),y
+        cmp     #13
+        blt     @north_ok
+        cmp     #18 + 1
+        bge     @north_ok
+        ; Ghost is in restricted zone
+        lda     #0
+        sta     ScoreNorth
+@north_ok:
         rts
 
 @random:
