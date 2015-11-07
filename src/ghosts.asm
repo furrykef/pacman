@@ -21,7 +21,8 @@
         fScared         .byte
         fReverse        .byte
         DotCounter      .byte
-        GetTargetTile   .addr
+        pGetTargetTileL .byte
+        pGetTargetTileH .byte
         Priority        .byte
         Palette         .byte
 .endstruct
@@ -115,9 +116,9 @@ InitAI:
         sta     Blinky+Ghost::fScared
         sta     Blinky+Ghost::DotCounter
         lda     #<GetBlinkyTargetTile
-        sta     Blinky+Ghost::GetTargetTile
+        sta     Blinky+Ghost::pGetTargetTileL
         lda     #>GetBlinkyTargetTile
-        sta     Blinky+Ghost::GetTargetTile+1
+        sta     Blinky+Ghost::pGetTargetTileH
         lda     #0
         sta     Blinky+Ghost::Priority
         lda     #$00
@@ -138,9 +139,9 @@ InitAI:
         sta     Pinky+Ghost::fScared
         sta     Pinky+Ghost::DotCounter
         lda     #<GetPinkyTargetTile
-        sta     Pinky+Ghost::GetTargetTile
+        sta     Pinky+Ghost::pGetTargetTileL
         lda     #>GetPinkyTargetTile
-        sta     Pinky+Ghost::GetTargetTile+1
+        sta     Pinky+Ghost::pGetTargetTileH
         lda     #1
         sta     Pinky+Ghost::Priority
         lda     #$01
@@ -159,12 +160,12 @@ InitAI:
         lda     #0
         sta     Inky+Ghost::fReverse
         sta     Inky+Ghost::fScared
-        lda     #30
+        lda     #30 - 1
         sta     Inky+Ghost::DotCounter
         lda     #<GetInkyTargetTile
-        sta     Inky+Ghost::GetTargetTile
+        sta     Inky+Ghost::pGetTargetTileL
         lda     #>GetInkyTargetTile
-        sta     Inky+Ghost::GetTargetTile+1
+        sta     Inky+Ghost::pGetTargetTileH
         lda     #2
         sta     Inky+Ghost::Priority
         lda     #$02
@@ -183,12 +184,12 @@ InitAI:
         lda     #0
         sta     Clyde+Ghost::fReverse
         sta     Clyde+Ghost::fScared
-        lda     #60
+        lda     #60 - 1
         sta     Clyde+Ghost::DotCounter
         lda     #<GetClydeTargetTile
-        sta     Clyde+Ghost::GetTargetTile
+        sta     Clyde+Ghost::pGetTargetTileL
         lda     #>GetClydeTargetTile
-        sta     Clyde+Ghost::GetTargetTile+1
+        sta     Clyde+Ghost::pGetTargetTileH
         lda     #3
         sta     Clyde+Ghost::Priority
         lda     #$03
@@ -446,8 +447,8 @@ MoveOneGhostNormal:
         iny
         sta     (GhostL),y
 
-        ; JSR to Ghost::GetTargetTile
-        ldy     #Ghost::GetTargetTile
+        ; JSR to Ghost::pGetTargetTile
+        ldy     #Ghost::pGetTargetTileL
         lda     (GhostL),y
         sta     JsrIndAddrL
         iny
@@ -644,7 +645,7 @@ SquareTbl:
 
 
 .macro EvalDirection dir, score
-.local end, is_scared, not_scared
+.local end
         ldy     #Ghost::Direction           ; Disallow if going the opposite direction
         lda     (GhostL),y
         cmp     #dir ^ $03
@@ -664,19 +665,7 @@ SquareTbl:
         jsr     GetTile
         jsr     IsTileEnterable
         bne     end
-        ldy     #Ghost::fScared
-        lda     (GhostL),y
-        bne     is_scared
         lda     score
-        jmp     not_scared
-is_scared:
-        jsr     Rand
-        ; Don't allow a score of 0 (reserved for invalid directions)
-        cmp     #0
-        bne     :+
-        lda     #1
-:
-not_scared:
         cmp     MaxScore
         blt     end
         beq     end
@@ -698,11 +687,35 @@ ComputeTurn:
         rts
 @not_at_edge:
 
+        jsr     ComputeScores
+        EvalDirection NORTH, ScoreNorth
+        EvalDirection WEST, ScoreWest
+        EvalDirection SOUTH, ScoreSouth
+        EvalDirection EAST, ScoreEast
+        rts
+
+
+.macro GenRandomScore score
+        jsr     Rand
+        ; Don't allow a score of 0 (reserved for invalid directions)
+        cmp     #0
+        bne     :+
+        lda     #1
+:
+        sta     score
+.endmacro
+
+ComputeScores:
+        lda     #0
+        sta     MaxScore
+
+        ldy     #Ghost::fScared
+        lda     (GhostL),y
+        bne     @random
+
         ; Scores here will be $00..$ff, but think of $00 = -128, $01 = -127 ... $ff = 127
         ; This is called excess-128 representation (a form of excess-K, a.k.a. offset binary).
         ; This is done because signed comparisons suck on 6502.
-        lda     #0
-        sta     MaxScore
         lda     NextTileX
         sub     TargetTileX
         tax
@@ -723,12 +736,13 @@ ComputeTurn:
         sec
         adc     #$80
         sta     ScoreSouth
+        rts
 
-        EvalDirection NORTH, ScoreNorth
-        EvalDirection WEST, ScoreWest
-        EvalDirection SOUTH, ScoreSouth
-        EvalDirection EAST, ScoreEast
-
+@random:
+        GenRandomScore ScoreNorth
+        GenRandomScore ScoreWest
+        GenRandomScore ScoreSouth
+        GenRandomScore ScoreEast
         rts
 
 
