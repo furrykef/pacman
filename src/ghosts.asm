@@ -149,7 +149,7 @@ InitAI:
 
         ; Pinky
         InitGhostPos Pinky, 127, 115
-        lda     #NORTH
+        lda     #SOUTH
         sta     Pinky+Ghost::Direction
         sta     Pinky+Ghost::TurnDir
         lda     #GhostState::exiting
@@ -169,7 +169,7 @@ InitAI:
 
         ; Inky
         InitGhostPos Inky, 111, 115
-        lda     #SOUTH
+        lda     #NORTH
         sta     Inky+Ghost::Direction
         sta     Inky+Ghost::TurnDir
         lda     #GhostState::waiting
@@ -190,7 +190,7 @@ InitAI:
 
         ; Clyde
         InitGhostPos Clyde, 143, 115
-        lda     #SOUTH
+        lda     #NORTH
         sta     Clyde+Ghost::Direction
         sta     Clyde+Ghost::TurnDir
         lda     #GhostState::waiting
