@@ -202,6 +202,7 @@ EatStuff:
         tya
         pha
         jsr     AddPoints
+        jsr     GhostHandleDot
         pla
         tay
         jmp     @eat_object
@@ -218,6 +219,7 @@ EatStuff:
         pha
         jsr     AddPoints
         jsr     StartEnergizer
+        jsr     GhostHandleDot
         pla
         tay
         jmp     @eat_object

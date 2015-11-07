@@ -20,6 +20,7 @@
         State           .byte
         fScared         .byte
         fReverse        .byte
+        DotCounter      .byte
         GetTargetTile   .addr
         Priority        .byte
         Palette         .byte
@@ -112,6 +113,7 @@ InitAI:
         lda     #0
         sta     Blinky+Ghost::fReverse
         sta     Blinky+Ghost::fScared
+        sta     Blinky+Ghost::DotCounter
         lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::GetTargetTile
         lda     #>GetBlinkyTargetTile
@@ -126,14 +128,15 @@ InitAI:
         sta     Pinky+Ghost::PosX
         lda     #115
         sta     Pinky+Ghost::PosY
-        lda     #WEST
+        lda     #NORTH
         sta     Pinky+Ghost::Direction
         sta     Pinky+Ghost::TurnDir
-        lda     #GhostState::active
+        lda     #GhostState::exiting
         sta     Pinky+Ghost::State
         lda     #0
         sta     Pinky+Ghost::fReverse
         sta     Pinky+Ghost::fScared
+        sta     Pinky+Ghost::DotCounter
         lda     #<GetPinkyTargetTile
         sta     Pinky+Ghost::GetTargetTile
         lda     #>GetPinkyTargetTile
@@ -148,14 +151,16 @@ InitAI:
         sta     Inky+Ghost::PosX
         lda     #115
         sta     Inky+Ghost::PosY
-        lda     #WEST
+        lda     #SOUTH
         sta     Inky+Ghost::Direction
         sta     Inky+Ghost::TurnDir
-        lda     #GhostState::active
+        lda     #GhostState::waiting
         sta     Inky+Ghost::State
         lda     #0
         sta     Inky+Ghost::fReverse
         sta     Inky+Ghost::fScared
+        lda     #30
+        sta     Inky+Ghost::DotCounter
         lda     #<GetInkyTargetTile
         sta     Inky+Ghost::GetTargetTile
         lda     #>GetInkyTargetTile
@@ -170,14 +175,16 @@ InitAI:
         sta     Clyde+Ghost::PosX
         lda     #115
         sta     Clyde+Ghost::PosY
-        lda     #WEST
+        lda     #SOUTH
         sta     Clyde+Ghost::Direction
         sta     Clyde+Ghost::TurnDir
-        lda     #GhostState::active
+        lda     #GhostState::waiting
         sta     Clyde+Ghost::State
         lda     #0
         sta     Clyde+Ghost::fReverse
         sta     Clyde+Ghost::fScared
+        lda     #60
+        sta     Clyde+Ghost::DotCounter
         lda     #<GetClydeTargetTile
         sta     Clyde+Ghost::GetTargetTile
         lda     #>GetClydeTargetTile
@@ -311,6 +318,68 @@ HandleOneGhost:
 
 
 MoveOneGhost:
+        ldy     #Ghost::State
+        lda     (GhostL),y
+        cmp     #GhostState::waiting
+        beq     @waiting
+        cmp     #GhostState::exiting
+        beq     @exiting
+        jmp     MoveOneGhostNormal
+@waiting:
+        jmp     MoveOneGhostWaiting
+@exiting:
+        jmp     MoveOneGhostExiting
+
+
+MoveOneGhostWaiting:
+        ldy     #Ghost::Direction
+        lda     (GhostL),y
+        tax
+        lda     DeltaYTbl,x
+        ldy     #Ghost::PosY
+        add     (GhostL),y
+        sta     (GhostL),y
+        cmp     #111
+        beq     @reverse
+        cmp     #119
+        beq     @reverse
+        rts
+@reverse:
+        ldy     #Ghost::Direction
+        lda     (GhostL),y
+        eor     #$03
+        sta     (GhostL),y
+        ldy     #Ghost::TurnDir
+        sta     (GhostL),y
+        rts
+
+
+MoveOneGhostExiting:
+        lda     #NORTH
+        ldy     #Ghost::Direction
+        sta     (GhostL),y
+        ldy     #Ghost::TurnDir
+        sta     (GhostL),y
+        ldy     #Ghost::PosY
+        lda     (GhostL),y
+        sub     #1
+        sta     (GhostL),y
+        cmp     #91
+        beq     @exited
+        rts
+@exited:
+        lda     #WEST
+        ldy     #Ghost::Direction
+        sta     (GhostL),y
+        ldy     #Ghost::TurnDir
+        sta     (GhostL),y
+        ldy     #Ghost::State
+        lda     #GhostState::active
+        sta     (GhostL),y
+        rts
+
+
+MoveOneGhostNormal:
         ldy     #Ghost::Direction 
         lda     (GhostL),y
         tax
@@ -478,7 +547,7 @@ GetClydeTargetTile:
         eor     #$ff
         add     #1
 @positive_x:
-        cmp     #9
+        cmp     #8
         bge     @chase
         tax
         lda     SquareTbl,x
@@ -489,14 +558,14 @@ GetClydeTargetTile:
         eor     #$ff
         add     #1
 @positive_y:
-        cmp     #9
+        cmp     #8
         bge     @chase
         tax
         tya                                 ; get square of horizontal distance back
         add     SquareTbl,x
         ; A is now the square of the distance between Clyde and Pac-Man
         ; Retreat to corner if too close
-        cmp     #65                         ; 8**2 = 64
+        cmp     #49+1                       ; 7**2 = 49
         blt     @scatter
 @chase:
         lda     PacTileX
@@ -539,7 +608,7 @@ DeltaY4Tbl:
         .byte   0                           ; east
 
 SquareTbl:
-.repeat 9, I
+.repeat 8, I
         .byte   I*I
 .endrepeat
 
@@ -643,6 +712,37 @@ StartEnergizer:
         sta     Inky+Ghost::fScared
         sta     Clyde+Ghost::fReverse
         sta     Clyde+Ghost::fScared
+        rts
+
+
+GhostHandleDot:
+        lda     Inky+Ghost::State
+        cmp     #GhostState::waiting
+        bne     @try_clyde
+        ; Inky is waiting
+        dec     Inky+Ghost::DotCounter
+        bmi     @release_inky
+        rts
+@release_inky:
+        inc     Inky+Ghost::DotCounter
+        lda     #GhostState::exiting
+        sta     Inky+Ghost::State
+        rts
+
+@try_clyde:
+        lda     Clyde+Ghost::State
+        cmp     #GhostState::waiting
+        bne     @end
+        ; Clyde is waiting
+        dec     Clyde+Ghost::DotCounter
+        bmi     @release_clyde
+        rts
+@release_clyde:
+        inc     Clyde+Ghost::DotCounter
+        lda     #GhostState::exiting
+        sta     Clyde+Ghost::State
+
+@end:
         rts
 
 
