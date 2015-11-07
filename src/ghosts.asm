@@ -355,6 +355,36 @@ MoveOneGhostWaiting:
 
 
 MoveOneGhostExiting:
+        ldy     #Ghost::PosX
+        lda     (GhostL),y
+        cmp     #127
+        blt     @move_east
+        beq     @move_north
+        ; Move west
+        lda     #WEST
+        ldy     #Ghost::Direction
+        sta     (GhostL),y
+        ldy     #Ghost::TurnDir
+        sta     (GhostL),y
+        ldy     #Ghost::PosX
+        lda     (GhostL),y
+        sub     #1
+        sta     (GhostL),y
+        rts
+
+@move_east:
+        lda     #EAST
+        ldy     #Ghost::Direction
+        sta     (GhostL),y
+        ldy     #Ghost::TurnDir
+        sta     (GhostL),y
+        ldy     #Ghost::PosX
+        lda     (GhostL),y
+        add     #1
+        sta     (GhostL),y
+        rts
+
+@move_north:
         lda     #NORTH
         ldy     #Ghost::Direction
         sta     (GhostL),y
