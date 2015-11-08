@@ -32,12 +32,12 @@ InitPacMan:
 
 
 MovePacMan:
-        dec     PacDelay
-        bmi     @no_delay
+        lda     PacDelay
+        beq     @no_delay
         ; Delay Pac-Man
+        dec     PacDelay
         rts
 @no_delay:
-        inc     PacDelay
 
         jsr     TryTurningPacMan
 
