@@ -23,6 +23,7 @@ NUM_SCORE_DIGITS = 6
 .export MovePacMan
 .export MoveGhosts
 .export DisplayList
+.export Blinky
 
 
 MyOAM = $200

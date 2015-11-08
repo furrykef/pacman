@@ -3,16 +3,18 @@
         eaten
         waiting
         exiting
+        entering
 .endenum
 
 
 .struct Ghost
-        PosX            .byte              ; center of ghost, not upper left
+        PosX            .byte               ; center of ghost, not upper left
         PosY            .byte
+        HomeX           .byte
         TileX           .byte
-        TileY           .byte
+        TileY           .byte               ; must follow TileX in memory
         Direction       .byte
-        TurnDir         .byte              ; direction ghost has planned to turn in
+        TurnDir         .byte               ; direction ghost has planned to turn in
         Speed1          .byte
         Speed2          .byte
         Speed3          .byte
@@ -76,6 +78,11 @@ ModeCount:      .res 1
 DotTimeout:     .res 1
 DotClock:       .res 1
 
+EnergizerTimeoutL:  .res 1
+EnergizerTimeoutH:  .res 1
+EnergizerClockL:    .res 1
+EnergizerClockH:    .res 1
+
 
 .segment "CODE"
 
@@ -111,6 +118,7 @@ Lvl5Modes:
 .macro InitGhostPos ghost, pos_x, pos_y
         lda     #pos_x
         sta     ghost+Ghost::PosX
+        sta     ghost+Ghost::HomeX
         lda     #pos_y
         sta     ghost+Ghost::PosY
         lda     #pos_x / 8
@@ -294,7 +302,18 @@ InitAI:
         sta     DotTimeout
         sta     DotClock
 
+        ; @TODO@ -- depends on level
+        lda     #<360
+        sta     EnergizerTimeoutL
+        lda     #>360
+        sta     EnergizerTimeoutH
+
+        lda     #0
+        sta     EnergizerClockL
+        sta     EnergizerClockH
+
         rts
+
 
 MoveGhosts:
         jsr     ModeClockTick
@@ -424,10 +443,7 @@ HandleOneGhost:
         jsr     MoveOneGhost
 :
 .endrepeat
-
-        ; @TODO@ -- check collisions
-
-        rts
+        jmp     CheckCollisions
 
 
 ; Output:
@@ -464,6 +480,33 @@ GetSpeed:
         rts
 @scared:
         ldy     #Ghost::ScaredSpeed1
+        rts
+
+
+CheckCollisions:
+        ldy     #Ghost::TileX
+        lda     (GhostL),y
+        cmp     PacTileX
+        bne     @no_collision
+        iny
+        lda     (GhostL),y
+        cmp     PacTileY
+        bne     @no_collision
+        ; collided
+        ldy     #Ghost::fScared
+        lda     (GhostL),y
+        bne     @scared
+        ; Kill Pac-Man
+        ; @TODO@
+        rts
+@scared:
+        ; Get eaten
+        lda     #0                          ; clear fScared
+        sta     (GhostL),y
+        ldy     #Ghost::State
+        lda     #GhostState::eaten
+        sta     (GhostL),y
+@no_collision:
         rts
 
 
@@ -914,16 +957,25 @@ ComputeScores:
         rts
 
 
+.macro GhostHandleEnergizer ghost
+.local end
+        lda     ghost+Ghost::State
+        cmp     #GhostState::eaten
+        beq     end
+        cmp     #GhostState::entering
+        beq     end
+        lda     #1
+        sta     ghost+Ghost::fReverse
+        sta     ghost+Ghost::fScared
+end:
+.endmacro
+
 StartEnergizer:
         lda     #1
-        sta     Blinky+Ghost::fReverse
-        sta     Blinky+Ghost::fScared
-        sta     Pinky+Ghost::fReverse
-        sta     Pinky+Ghost::fScared
-        sta     Inky+Ghost::fReverse
-        sta     Inky+Ghost::fScared
-        sta     Clyde+Ghost::fReverse
-        sta     Clyde+Ghost::fScared
+        GhostHandleEnergizer Blinky
+        GhostHandleEnergizer Inky
+        GhostHandleEnergizer Pinky
+        GhostHandleEnergizer Clyde
         rts
 
 
@@ -1039,6 +1091,17 @@ DrawOneGhost:
         sta     (GhostOamL),y
 
         ; Pattern index
+        ldy     #Ghost::State
+        lda     (GhostL),y
+        cmp     #GhostState::eaten
+        beq     @eaten
+        cmp     #GhostState::entering
+        bne     @not_eaten
+@eaten:
+        ; Ghost has been eaten
+        lda     #$40
+        jmp     @first_frame
+@not_eaten:
         ; Toggle between two frames
         lda     FrameCounter
         and     #$08
@@ -1054,10 +1117,10 @@ DrawOneGhost:
         lda     (GhostL),y
         asl
         asl
-        jmp     :+
+        jmp     @store_pattern
 @scared:
         lda     #$20
-:
+@store_pattern:
         ora     #$01                        ; Use $1000 bank of PPU memory
         add     TmpL
         ldy     #1

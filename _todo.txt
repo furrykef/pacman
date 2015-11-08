@@ -16,3 +16,7 @@ Cruise Elroy.
 The chase/scatter mode timer should be paused while an energizer is active.
 
 Global dot counter after Pac-Man dies.
+
+Do eaten ghosts ever reverse direction with mode changes?
+
+Eaten ghosts should have a constant, fast speed (and not slow down in tunnels)
