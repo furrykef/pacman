@@ -15,11 +15,6 @@ NUM_SCORE_DIGITS = 6
 .endenum
 
 
-.include "ghosts.asm"
-.include "pacman.asm"
-.include "map.asm"
-
-
 ; Exports for easy debugging
 .export HandleVblank
 .export HandleIrq
@@ -59,6 +54,11 @@ JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP 
 
 NumDots:            .res 1
 Score:              .res NUM_SCORE_DIGITS   ; BCD
+
+
+.include "pacman.asm"
+.include "ghosts.asm"
+.include "map.asm"
 
 
 .segment "BSS"
