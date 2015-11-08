@@ -88,31 +88,31 @@ EnergizerClockH:    .res 1
 
 ; Times are guessed based on Pac-Man Dossier
 Lvl1Modes:
-        .word   $01a0                       ; 0 (scatter) - 7 secs
-        .word   $04b0                       ; 1 (chase) - 20 secs
-        .word   $01a0                       ; 2 (scatter) - 7 secs
-        .word   $04b0                       ; 3 (chase) - 20 secs
-        .word   $0130                       ; 4 (scatter) - 5 secs
-        .word   $04b0                       ; 5 (chase) - 20 secs
-        .word   $0130                       ; 6 (scatter) - 5 secs
+        .word   7*60                        ; 0 (scatter) - 7 secs
+        .word   20*60                       ; 1 (chase) - 20 secs
+        .word   7*60                        ; 2 (scatter) - 7 secs
+        .word   20*60                       ; 3 (chase) - 20 secs
+        .word   5*60                        ; 4 (scatter) - 5 secs
+        .word   20*60                       ; 5 (chase) - 20 secs
+        .word   5*60                        ; 6 (scatter) - 5 secs
 
 Lvl2Modes:
-        .word   $01a0                       ; 0 (scatter) - 7 secs
-        .word   $04b0                       ; 1 (chase) - 20 secs
-        .word   $01a0                       ; 2 (scatter) - 7 secs
-        .word   $04b0                       ; 3 (chase) - 20 secs
-        .word   $0130                       ; 4 (scatter) - 5 secs
-        .word   $f220                       ; 5 (chase) - 1033 secs
-        .word   $0001                       ; 6 (scatter) - 1/60 sec
+        .word   7*60                        ; 0 (scatter) - 7 secs
+        .word   20*60                       ; 1 (chase) - 20 secs
+        .word   7*60                        ; 2 (scatter) - 7 secs
+        .word   20*60                       ; 3 (chase) - 20 secs
+        .word   5*60                        ; 4 (scatter) - 5 secs
+        .word   1033*60                     ; 5 (chase) - 1033 secs
+        .word   1                           ; 6 (scatter) - 1/60 sec
 
 Lvl5Modes:
-        .word   $0130                       ; 0 (scatter) - 5 secs
-        .word   $04b0                       ; 1 (chase) - 20 secs
-        .word   $0130                       ; 2 (scatter) - 5 secs
-        .word   $04b0                       ; 3 (chase) - 20 secs
-        .word   $0130                       ; 4 (scatter) - 5 secs
-        .word   $f300                       ; 5 (chase) - 1037 secs
-        .word   $0001                       ; 6 (scatter) - 1/60 sec
+        .word   5*60                        ; 0 (scatter) - 5 secs
+        .word   20*60                       ; 1 (chase) - 20 secs
+        .word   5*60                        ; 2 (scatter) - 5 secs
+        .word   20*60                       ; 3 (chase) - 20 secs
+        .word   5*60                        ; 4 (scatter) - 5 secs
+        .word   1037*60                     ; 5 (chase) - 1037 secs
+        .word   1                           ; 6 (scatter) - 1/60 sec
 
 
 .macro InitGhostPos ghost, pos_x, pos_y
@@ -185,7 +185,7 @@ InitAI:
         lda     #0
         sta     Inky+Ghost::fReverse
         sta     Inky+Ghost::fScared
-        lda     #30 - 1
+        lda     #30 + 1
         sta     Inky+Ghost::DotCounter
         lda     #<GetInkyTargetTile
         sta     Inky+Ghost::pGetTargetTileL
@@ -206,7 +206,7 @@ InitAI:
         lda     #0
         sta     Clyde+Ghost::fReverse
         sta     Clyde+Ghost::fScared
-        lda     #60 - 1
+        lda     #60 + 1
         sta     Clyde+Ghost::DotCounter
         lda     #<GetClydeTargetTile
         sta     Clyde+Ghost::pGetTargetTileL
@@ -416,6 +416,19 @@ DotClockTick:
 
 
 HandleOneGhost:
+        ; Release ghost if waiting and its dot counter is clear
+        ldy     #Ghost::State
+        lda     (GhostL),y
+        cmp     #GhostState::waiting
+        bne     @no_release
+        ldy     #Ghost::DotCounter
+        lda     (GhostL),y
+        bne     @no_release
+        ldy     #Ghost::State
+        lda     #GhostState::exiting
+        sta     (GhostL),y
+@no_release:
+
         ; Need to check collisions both before and after moving the ghost.
         ; This will prevent the bug in the arcade version where Pac-Man may 
         ; sometimes pass through ghosts.
@@ -1050,27 +1063,13 @@ GhostHandleDot:
         bne     @try_clyde
         ; Inky is waiting
         dec     Inky+Ghost::DotCounter
-        bmi     @release_inky
         rts
-@release_inky:
-        inc     Inky+Ghost::DotCounter
-        lda     #GhostState::exiting
-        sta     Inky+Ghost::State
-        rts
-
 @try_clyde:
         lda     Clyde+Ghost::State
         cmp     #GhostState::waiting
         bne     @end
         ; Clyde is waiting
         dec     Clyde+Ghost::DotCounter
-        bmi     @release_clyde
-        rts
-@release_clyde:
-        inc     Clyde+Ghost::DotCounter
-        lda     #GhostState::exiting
-        sta     Clyde+Ghost::State
-
 @end:
         rts
 
