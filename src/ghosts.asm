@@ -416,6 +416,11 @@ DotClockTick:
 
 
 HandleOneGhost:
+        ; Need to check collisions both before and after moving the ghost.
+        ; This will prevent the bug in the arcade version where Pac-Man may 
+        ; sometimes pass through ghosts.
+        jsr     CheckCollisions
+
 .repeat 2
         jsr     GetSpeed
         ; Get least significant bit of speed value so we can rotate it in
@@ -443,6 +448,7 @@ HandleOneGhost:
         jsr     MoveOneGhost
 :
 .endrepeat
+
         jmp     CheckCollisions
 
 

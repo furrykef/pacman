@@ -258,8 +258,6 @@ PlayRound:
         beq     :+
         jsr     Pause
 :
-        ; Must move ghosts *before* Pac-Man since collision detection
-        ; is done inside MoveGhosts.
         jsr     MoveGhosts
         jsr     MovePacMan
         jsr     Render
