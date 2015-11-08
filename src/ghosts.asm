@@ -34,6 +34,7 @@
         State           .byte
         fScared         .byte
         fReverse        .byte
+        fBeingEaten     .byte
         DotCounter      .byte
         pGetTargetTileL .byte
         pGetTargetTileH .byte
@@ -84,6 +85,8 @@ EnergizerClockL:    .res 1
 EnergizerClockH:    .res 1
 
 EnergizerPoints:    .res 1                  ; 0 = 200, 1 = 400...
+
+EatingGhostClock:   .res 1
 
 
 .segment "CODE"
@@ -147,6 +150,7 @@ InitAI:
         lda     #0
         sta     Blinky+Ghost::fReverse
         sta     Blinky+Ghost::fScared
+        sta     Blinky+Ghost::fBeingEaten
         sta     Blinky+Ghost::DotCounter
         lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::pGetTargetTileL
@@ -167,6 +171,7 @@ InitAI:
         lda     #0
         sta     Pinky+Ghost::fReverse
         sta     Pinky+Ghost::fScared
+        sta     Pinky+Ghost::fBeingEaten
         sta     Pinky+Ghost::DotCounter
         lda     #<GetPinkyTargetTile
         sta     Pinky+Ghost::pGetTargetTileL
@@ -187,6 +192,7 @@ InitAI:
         lda     #0
         sta     Inky+Ghost::fReverse
         sta     Inky+Ghost::fScared
+        sta     Inky+Ghost::fBeingEaten
         lda     #30 + 1
         sta     Inky+Ghost::DotCounter
         lda     #<GetInkyTargetTile
@@ -208,6 +214,7 @@ InitAI:
         lda     #0
         sta     Clyde+Ghost::fReverse
         sta     Clyde+Ghost::fScared
+        sta     Clyde+Ghost::fBeingEaten
         lda     #60 + 1
         sta     Clyde+Ghost::DotCounter
         lda     #<GetClydeTargetTile
@@ -313,6 +320,7 @@ InitAI:
         lda     #0
         sta     EnergizerClockL
         sta     EnergizerClockH
+        sta     EatingGhostClock
 
         rts
 
@@ -339,7 +347,19 @@ MoveGhosts:
         sta     GhostL
         lda     #>Clyde
         sta     GhostH
-        jmp     HandleOneGhost
+        jsr     HandleOneGhost
+        lda     EatingGhostClock
+        beq     @no_ghost_being_eaten
+        dec     EatingGhostClock
+        rts
+@no_ghost_being_eaten:
+        lda     #0
+        sta     Blinky+Ghost::fBeingEaten
+        sta     Inky+Ghost::fBeingEaten
+        sta     Pinky+Ghost::fBeingEaten
+        sta     Clyde+Ghost::fBeingEaten
+        rts
+
 
 ModeClockTick:
         lda     ModeCount
@@ -372,6 +392,7 @@ ModeClockTick:
         jsr     SetModeClock
 @end:
         rts
+
 
 SetModeClock:
         ; @TODO@ -- choose table based on level number
@@ -418,6 +439,23 @@ DotClockTick:
 
 
 HandleOneGhost:
+        ; Ghost doesn't move while being eaten
+        ldy     #Ghost::fBeingEaten
+        lda     (GhostL),y
+        bne     @end
+
+        ; Only eaten ghosts move if another ghost is being eaten
+        lda     EatingGhostClock
+        beq     @can_move
+        ; Another ghost is being eaten
+        ldy     #Ghost::State
+        lda     (GhostL),y
+        cmp     #GhostState::eaten
+        beq     @can_move
+        cmp     #GhostState::entering
+        bne     @end                        ; we're not an eaten ghost
+@can_move:
+
         ; Release ghost if waiting and its dot counter is clear
         ldy     #Ghost::State
         lda     (GhostL),y
@@ -465,6 +503,9 @@ HandleOneGhost:
 .endrepeat
 
         jmp     CheckCollisions
+
+@end:
+        rts
 
 
 ; Output:
@@ -524,9 +565,14 @@ CheckCollisions:
         ; Get eaten
         lda     #0                          ; clear fScared
         sta     (GhostL),y
+        ldy     #Ghost::fBeingEaten
+        lda     #1
+        sta     (GhostL),y
         ldy     #Ghost::State
         lda     #GhostState::eaten
         sta     (GhostL),y
+        lda     #60
+        sta     EatingGhostClock
         lda     EnergizerPoints
         asl                                 ; 16-bit entries
         tax
@@ -1163,6 +1209,18 @@ DrawOneGhost:
         sta     GhostOamL
         lda     #>MyOAM
         sta     GhostOamH
+
+        ; Don't draw ghost if it's being eaten
+        ldy     #Ghost::fBeingEaten
+        lda     (GhostL),y
+        beq     @not_being_eaten
+        lda     #$ff
+        ldy     #0
+        sta     (GhostOamL),y
+        ldy     #4
+        sta     (GhostOamL),y
+        rts
+@not_being_eaten:
 
         ; Y position
         ldy     #Ghost::PosY

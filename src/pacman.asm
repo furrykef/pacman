@@ -32,6 +32,11 @@ InitPacMan:
 
 
 MovePacMan:
+        ; Do not move Pac-Man while he's eating a ghost
+        lda     EatingGhostClock
+        bne     @end
+
+        ; ...or while eating a dot
         lda     PacDelay
         beq     @no_delay
         ; Delay Pac-Man
@@ -86,6 +91,7 @@ MovePacMan:
         jsr     CalcPacCoords
         jsr     EatStuff
 @reject_move:
+@end:
         rts
 
 
@@ -292,6 +298,18 @@ DrawPacMan:
         sta     PacManOAM+4
 
         ; Pattern index
+        ; If Pac-Man is eating a ghost, draw number of points
+        lda     EatingGhostClock
+        beq     @not_eating_ghost
+        lda     EnergizerPoints
+        asl
+        asl
+        add     #$5d
+        sta     PacManOAM+1
+        add     #$02
+        sta     PacManOAM+5
+        jmp     @attributes
+@not_eating_ghost:
         lda     PacDirection
         cmp     #WEST
         beq     @horizontal
@@ -318,6 +336,7 @@ DrawPacMan:
         sta     PacManOAM+5
 
         ; Attributes
+@attributes:
         lda     #$03
         ; Flip priority if Pac-Man is at edges of tunnel
         ldx     PacTileX
