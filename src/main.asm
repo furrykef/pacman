@@ -677,6 +677,10 @@ StatusBar:
 
 Points10:   .byte   0,0,0,0,1,0
 Points50:   .byte   0,0,0,0,5,0
+Points200:  .byte   0,0,0,2,0,0
+Points400:  .byte   0,0,0,4,0,0
+Points800:  .byte   0,0,0,8,0,0
+Points1600: .byte   0,0,1,6,0,0
 
 Palette:
 .incbin "../assets/palette.dat"

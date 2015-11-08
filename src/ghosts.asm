@@ -83,6 +83,8 @@ EnergizerTimeoutH:  .res 1
 EnergizerClockL:    .res 1
 EnergizerClockH:    .res 1
 
+EnergizerPoints:    .res 1                  ; 0 = 200, 1 = 400...
+
 
 .segment "CODE"
 
@@ -525,8 +527,23 @@ CheckCollisions:
         ldy     #Ghost::State
         lda     #GhostState::eaten
         sta     (GhostL),y
+        lda     EnergizerPoints
+        asl                                 ; 16-bit entries
+        tax
+        lda     EnergizerPtsTbl,x
+        sta     TmpL
+        lda     EnergizerPtsTbl+1,x
+        sta     TmpH
+        jsr     AddPoints
+        inc     EnergizerPoints
 @no_collision:
         rts
+
+EnergizerPtsTbl:
+        .addr   Points200
+        .addr   Points400
+        .addr   Points800
+        .addr   Points1600
 
 
 MoveOneGhost:
@@ -1063,11 +1080,12 @@ end:
 .endmacro
 
 StartEnergizer:
-        lda     #1
         GhostHandleEnergizer Blinky
         GhostHandleEnergizer Inky
         GhostHandleEnergizer Pinky
         GhostHandleEnergizer Clyde
+        lda     #0
+        sta     EnergizerPoints
         rts
 
 
