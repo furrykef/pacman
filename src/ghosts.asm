@@ -521,13 +521,21 @@ MoveOneGhost:
         lda     (GhostL),y
         cmp     #GhostState::waiting
         beq     @waiting
+        cmp     #GhostState::eaten
+        beq     @eaten
         cmp     #GhostState::exiting
         beq     @exiting
+        cmp     #GhostState::entering
+        beq     @entering
         jmp     MoveOneGhostNormal
+@eaten:
+        jmp     MoveOneGhostEaten
 @waiting:
         jmp     MoveOneGhostWaiting
 @exiting:
         jmp     MoveOneGhostExiting
+@entering:
+        jmp     MoveOneGhostEntering
 
 
 MoveOneGhostWaiting:
@@ -550,6 +558,23 @@ MoveOneGhostWaiting:
         sta     (GhostL),y
         ldy     #Ghost::TurnDir
         sta     (GhostL),y
+        rts
+
+
+MoveOneGhostEaten:
+        jsr     MoveOneGhostNormal
+        ldy     #Ghost::PosX
+        lda     (GhostL),y
+        cmp     #127
+        bne     @not_above_house
+        ldy     #Ghost::PosY
+        lda     (GhostL),y
+        cmp     #91
+        bne     @not_above_house
+        ldy     #Ghost::State
+        lda     #GhostState::entering
+        sta     (GhostL),y
+@not_above_house:
         rts
 
 
@@ -608,6 +633,25 @@ MoveOneGhostExiting:
         rts
 
 
+MoveOneGhostEntering:
+        ldy     #Ghost::Direction
+        lda     #SOUTH
+        sta     (GhostL),y
+        ldy     #Ghost::TurnDir
+        sta     (GhostL),y
+        ldy     #Ghost::PosY
+        lda     (GhostL),y
+        add     #1
+        sta     (GhostL),y
+        cmp     #115
+        bne     @end
+        ldy     #Ghost::State
+        lda     #GhostState::waiting
+        sta     (GhostL),y
+@end:
+        rts
+
+
 MoveOneGhostNormal:
         ldy     #Ghost::Direction 
         lda     (GhostL),y
@@ -644,6 +688,17 @@ MoveOneGhostNormal:
         iny
         sta     (GhostL),y
 
+        ldy     #Ghost::State
+        lda     (GhostL),y
+        cmp     #GhostState::eaten
+        bne     @not_eaten
+        ; Eaten; target tile is (15, 11)
+        lda     #15
+        sta     TargetTileX
+        lda     #11
+        sta     TargetTileY
+        jmp     @got_target
+@not_eaten:
         ; JSR to Ghost::pGetTargetTile
         ldy     #Ghost::pGetTargetTileL
         lda     (GhostL),y
@@ -652,6 +707,7 @@ MoveOneGhostNormal:
         lda     (GhostL),y
         sta     JsrIndAddrH
         jsr     JsrInd
+@got_target:
 
         ; If ghost is centered in tile, have it turn or reverse if necessary
         ; Then compute next turn
