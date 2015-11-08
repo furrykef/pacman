@@ -654,10 +654,27 @@ MoveOneGhostEntering:
         sta     (GhostL),y
         ldy     #Ghost::PosY
         lda     (GhostL),y
+        cmp     #115
+        blt     @move_south
+        ; In vertical position
+        ldy     #Ghost::HomeX
+        lda     (GhostL),y
+        sta     TmpL
+        ldy     #Ghost::PosX
+        lda     (GhostL),y
+        cmp     TmpL
+        beq     @ready
+        blt     @move_east
+        ; Move west
+        sub     #1
+        sta     (GhostL),y
+        rts
+@move_south:
+@move_east:
         add     #1
         sta     (GhostL),y
-        cmp     #115
-        bne     @end
+        rts
+@ready:
         ldy     #Ghost::State
         lda     #GhostState::waiting
         sta     (GhostL),y
