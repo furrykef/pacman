@@ -42,6 +42,7 @@ fSpriteOverflow:    .res 1                  ; true values won't necessarily be $
 fRenderOn:          .res 1                  ; tells vblank handler not to mess with PPU memory if zero
 fPaused:            .res 1
 DisplayListIndex:   .res 1
+fDisplayListReady:  .res 1
 Joy1State:          .res 1
 Joy2State:          .res 1                  ; must immediately follow Joy1State
 Joy1PrevState:      .res 1
@@ -169,6 +170,7 @@ Main:
         sta     FrameCounter
         sta     VScroll
         sta     DisplayListIndex
+        sta     fDisplayListReady
         sta     fRenderOn
         sta     fPaused
         sta     Joy1State
@@ -529,7 +531,9 @@ HandleVblank:
         and     #$20
         sta     fSpriteOverflow
 
-        ; Render display list
+        ; Render display list if ready
+        lda     fDisplayListReady
+        beq     @skip_display_list
         ldx     #0
 @display_list_loop:
         ldy     DisplayList,x               ; size of chunk to copy
@@ -551,6 +555,8 @@ HandleVblank:
 @display_list_end:
         lda     #0
         sta     DisplayListIndex
+        sta     fDisplayListReady
+@skip_display_list:
 
         ; Cycle color 3 of BG palette 0
         lda     #$3f
@@ -608,6 +614,8 @@ WaitForVblank:
         lda     #0                          ; mark end of display list
         ldx     DisplayListIndex
         sta     DisplayList,x
+        lda     #1
+        sta     fDisplayListReady
         lda     FrameCounter
 @loop:
         cmp     FrameCounter
