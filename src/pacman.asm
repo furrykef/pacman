@@ -200,7 +200,6 @@ EatStuff:
 @eat_dot:
         lda     #1
         sta     PacDelay
-        dec     NumDots
         lda     #<Points10
         sta     TmpL
         lda     #>Points10
@@ -208,7 +207,7 @@ EatStuff:
         tya
         pha
         jsr     AddPoints
-        jsr     GhostHandleDot
+        jsr     EatDot
         pla
         tay
         jmp     @eat_object
@@ -216,7 +215,6 @@ EatStuff:
 @eat_energizer:
         lda     #3
         sta     PacDelay
-        dec     NumDots
         lda     #<Points50
         sta     TmpL
         lda     #>Points50
@@ -225,7 +223,7 @@ EatStuff:
         pha
         jsr     AddPoints
         jsr     StartEnergizer
-        jsr     GhostHandleDot
+        jsr     EatDot
         pla
         tay
         jmp     @eat_object
@@ -267,6 +265,20 @@ EatStuff:
         inx
         stx     DisplayListIndex
         rts
+
+
+EatDot:
+        dec     NumDots
+        lda     NumDots
+        cmp     #244 - 70
+        beq     @fruit
+        cmp     #244 - 170
+        bne     @no_fruit
+@fruit:
+        ; @TODO@ -- clear score graphic in fruit area in case it is present
+        jsr     SpawnFruit
+@no_fruit:
+        jmp     GhostHandleDot
 
 
 CalcPacCoords:
