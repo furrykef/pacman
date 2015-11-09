@@ -83,6 +83,7 @@ EnergizerTimeoutL:  .res 1
 EnergizerTimeoutH:  .res 1
 EnergizerClockL:    .res 1
 EnergizerClockH:    .res 1
+fEnergizerActive:   .res 1
 
 EnergizerPoints:    .res 1                  ; 0 = 200, 1 = 400...
 
@@ -328,6 +329,8 @@ InitAI:
 MoveGhosts:
         jsr     ModeClockTick
         jsr     DotClockTick
+        jsr     EnergizerClockTick
+        jsr     EatingGhostClockTick
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
@@ -347,18 +350,7 @@ MoveGhosts:
         sta     GhostL
         lda     #>Clyde
         sta     GhostH
-        jsr     HandleOneGhost
-        lda     EatingGhostClock
-        beq     @no_ghost_being_eaten
-        dec     EatingGhostClock
-        rts
-@no_ghost_being_eaten:
-        lda     #0
-        sta     Blinky+Ghost::fBeingEaten
-        sta     Inky+Ghost::fBeingEaten
-        sta     Pinky+Ghost::fBeingEaten
-        sta     Clyde+Ghost::fBeingEaten
-        rts
+        jmp     HandleOneGhost
 
 
 ModeClockTick:
@@ -406,6 +398,7 @@ SetModeClock:
         sta     ModeClockH
         rts
 
+
 ; @TODO@ -- don't use this if global dot counter is active
 DotClockTick:
         ldx     DotClock
@@ -435,6 +428,46 @@ DotClockTick:
         rts
 @release_clyde:
         stx     Clyde+Ghost::State
+        rts
+
+
+EnergizerClockTick:
+        lda     EnergizerClockL
+        beq     @maybe_zero
+        jmp     @nonzero
+@maybe_zero:
+        ldx     EnergizerClockH
+        beq     @zero
+@nonzero:
+        sub     #1
+        sta     EnergizerClockL
+        lda     EnergizerClockH
+        sbc     #0
+        sta     EnergizerClockH
+        lda     #1
+        sta     fEnergizerActive
+        rts
+@zero:
+        lda     #0
+        sta     fEnergizerActive
+        sta     Blinky+Ghost::fScared
+        sta     Pinky+Ghost::fScared
+        sta     Inky+Ghost::fScared
+        sta     Clyde+Ghost::fScared
+        rts
+
+
+EatingGhostClockTick:
+        lda     EatingGhostClock
+        beq     @no_ghost_being_eaten
+        dec     EatingGhostClock
+        rts
+@no_ghost_being_eaten:
+        lda     #0
+        sta     Blinky+Ghost::fBeingEaten
+        sta     Inky+Ghost::fBeingEaten
+        sta     Pinky+Ghost::fBeingEaten
+        sta     Clyde+Ghost::fBeingEaten
         rts
 
 
@@ -1130,6 +1163,10 @@ StartEnergizer:
         GhostHandleEnergizer Inky
         GhostHandleEnergizer Pinky
         GhostHandleEnergizer Clyde
+        lda     EnergizerTimeoutL
+        sta     EnergizerClockL
+        lda     EnergizerTimeoutH
+        sta     EnergizerClockH
         lda     #0
         sta     EnergizerPoints
         rts
@@ -1273,6 +1310,17 @@ DrawOneGhost:
         asl
         jmp     @store_pattern
 @scared:
+        lda     EnergizerClockH
+        bne     @scared_blue
+        lda     EnergizerClockL
+        cmp     #120 + 1
+        bge     @scared_blue
+        and     #%00010000
+        beq     @scared_blue
+        ; Ghost is flashing white
+        lda     #$24
+        jmp     @store_pattern
+@scared_blue:
         lda     #$20
 @store_pattern:
         ora     #$01                        ; Use $1000 bank of PPU memory
@@ -1287,8 +1335,16 @@ DrawOneGhost:
         ldy     #Ghost::TileX
         lda     (GhostL),y
         tax
+        ; Scared ghosts use palette 0
+        ldy     #Ghost::fScared
+        lda     (GhostL),y
+        bne     @scared2
         ldy     #Ghost::Palette
         lda     (GhostL),y                  ; get palette
+        jmp     @got_palette
+@scared2:
+        lda     #0
+@got_palette:
         ; Flip priority if ghost is at edges of tunnel
         cpx     #3
         blt     @flip

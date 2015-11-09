@@ -24,6 +24,7 @@ NUM_SCORE_DIGITS = 6
 .export MoveGhosts
 .export DisplayList
 .export Blinky
+.export EnergizerClockL
 
 
 MyOAM = $200
