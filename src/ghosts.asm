@@ -327,9 +327,12 @@ InitAI:
 
 
 MoveGhosts:
+        lda     EatingGhostClock
+        bne     @eating_ghost
         jsr     ModeClockTick
         jsr     DotClockTick
         jsr     EnergizerClockTick
+@eating_ghost:
         jsr     EatingGhostClockTick
         lda     #<Blinky
         sta     GhostL
