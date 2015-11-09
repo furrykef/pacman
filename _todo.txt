@@ -16,8 +16,6 @@ Pac-Man's speed should be adjustable.
 
 Cruise Elroy.
 
-The chase/scatter mode timer should be paused while an energizer is active.
-
 Global dot counter after Pac-Man dies.
 
 Do eaten ghosts ever reverse direction with mode changes?

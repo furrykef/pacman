@@ -357,6 +357,10 @@ MoveGhosts:
 
 
 ModeClockTick:
+        ; Mode clock paused while energizer is active
+        lda     fEnergizerActive
+        bne     @end
+
         lda     ModeCount
         cmp     #7
         beq     @end                        ; only 7 mode changes
