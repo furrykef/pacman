@@ -131,6 +131,14 @@ CopyBoardIntoVram:
         sty     PPUADDR
         sta     PPUDATA
 
+        ; Attributes for fruit area (X=14..17, Y=16..18)
+        stx     PPUADDR
+        lda     #$e3
+        sta     PPUADDR
+        lda     #%11111111
+        sta     PPUDATA
+        sta     PPUDATA
+
         ; Attributes for status area
         lda     #$2b
         sta     PPUADDR
