@@ -7,9 +7,6 @@ With the previous bug, when Pac-Man is at the very top of the maze and facing up
 I'm not sure the two bugs fully cancel out; Pinky's score for "northish" might be too high. If so, this would remove "westish" and "eastish" from the steering computation.
 
 
-TileX and TileY not calculated for ghosts in movement functions other than MoveOneGhostNormal
-
-
 To be implemented
 -----------------
 Pac-Man's speed should be adjustable.

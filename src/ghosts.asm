@@ -562,6 +562,7 @@ HandleOneGhost:
         sta     (GhostL),y
         bcc     :+
         jsr     MoveOneGhost
+        jsr     CalcGhostCoords
 :
 .endrepeat
 
@@ -832,26 +833,12 @@ MoveOneGhostNormal:
         lda     (GhostL),y
         add     DeltaXTbl,x
         sta     (GhostL),y
-        tay
-        lsr
-        lsr
-        lsr
-        sta     TileX
-        tya
-        and     #$07
-        sta     PixelX
         ldy     #Ghost::PosY
         lda     (GhostL),y
         add     DeltaYTbl,x
         sta     (GhostL),y
-        tay
-        lsr
-        lsr
-        lsr
-        sta     TileY
-        tya
-        and     #$07
-        sta     PixelY
+
+        jsr     CalcGhostCoords
 
         lda     TileX
         ldy     #Ghost::TileX
@@ -1235,6 +1222,34 @@ GhostHandleDot:
         ; Clyde is waiting
         dec     Clyde+Ghost::DotCounter
 @end:
+        rts
+
+
+CalcGhostCoords:
+        ldy     #Ghost::PosX
+        lda     (GhostL),y
+        tax
+        lsr
+        lsr
+        lsr
+        sta     TileX
+        ldy     #Ghost::TileX
+        sta     (GhostL),y
+        txa
+        and     #$07
+        sta     PixelX
+        ldy     #Ghost::PosY
+        lda     (GhostL),y
+        tax
+        lsr
+        lsr
+        lsr
+        sta     TileY
+        ldy     #Ghost::TileY
+        sta     (GhostL),y
+        txa
+        and     #$07
+        sta     PixelY
         rts
 
 
