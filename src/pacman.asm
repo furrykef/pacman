@@ -332,7 +332,6 @@ DrawPacMan:
         asl
         asl
         asl
-        asl
         sta     TmpL
         lda     PacDirection
         asl
