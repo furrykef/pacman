@@ -15,6 +15,8 @@ PacTryDirection:    .res 1
 
 PacDelay:           .res 1
 
+fPacDead:           .res 1
+
 
 .segment "CODE"
 
@@ -28,6 +30,7 @@ InitPacMan:
         sta     PacDirection
         lda     #0
         sta     PacDelay
+        sta     fPacDead
         rts
 
 
@@ -365,3 +368,53 @@ DrawPacMan:
         add     #8
         sta     PacManOAM+7
         rts
+
+
+DoPacManDeathAnimation:
+        ; Y position
+        lda     PacY
+        add     #24                         ; -8 to convert center to edge, +32 for status area
+        sub     VScroll
+        sta     PacManOAM
+        sta     PacManOAM+4
+
+        ; Pattern
+        lda     #$c1
+        sta     PacManOAM+1
+        lda     #$c3
+        sta     PacManOAM+5
+
+        ; Attributes
+        lda     #$03
+        sta     PacManOAM+2
+        sta     PacManOAM+6
+
+        ; X position
+        lda     PacX
+        sub     #7
+        sta     PacManOAM+3
+        add     #8
+        sta     PacManOAM+7
+
+        ldy     #30
+        jsr     WaitFrames
+
+        ldx     #$c5
+@loop:
+        stx     PacManOAM+1
+        inx
+        inx
+        stx     PacManOAM+5
+        inx
+        inx
+        txa
+        pha
+        ldy     #8
+        jsr     WaitFrames
+        pla
+        tax
+        cpx     #$f1
+        bne     @loop
+
+        ldy     #60
+        jmp     WaitFrames

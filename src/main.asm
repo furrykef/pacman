@@ -275,6 +275,7 @@ PlayRound:
         lda     #244
         sta     NumDots
 
+@start_life:
         jsr     InitLife
         jsr     Render
         ldy     #60
@@ -288,6 +289,8 @@ PlayRound:
         jsr     Pause
 :
         jsr     MoveGhosts
+        lda     fPacDead
+        bne     @pac_dead
         jsr     MovePacMan
         jsr     HandleFruit
         jsr     Render
@@ -297,6 +300,13 @@ PlayRound:
         ldy     #120
         jsr     WaitFrames
         jmp     PlayRound
+
+@pac_dead:
+        ldy     #60
+        jsr     WaitFrames
+        jsr     ClearMyOAM
+        jsr     DoPacManDeathAnimation
+        jmp     @start_life
 
 
 InitLife:
@@ -607,6 +617,16 @@ HandleIrq:
         tax
         pla
         rti
+
+
+ClearMyOAM:
+        lda     #$ff
+        ldx     #0
+@loop:
+        sta     MyOAM,x
+        inx
+        bne     @loop
+        rts
 
 
 ReadJoys:

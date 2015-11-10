@@ -629,7 +629,8 @@ CheckCollisions:
         lda     (GhostL),y
         bne     @scared
         ; Kill Pac-Man
-        ; @TODO@
+        lda     #1
+        sta     fPacDead
         rts
 @scared:
         ; Get eaten
