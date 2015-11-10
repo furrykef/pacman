@@ -187,7 +187,9 @@ MovePacManTowardCenter:
         rts
 
 
+; Note: eating fruit is handled in fruit.asm
 EatStuff:
+        ; Check for dots or energizers
         ldy     PacTileX
         ldx     PacTileY
         jsr     GetTile

@@ -26,6 +26,7 @@ NUM_SCORE_DIGITS = 6
 .export DisplayList
 .export Blinky
 .export EnergizerClockL
+.export FruitClockL
 
 
 MyOAM = $200
@@ -284,6 +285,7 @@ PlayRound:
 :
         jsr     MoveGhosts
         jsr     MovePacMan
+        jsr     HandleFruit
         jsr     Render
         lda     NumDots
         bne     @game_loop
@@ -688,6 +690,7 @@ StatusBar:
 
 Points10:   .byte   0,0,0,0,1,0
 Points50:   .byte   0,0,0,0,5,0
+Points100:  .byte   0,0,0,1,0,0
 Points200:  .byte   0,0,0,2,0,0
 Points400:  .byte   0,0,0,4,0,0
 Points800:  .byte   0,0,0,8,0,0

@@ -1,3 +1,6 @@
+FRUIT_TIMEOUT = 10*60
+
+
 .segment "ZEROPAGE"
 
 FruitClockL:        .res 1
@@ -14,9 +17,9 @@ InitFruit:
 
 
 SpawnFruit:
-        lda     #<10*60
+        lda     #<FRUIT_TIMEOUT
         sta     FruitClockL
-        lda     #>10*60
+        lda     #>FRUIT_TIMEOUT
         sta     FruitClockH
 
         DlBegin
@@ -30,4 +33,41 @@ SpawnFruit:
         DlAdd   #$f0, #$f1
         DlEnd
 
+        rts
+
+
+HandleFruit:
+        lda     FruitClockL
+        beq     @maybe_zero
+        jmp     @nonzero
+@maybe_zero:
+        ldx     FruitClockH
+        beq     @end
+@nonzero:
+        sub     #1
+        sta     FruitClockL
+        lda     FruitClockH
+        sbc     #0
+        sta     FruitClockH
+
+        ; Check if Pac-Man is eating fruit
+        ldx     PacTileY
+        cpx     #17
+        bne     @end
+        lda     PacX
+        cmp     #126
+        blt     @end
+        cmp     #130
+        bge     @end
+
+        ; Pac-Man is in the fruit zone
+        lda     #0
+        sta     FruitClockL
+        sta     FruitClockH
+        lda     #<Points100
+        sta     TmpL
+        lda     #>Points100
+        sta     TmpH
+        jsr     AddPoints
+@end:
         rts
