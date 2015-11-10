@@ -37,6 +37,9 @@ SpawnFruit:
 
 
 HandleFruit:
+        lda     EatingGhostClock
+        bne     @end
+
         lda     FruitClockL
         beq     @maybe_zero
         jmp     @nonzero
