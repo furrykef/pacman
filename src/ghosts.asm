@@ -624,7 +624,15 @@ CheckCollisions:
         lda     (GhostL),y
         cmp     PacTileY
         bne     @no_collision
-        ; collided
+        ; Collided
+        ; Ignore collision if ghost has been eaten
+        ldy     #Ghost::State
+        lda     (GhostL),y
+        cmp     #GhostState::eaten
+        beq     @no_collision
+        cmp     #GhostState::entering
+        beq     @no_collision
+        ; Ghost gets eaten if scared
         ldy     #Ghost::fScared
         lda     (GhostL),y
         bne     @scared
