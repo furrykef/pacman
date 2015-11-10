@@ -27,6 +27,7 @@ NUM_SCORE_DIGITS = 6
 .export Blinky
 .export EnergizerClockL
 .export FruitClockL
+.export DotClock
 
 
 MyOAM = $200
@@ -80,6 +81,7 @@ RngSeedH:           .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
+NumLives:           .res 1
 NumDots:            .res 1
 Score:              .res NUM_SCORE_DIGITS   ; BCD
 
@@ -254,6 +256,8 @@ Main:
         ; FALL THROUGH to NewGame
 
 NewGame:
+        lda     #3
+        sta     NumLives
         lda     #0
 .repeat NUM_SCORE_DIGITS, I
         sta     Score+I
@@ -306,6 +310,8 @@ PlayRound:
         jsr     WaitFrames
         jsr     ClearMyOAM
         jsr     DoPacManDeathAnimation
+        dec     NumLives
+        beq     NewGame
         jmp     @start_life
 
 
@@ -404,22 +410,29 @@ Render:
 
 DrawStatus:
         DlBegin
+
         ; Draw score
-        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$a6
+        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$a2
 .repeat NUM_SCORE_DIGITS, I
         DlAdd   Score+I
 .endrepeat
+
         ; Draw high score
         ; Unlock PRG RAM, read-only
         lda     #$c0
         sta     $a001
-        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$b0
+        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$ac
 .repeat NUM_SCORE_DIGITS, I
         DlAdd   HiScore+I
 .endrepeat
         ; Lock PRG RAM
         lda     #$00
         sta     $a001
+
+        ; Draw number of lives
+        DlAdd   #1, #$2b, #$99
+        DlAdd   NumLives
+
         DlEnd
         rts
 
@@ -707,7 +720,7 @@ DeltaYTbl:
 StatusBar:
         .byte   "                                "
         .byte   "                                "
-        .byte   "        1UP   HIGH SCORE        "
+        .byte   "    1UP   HIGH SCORE   ", $98, $a0, "       "
         .byte   "                                "
         .byte   0
 
