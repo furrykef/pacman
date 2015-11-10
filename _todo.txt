@@ -19,5 +19,3 @@ Cruise Elroy.
 Global dot counter after Pac-Man dies.
 
 Do eaten ghosts ever reverse direction with mode changes?
-
-Eaten ghosts should have a constant, fast speed (and not slow down in tunnels)

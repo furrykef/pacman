@@ -31,6 +31,10 @@
         ScaredSpeed2    .byte
         ScaredSpeed3    .byte
         ScaredSpeed4    .byte
+        EatenSpeed1     .byte
+        EatenSpeed2     .byte
+        EatenSpeed3     .byte
+        EatenSpeed4     .byte
         State           .byte
         fScared         .byte
         fReverse        .byte
@@ -307,6 +311,25 @@ InitAI:
         sta     Clyde+Ghost::ScaredSpeed3
         sta     Clyde+Ghost::ScaredSpeed1
 
+        ; Eaten speed
+        lda     #$ff
+        sta     Blinky+Ghost::EatenSpeed4
+        sta     Blinky+Ghost::EatenSpeed3
+        sta     Blinky+Ghost::EatenSpeed2
+        sta     Blinky+Ghost::EatenSpeed1
+        sta     Pinky+Ghost::EatenSpeed4
+        sta     Pinky+Ghost::EatenSpeed3
+        sta     Pinky+Ghost::EatenSpeed2
+        sta     Pinky+Ghost::EatenSpeed1
+        sta     Inky+Ghost::EatenSpeed4
+        sta     Inky+Ghost::EatenSpeed3
+        sta     Inky+Ghost::EatenSpeed2
+        sta     Inky+Ghost::EatenSpeed1
+        sta     Clyde+Ghost::EatenSpeed4
+        sta     Clyde+Ghost::EatenSpeed3
+        sta     Clyde+Ghost::EatenSpeed2
+        sta     Clyde+Ghost::EatenSpeed1
+
         ; @TODO@ -- depends on level
         lda     #240
         sta     DotTimeout
@@ -553,6 +576,10 @@ HandleOneGhost:
 GetSpeed:
         ldy     #Ghost::State
         lda     (GhostL),y
+        cmp     #GhostState::eaten
+        beq     @eaten
+        cmp     #GhostState::entering
+        beq     @eaten
         cmp     #GhostState::waiting
         beq     @in_house
         cmp     #GhostState::exiting
@@ -573,6 +600,9 @@ GetSpeed:
         bne     @scared
         ; No special conditions apply
         ldy     #Ghost::Speed1
+        rts
+@eaten:
+        ldy     #Ghost::EatenSpeed1
         rts
 @in_house:
         ldy     #Ghost::WaitingSpeed1
