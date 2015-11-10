@@ -293,11 +293,11 @@ PlayRound:
         jsr     Pause
 :
         jsr     MoveGhosts
-        lda     fPacDead
-        bne     @pac_dead
         jsr     MovePacMan
         jsr     HandleFruit
         jsr     Render
+        lda     fPacDead
+        bne     @pac_dead
         lda     NumDots
         bne     @game_loop
         ; Round has been won
@@ -311,8 +311,17 @@ PlayRound:
         jsr     ClearMyOAM
         jsr     DoPacManDeathAnimation
         dec     NumLives
-        beq     NewGame
+        beq     @game_over
         jmp     @start_life
+@game_over:
+        jsr     DrawStatus                  ; to show 0 lives
+        DlBegin
+        DlAdd   #10, #$22, #$2b
+        DlAdd   #'G', #'A', #'M', #'E', #' ', #' ', #'O', #'V', #'E', #'R'
+        DlEnd
+        ldy     #180
+        jsr     WaitFrames
+        jmp     NewGame
 
 
 InitLife:
