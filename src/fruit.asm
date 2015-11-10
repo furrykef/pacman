@@ -19,60 +19,15 @@ SpawnFruit:
         lda     #>10*60
         sta     FruitClockH
 
-        ldx     DisplayListIndex
-        lda     #2
-        sta     DisplayList,x
-        inx
-        lda     #$22
-        sta     DisplayList,x
-        inx
-        lda     #$0f
-        sta     DisplayList,x
-        inx
-        lda     #$d0
-        sta     DisplayList,x
-        inx
-        lda     #$d1
-        sta     DisplayList,x
-        inx
+        DlBegin
+        DlAdd   #2, #$22, #$0f
+        DlAdd   #$d0, #$d1
         ; Clear space to the left and right of the fruit as well
         ; (in case bonus points have been drawn here)
-        lda     #4
-        sta     DisplayList,x
-        inx
-        lda     #$22
-        sta     DisplayList,x
-        inx
-        lda     #$2e
-        sta     DisplayList,x
-        inx
-        lda     #$20
-        sta     DisplayList,x
-        inx
-        lda     #$e0
-        sta     DisplayList,x
-        inx
-        lda     #$e1
-        sta     DisplayList,x
-        inx
-        lda     #$20
-        sta     DisplayList,x
-        inx
-        lda     #2
-        sta     DisplayList,x
-        inx
-        lda     #$22
-        sta     DisplayList,x
-        inx
-        lda     #$4f
-        sta     DisplayList,x
-        inx
-        lda     #$f0
-        sta     DisplayList,x
-        inx
-        lda     #$f1
-        sta     DisplayList,x
-        inx
-        stx     DisplayListIndex
+        DlAdd   #4, #$22, #$2e
+        DlAdd   #$20, #$e0, #$e1, #$20
+        DlAdd   #2, #$22, #$4f
+        DlAdd   #$f0, #$f1
+        DlEnd
 
         rts

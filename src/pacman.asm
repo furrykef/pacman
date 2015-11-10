@@ -234,10 +234,8 @@ EatStuff:
         sta     (RowAddrL),y
 
         ; Draw space where Pac-Man is
-        ldx     DisplayListIndex
-        lda     #1
-        sta     DisplayList,x               ; size of chunk
-        inx
+        DlBegin
+        DlAdd   #1
         lda     #0
         sta     TmpL
         lda     PacTileY
@@ -260,10 +258,8 @@ EatStuff:
         tya
         sta     DisplayList,x               ; PPU address LSB
         inx
-        lda     #SPACE                      ; space
-        sta     DisplayList,x
-        inx
-        stx     DisplayListIndex
+        DlAdd   #SPACE
+        DlEnd
         rts
 
 

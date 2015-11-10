@@ -31,6 +31,25 @@ NUM_SCORE_DIGITS = 6
 MyOAM = $200
 
 
+.macro DlBegin
+        ldx     DisplayListIndex
+.endmacro
+
+.macro DlAdd a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16
+.ifblank a1
+        .exitmacro
+.endif
+        lda     a1
+        sta     DisplayList,x
+        inx
+        DlAdd a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16
+.endmacro
+
+.macro DlEnd
+        stx     DisplayListIndex
+.endmacro
+
+
 .segment "ZEROPAGE"
 
 TmpL:               .res 1
@@ -368,44 +387,24 @@ Render:
 
 
 DrawStatus:
-        ldx     DisplayListIndex
+        DlBegin
         ; Draw score
-        lda     #NUM_SCORE_DIGITS
-        sta     DisplayList,x
-        inx
-        lda     #$2b
-        sta     DisplayList,x
-        inx
-        lda     #$a6
-        sta     DisplayList,x
-        inx
+        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$a6
 .repeat NUM_SCORE_DIGITS, I
-        lda     Score+I
-        sta     DisplayList,x
-        inx
+        DlAdd   Score+I
 .endrepeat
         ; Draw high score
         ; Unlock PRG RAM, read-only
         lda     #$c0
         sta     $a001
-        lda     #NUM_SCORE_DIGITS
-        sta     DisplayList,x
-        inx
-        lda     #$2b
-        sta     DisplayList,x
-        inx
-        lda     #$b0
-        sta     DisplayList,x
-        inx
+        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$b0
 .repeat NUM_SCORE_DIGITS, I
-        lda     HiScore+I
-        sta     DisplayList,x
-        inx
+        DlAdd   HiScore+I
 .endrepeat
         ; Lock PRG RAM
         lda     #$00
         sta     $a001
-        stx     DisplayListIndex
+        DlEnd
         rts
 
 
