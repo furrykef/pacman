@@ -310,6 +310,7 @@ PlayRound:
         jsr     WaitFrames
         jsr     ClearMyOAM
         jsr     DoPacManDeathAnimation
+        jsr     ClearFruitGraphic
         dec     NumLives
         beq     @game_over
         jmp     @start_life

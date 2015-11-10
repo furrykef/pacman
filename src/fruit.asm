@@ -1,10 +1,12 @@
 FRUIT_TIMEOUT = 10*60
+FRUIT_POINTS_TIMEOUT = 2*60
 
 
 .segment "ZEROPAGE"
 
 FruitClockL:        .res 1
 FruitClockH:        .res 1
+FruitPointsClock:   .res 1
 
 
 .segment "CODE"
@@ -13,6 +15,7 @@ InitFruit:
         lda     #0
         sta     FruitClockL
         sta     FruitClockH
+        sta     FruitPointsClock
         rts
 
 
@@ -54,7 +57,7 @@ HandleFruit:
         cmp     #130
         bge     @end
 
-        ; Pac-Man is in the fruit zone
+        ; Pac-Man is eating the fruit
         lda     #0
         sta     FruitClockL
         sta     FruitClockH
@@ -63,12 +66,22 @@ HandleFruit:
         lda     #>Points100
         sta     TmpH
         jsr     AddPoints
+        lda     #FRUIT_POINTS_TIMEOUT
+        sta     FruitPointsClock
 @end:
         rts
 @zero:
-        ; Clear fruit graphic
-        lda     #0
+        ; Check if we're drawing points
+        lda     FruitPointsClock
+        beq     @no_points
+        ; Drawing points
+        dec     FruitPointsClock
+        lda     #2
         jmp     DrawFruitGraphic
+
+@no_points:
+        ; Clear fruit graphic
+        jmp     ClearFruitGraphic
 
 
 DrawFruitGraphic:
@@ -102,9 +115,15 @@ DrawFruitGraphic:
         rts
 
 
+ClearFruitGraphic:
+        lda     #0
+        jmp     DrawFruitGraphic
+
+
 ; First two bytes correspond to (15, 16) and (16, 16)
 ; Next four correspond to (14, 17) through (17, 17)
 ; Last two bytes correspond to (15, 18) through (16, 18)
 FruitGraphicTbl:
         .byte   $a8, $a8, $20, $20, $20, $20, $82, $82      ; blank
         .byte   $d0, $d1, $20, $e0, $e1, $20, $f0, $f1      ; cherry
+        .byte   $a8, $a8, $20, $c0, $c1, $20, $82, $82      ; 100 points
