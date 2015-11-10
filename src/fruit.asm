@@ -26,7 +26,7 @@ SpawnFruit:
         sta     FruitClockH
 
         ; @TODO@ -- depends on level
-        lda     #1
+        lda     #0
         jmp     DrawFruitGraphic
 
 
@@ -76,54 +76,76 @@ HandleFruit:
         beq     @no_points
         ; Drawing points
         dec     FruitPointsClock
-        lda     #2
-        jmp     DrawFruitGraphic
+        lda     #1                          ; @TODO@
+        jmp     DrawPointsGraphic
 
 @no_points:
-        ; Clear fruit graphic
         jmp     ClearFruitGraphic
 
 
 DrawFruitGraphic:
-        ; Entries are 8 bytes
         asl
+        add     #$d0
+        tay
+        DlBegin
+
+        DlAdd   #2, #$22, #$0f
+        tya
+        DlAddA
+        add     #1
+        DlAddA
+        add     #$0f
+        tay
+
+        DlAdd   #4, #$22, #$2e
+        DlAdd   #$20
+        tya
+        DlAddA
+        add     #1
+        DlAddA
+        add     #$0f
+        tay
+        DlAdd   #$20
+
+        DlAdd   #2, #$22, #$4f
+        tya
+        DlAddA
+        add     #1
+        DlAddA
+
+        DlEnd
+        rts
+
+
+DrawPointsGraphic:
+        ; 4-byte entries
         asl
         asl
         tay
-
         DlBegin
+
         DlAdd   #2, #$22, #$0f
-.repeat 2
-        lda     FruitGraphicTbl,y
-        iny
-        DlAddA
-.endrepeat
+        DlAdd   #$a8, #$a8
+
         DlAdd   #4, #$22, #$2e
 .repeat 4
-        lda     FruitGraphicTbl,y
+        lda     PointsGraphicTbl,y
         iny
         DlAddA
 .endrepeat
-        DlAdd   #2, #$22, #$4f
-.repeat 2
-        lda     FruitGraphicTbl,y
-        iny
-        DlAddA
-.endrepeat
-        DlEnd
 
+        DlAdd   #2, #$22, #$4f
+        DlAdd   #$82, #$82
+
+        DlEnd
         rts
 
 
 ClearFruitGraphic:
         lda     #0
-        jmp     DrawFruitGraphic
+        jmp     DrawPointsGraphic
 
 
-; First two bytes correspond to (15, 16) and (16, 16)
-; Next four correspond to (14, 17) through (17, 17)
-; Last two bytes correspond to (15, 18) through (16, 18)
-FruitGraphicTbl:
-        .byte   $a8, $a8, $20, $20, $20, $20, $82, $82      ; blank
-        .byte   $d0, $d1, $20, $e0, $e1, $20, $f0, $f1      ; cherry
-        .byte   $a8, $a8, $20, $c0, $c1, $20, $82, $82      ; 100 points
+PointsGraphicTbl:
+        .byte   $20, $20, $20, $20          ; blank (will clear fruit graphic if drawn)
+        .byte   $20, $c0, $c1, $20          ; 100 points

@@ -18,5 +18,3 @@ Global dot counter after Pac-Man dies.
 Do eaten ghosts ever reverse direction with mode changes?
 
 Extra life at 10,000 pts.
-
-Is the "eating ghost" delay too long?
