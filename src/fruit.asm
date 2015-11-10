@@ -22,18 +22,9 @@ SpawnFruit:
         lda     #>FRUIT_TIMEOUT
         sta     FruitClockH
 
-        DlBegin
-        DlAdd   #2, #$22, #$0f
-        DlAdd   #$d0, #$d1
-        ; Clear space to the left and right of the fruit as well
-        ; (in case bonus points have been drawn here)
-        DlAdd   #4, #$22, #$2e
-        DlAdd   #$20, #$e0, #$e1, #$20
-        DlAdd   #2, #$22, #$4f
-        DlAdd   #$f0, #$f1
-        DlEnd
-
-        rts
+        ; @TODO@ -- depends on level
+        lda     #1
+        jmp     DrawFruitGraphic
 
 
 HandleFruit:
@@ -45,7 +36,7 @@ HandleFruit:
         jmp     @nonzero
 @maybe_zero:
         ldx     FruitClockH
-        beq     @end
+        beq     @zero
 @nonzero:
         sub     #1
         sta     FruitClockL
@@ -74,3 +65,46 @@ HandleFruit:
         jsr     AddPoints
 @end:
         rts
+@zero:
+        ; Clear fruit graphic
+        lda     #0
+        jmp     DrawFruitGraphic
+
+
+DrawFruitGraphic:
+        ; Entries are 8 bytes
+        asl
+        asl
+        asl
+        tay
+
+        DlBegin
+        DlAdd   #2, #$22, #$0f
+.repeat 2
+        lda     FruitGraphicTbl,y
+        iny
+        DlAddA
+.endrepeat
+        DlAdd   #4, #$22, #$2e
+.repeat 4
+        lda     FruitGraphicTbl,y
+        iny
+        DlAddA
+.endrepeat
+        DlAdd   #2, #$22, #$4f
+.repeat 2
+        lda     FruitGraphicTbl,y
+        iny
+        DlAddA
+.endrepeat
+        DlEnd
+
+        rts
+
+
+; First two bytes correspond to (15, 16) and (16, 16)
+; Next four correspond to (14, 17) through (17, 17)
+; Last two bytes correspond to (15, 18) through (16, 18)
+FruitGraphicTbl:
+        .byte   $a8, $a8, $20, $20, $20, $20, $82, $82      ; blank
+        .byte   $d0, $d1, $20, $e0, $e1, $20, $f0, $f1      ; cherry

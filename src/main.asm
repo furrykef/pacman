@@ -36,13 +36,17 @@ MyOAM = $200
         ldx     DisplayListIndex
 .endmacro
 
+.macro DlAddA
+        sta     DisplayList,x
+        inx
+.endmacro
+
 .macro DlAdd a1, a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16
 .ifblank a1
         .exitmacro
 .endif
         lda     a1
-        sta     DisplayList,x
-        inx
+        DlAddA
         DlAdd a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16
 .endmacro
 

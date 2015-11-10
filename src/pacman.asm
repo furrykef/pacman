@@ -255,11 +255,9 @@ EatStuff:
         tay                                 ; this will be the LSB; keep for later
         lda     TmpL
         add     #$20                        ; first nametable
-        sta     DisplayList,x               ; PPU address MSB
-        inx
+        DlAddA
         tya
-        sta     DisplayList,x               ; PPU address LSB
-        inx
+        DlAddA                              ; PPU address LSB
         DlAdd   #SPACE
         DlEnd
         rts
