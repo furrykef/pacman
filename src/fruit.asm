@@ -103,24 +103,20 @@ HandleFruit:
 AddFruitPoints:
         jsr     GetFruitId
 
-        ; First entry of PointsTbl is dummy entry
-        add     #1
-
-        ; Entries are 8 bytes
-        asl
-        asl
-        asl
+        asl                                 ; entries are 2 bytes
+        pha
         tax
-        lda     PointsTbl,x
+        lda     FruitPointsTbl,x
         sta     TmpL
         inx
-        lda     PointsTbl,x
+        lda     FruitPointsTbl,x
         sta     TmpH
         inx
         txa
-        pha
         jsr     AddPoints
         pla
+        asl                                 ; entries are 4 bytes
+        add     #4                          ; first entry is a dummy entry
         tay
         jmp     DrawPointsGraphic
 
@@ -165,7 +161,7 @@ DrawFruitGraphic:
 
 
 ; Input:
-;   Y = byte index into PointsTbl
+;   Y = byte index into FruitPointsGfxTbl
 DrawPointsGraphic:
         DlBegin
 
@@ -175,7 +171,7 @@ DrawPointsGraphic:
 
         DlAdd   #4, #$22, #$2e
 .repeat 4
-        lda     PointsTbl,y
+        lda     FruitPointsGfxTbl,y
         iny
         DlAddA
 .endrepeat
@@ -189,7 +185,7 @@ DrawPointsGraphic:
 
 
 ClearFruitGraphic:
-        ldy     #2
+        ldy     #0
         jmp     DrawPointsGraphic
 
 
@@ -212,30 +208,24 @@ LevelToFruit:
 ; First two bytes of each entry are address of points BCD number
 ; Next four bytes are the graphic
 ; Last two bytes are padding to make each entry 8 bytes
-PointsTbl:
-        .addr   0                           ; blank (will clear fruit graphic if drawn)
-        .byte   $20, $20, $20, $20, 0, 0    ; (address is dummy address)
-
+FruitPointsTbl:
         .addr   Points100                   ; cherry
-        .byte   $20, $c0, $c1, $20, 0, 0
-
         .addr   Points300                   ; strawberry
-        .byte   $20, $c2, $c1, $20, 0, 0
-
         .addr   Points500                   ; peach
-        .byte   $20, $c3, $c1, $20, 0, 0
-
         .addr   Points700                   ; apple
-        .byte   $20, $c4, $c1, $20, 0, 0
-
         .addr   Points1000                  ; grapes
-        .byte   $20, $c5, $c6, $c7, 0, 0
-
         .addr   Points2000                  ; galaxian
-        .byte   $c8, $c9, $c6, $c7, 0, 0
-
         .addr   Points3000                  ; bell
-        .byte   $ca, $cb, $c6, $c7, 0, 0
-
         .addr   Points5000                  ; key
-        .byte   $cc, $cd, $c6, $c7, 0, 0
+
+
+FruitPointsGfxTbl:
+        .byte   $20, $20, $20, $20          ; blank (will clear fruit graphic if drawn)
+        .byte   $20, $c0, $c1, $20          ; 100 points (cherry)
+        .byte   $20, $c2, $c1, $20          ; 300 points (strawberry)
+        .byte   $20, $c3, $c1, $20          ; 500 points (peach)
+        .byte   $20, $c4, $c1, $20          ; 700 points (apple)
+        .byte   $20, $c5, $c6, $c7          ; 1000 points (grape)
+        .byte   $c8, $c9, $c6, $c7          ; 2000 points (galaxian)
+        .byte   $ca, $cb, $c6, $c7          ; 3000 points (bell)
+        .byte   $cc, $cd, $c6, $c7          ; 5000 points (key)
