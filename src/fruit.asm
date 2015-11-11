@@ -220,22 +220,22 @@ PointsTbl:
         .byte   $20, $c0, $c1, $20, 0, 0
 
         .addr   Points300                   ; strawberry
-        .byte   $20, $20, $20, $20, 0, 0
+        .byte   $20, $c2, $c1, $20, 0, 0
 
         .addr   Points500                   ; peach
-        .byte   $20, $20, $20, $20, 0, 0
+        .byte   $20, $c3, $c1, $20, 0, 0
 
         .addr   Points700                   ; apple
-        .byte   $20, $20, $20, $20, 0, 0
+        .byte   $20, $c4, $c1, $20, 0, 0
 
         .addr   Points1000                  ; grapes
-        .byte   $20, $20, $20, $20, 0, 0
+        .byte   $20, $c5, $c6, $c7, 0, 0
 
         .addr   Points2000                  ; galaxian
-        .byte   $20, $20, $20, $20, 0, 0
+        .byte   $c8, $c9, $c6, $c7, 0, 0
 
         .addr   Points3000                  ; bell
-        .byte   $20, $20, $20, $20, 0, 0
+        .byte   $ca, $cb, $c6, $c7, 0, 0
 
         .addr   Points5000                  ; key
-        .byte   $20, $20, $20, $20, 0, 0
+        .byte   $cc, $cd, $c6, $c7, 0, 0
