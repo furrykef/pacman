@@ -252,6 +252,6 @@ FruitPalettes:
         .byte   $26, $2a                    ; peach
         .byte   $16, $27                    ; apple
         .byte   $2a, $30                    ; grapes
-        .byte   $28, $16                    ; galaxian
+        .byte   $16, $28                    ; galaxian
         .byte   $28, $30                    ; bell
         .byte   $31, $20                    ; key
