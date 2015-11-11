@@ -125,6 +125,7 @@ AddFruitPoints:
 ;   A = ID of fruit (CHERRY, etc.)
 DrawFruitGraphic:
         asl
+        pha                                 ; keep doubled fruit ID for later
         add     #$d0
         tay
         DlBegin
@@ -156,6 +157,16 @@ DrawFruitGraphic:
         add     #1
         DlAddA
 
+        ; Palette
+        DlAdd   #2, #$3f, #$0e
+        pla                                 ; get doubled fruit ID back
+        tay
+        lda     FruitPalettes,y
+        iny
+        DlAddA
+        lda     FruitPalettes,y
+        DlAddA
+
         DlEnd
         rts
 
@@ -179,6 +190,10 @@ DrawPointsGraphic:
         ; Clear bottom two tiles of fruit
         DlAdd   #2, #$22, #$4f
         DlAdd   #$82, #$82
+
+        ; Palette
+        DlAdd   #1, #$3f, #$0e
+        DlAdd   #$25
 
         DlEnd
         rts
@@ -229,3 +244,14 @@ FruitPointsGfxTbl:
         .byte   $c8, $c9, $c6, $c7          ; 2000 points (galaxian)
         .byte   $ca, $cb, $c6, $c7          ; 3000 points (bell)
         .byte   $cc, $cd, $c6, $c7          ; 5000 points (key)
+
+
+FruitPalettes:
+        .byte   $16, $27                    ; cherry
+        .byte   $16, $30                    ; strawberry
+        .byte   $26, $2a                    ; peach
+        .byte   $16, $27                    ; apple
+        .byte   $2a, $30                    ; grapes
+        .byte   $28, $16                    ; galaxian
+        .byte   $28, $30                    ; bell
+        .byte   $31, $20                    ; key
