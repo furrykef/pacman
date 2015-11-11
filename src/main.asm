@@ -731,7 +731,7 @@ StatusBar:
         .byte   "                                "
         .byte   "                                "
         .byte   "    1UP   HIGH SCORE   ", $98, $a0, "       "
-        .byte   "                                "
+        .byte   "                       L=       "
         .byte   0
 
 
