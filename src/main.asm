@@ -25,6 +25,7 @@ NUM_SCORE_DIGITS = 6
 .export MoveGhosts
 .export DisplayList
 .export Blinky
+.export Pinky
 .export EnergizerClockL
 .export FruitClockL
 .export DotClock
@@ -85,6 +86,7 @@ NumLevel:           .res 1
 NumLives:           .res 1
 NumDots:            .res 1
 Score:              .res NUM_SCORE_DIGITS   ; BCD
+fDiedThisRound:     .res 1
 
 
 .include "pacman.asm"
@@ -280,6 +282,8 @@ PlayRound:
 
         lda     #244
         sta     NumDots
+        lda     #0
+        sta     fDiedThisRound
 
 @start_life:
         jsr     InitLife
@@ -320,6 +324,8 @@ PlayRound:
         jsr     ClearFruitGraphic
         dec     NumLives
         beq     @game_over
+        lda     #1
+        sta     fDiedThisRound
         jmp     @start_life
 @game_over:
         jsr     DrawStatus                  ; to show 0 lives
@@ -345,15 +351,15 @@ InitLife:
 ; Output:
 ;   carry flag
 .macro AddDigit num
-.local end
+.local @end
         lda     Score+(NUM_SCORE_DIGITS-num-1)
         adc     (TmpL),y
         dey
         cmp     #10
-        blt     end                         ; carry flag will be clear
+        blt     @end                        ; carry flag will be clear
         sub     #10
         ; carry flag will be set
-end:
+@end:
         sta     Score+(NUM_SCORE_DIGITS-num-1)
 .endmacro
 

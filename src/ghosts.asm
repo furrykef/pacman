@@ -82,6 +82,7 @@ ModeCount:      .res 1
 
 DotTimeout:     .res 1
 DotClock:       .res 1
+GhostGlobalDotCounter:  .res 1
 
 EnergizerTimeoutL:  .res 1
 EnergizerTimeoutH:  .res 1
@@ -156,7 +157,6 @@ InitAI:
         sta     Blinky+Ghost::fReverse
         sta     Blinky+Ghost::fScared
         sta     Blinky+Ghost::fBeingEaten
-        sta     Blinky+Ghost::DotCounter
         lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::pGetTargetTileL
         lda     #>GetBlinkyTargetTile
@@ -171,13 +171,12 @@ InitAI:
         lda     #SOUTH
         sta     Pinky+Ghost::Direction
         sta     Pinky+Ghost::TurnDir
-        lda     #GhostState::exiting
+        lda     #GhostState::waiting
         sta     Pinky+Ghost::State
         lda     #0
         sta     Pinky+Ghost::fReverse
         sta     Pinky+Ghost::fScared
         sta     Pinky+Ghost::fBeingEaten
-        sta     Pinky+Ghost::DotCounter
         lda     #<GetPinkyTargetTile
         sta     Pinky+Ghost::pGetTargetTileL
         lda     #>GetPinkyTargetTile
@@ -198,8 +197,6 @@ InitAI:
         sta     Inky+Ghost::fReverse
         sta     Inky+Ghost::fScared
         sta     Inky+Ghost::fBeingEaten
-        lda     #30 + 1
-        sta     Inky+Ghost::DotCounter
         lda     #<GetInkyTargetTile
         sta     Inky+Ghost::pGetTargetTileL
         lda     #>GetInkyTargetTile
@@ -220,8 +217,6 @@ InitAI:
         sta     Clyde+Ghost::fReverse
         sta     Clyde+Ghost::fScared
         sta     Clyde+Ghost::fBeingEaten
-        lda     #60 + 1
-        sta     Clyde+Ghost::DotCounter
         lda     #<GetClydeTargetTile
         sta     Clyde+Ghost::pGetTargetTileL
         lda     #>GetClydeTargetTile
@@ -346,6 +341,22 @@ InitAI:
         sta     EnergizerClockH
         sta     EatingGhostClock
 
+        lda     #32
+        sta     GhostGlobalDotCounter
+
+        ; Reset individual dot counters if global dot counter is not active
+        lda     fDiedThisRound
+        bne     @died
+        lda     #0
+        sta     GhostGlobalDotCounter       ; global dot counter only active when Pac-Man had died
+        sta     Blinky+Ghost::DotCounter
+        sta     Pinky+Ghost::DotCounter
+        lda     #30 + 1
+        sta     Inky+Ghost::DotCounter
+        lda     #60 + 1
+        sta     Clyde+Ghost::DotCounter
+@died:
+
         rts
 
 
@@ -429,7 +440,6 @@ SetModeClock:
         rts
 
 
-; @TODO@ -- don't use this if global dot counter is active
 DotClockTick:
         ldx     DotClock
         beq     @release_ghost
@@ -519,11 +529,16 @@ HandleOneGhost:
         bne     @end                        ; we're not an eaten ghost
 @can_move:
 
-        ; Release ghost if waiting and its dot counter is clear
+        ; Release ghost if:
+        ; 1) Global dot counter is inactive
+        lda     GhostGlobalDotCounter
+        bne     @no_release
+        ; 2) It is waiting
         ldy     #Ghost::State
         lda     (GhostL),y
         cmp     #GhostState::waiting
         bne     @no_release
+        ; 3) Its dot counter is zero
         ldy     #Ghost::DotCounter
         lda     (GhostL),y
         bne     @no_release
@@ -1057,11 +1072,11 @@ SquareTbl:
 
 
 .macro EvalDirection dir, score
-.local end
+.local @end
         ldy     #Ghost::Direction           ; Disallow if going the opposite direction
         lda     (GhostL),y
         cmp     #dir ^ $03
-        beq     end
+        beq     @end
         ldy     NextTileX
 .if dir = WEST
         dey
@@ -1076,16 +1091,16 @@ SquareTbl:
 .endif
         jsr     GetTile
         jsr     IsTileEnterable
-        bne     end
+        bne     @end
         lda     score
         cmp     MaxScore
-        blt     end
-        beq     end
+        blt     @end
+        beq     @end
         sta     MaxScore
         lda     #dir
         ldy     #Ghost::TurnDir
         sta     (GhostL),y
-end:
+@end:
 .endmacro
 
 ComputeTurn:
@@ -1179,16 +1194,16 @@ ComputeScores:
 
 
 .macro GhostHandleEnergizer ghost
-.local end
+.local @end
         lda     ghost+Ghost::State
         cmp     #GhostState::eaten
-        beq     end
+        beq     @end
         cmp     #GhostState::entering
-        beq     end
+        beq     @end
         lda     #1
         sta     ghost+Ghost::fReverse
         sta     ghost+Ghost::fScared
-end:
+@end:
 .endmacro
 
 StartEnergizer:
@@ -1205,14 +1220,45 @@ StartEnergizer:
         rts
 
 
+; Input:
+;   A = global dot counter (won't be changed)
+.macro TestGlobalDotCounter ghost, count
+.local @end
+        cmp     #32 - count
+        bne     @end
+        ldx     ghost+Ghost::State
+        cpx     #GhostState::waiting
+        bne     @end
+        ldx     #GhostState::exiting
+        stx     ghost+Ghost::State
+@end:
+.endmacro
+
 GhostHandleDot:
         lda     DotTimeout
         sta     DotClock
 
+        lda     GhostGlobalDotCounter
+        beq     @individual_counters
+        ; Use individual counters if Clyde is out and about
+        ldx     Clyde+Ghost::State
+        cpx     #GhostState::waiting
+        bne     @individual_counters
+        ; Using global dot counter
+        sub     #1
+        sta     GhostGlobalDotCounter
+        TestGlobalDotCounter Pinky, 7
+        TestGlobalDotCounter Inky, 17
+        rts
+
+@individual_counters:
+        ; Individual dot counters
         lda     Inky+Ghost::State
         cmp     #GhostState::waiting
         bne     @try_clyde
         ; Inky is waiting
+        lda     Inky+Ghost::DotCounter
+        beq     @end
         dec     Inky+Ghost::DotCounter
         rts
 @try_clyde:
@@ -1220,9 +1266,13 @@ GhostHandleDot:
         cmp     #GhostState::waiting
         bne     @end
         ; Clyde is waiting
+        lda     Clyde+Ghost::DotCounter
+        beq     @end
         dec     Clyde+Ghost::DotCounter
 @end:
         rts
+
+@global_dot_counter:
 
 
 CalcGhostCoords:

@@ -13,8 +13,8 @@ Pac-Man's speed should be adjustable.
 
 Cruise Elroy.
 
-Global dot counter after Pac-Man dies.
-
 Do eaten ghosts ever reverse direction with mode changes?
 
 Extra life at 10,000 pts.
+
+If we add two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
