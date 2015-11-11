@@ -768,9 +768,16 @@ Points10:   .byte   0,0,0,0,1,0
 Points50:   .byte   0,0,0,0,5,0
 Points100:  .byte   0,0,0,1,0,0
 Points200:  .byte   0,0,0,2,0,0
+Points300:  .byte   0,0,0,3,0,0
 Points400:  .byte   0,0,0,4,0,0
+Points500:  .byte   0,0,0,5,0,0
+Points700:  .byte   0,0,0,7,0,0
 Points800:  .byte   0,0,0,8,0,0
+Points1000: .byte   0,0,1,0,0,0
 Points1600: .byte   0,0,1,6,0,0
+Points2000: .byte   0,0,2,0,0,0
+Points3000: .byte   0,0,3,0,0,0
+Points5000: .byte   0,0,5,0,0,0
 
 
 FirstDigitTbl:

@@ -32,14 +32,24 @@ InitFruit:
         rts
 
 
+GetFruitId:
+        ldx     NumLevel
+        cpx     #12
+        bge     @key
+        lda     LevelToFruit,x
+        rts
+@key:
+        lda     #KEY
+        rts
+
+
 SpawnFruit:
         lda     #<FRUIT_TIMEOUT
         sta     FruitClockL
         lda     #>FRUIT_TIMEOUT
         sta     FruitClockH
 
-        ; @TODO@ -- depends on level
-        lda     #CHERRY
+        jsr     GetFruitId
         jmp     DrawFruitGraphic
 
 
@@ -74,7 +84,6 @@ HandleFruit:
         lda     #0
         sta     FruitClockL
         sta     FruitClockH
-        lda     #CHERRY                     ; @TODO@ -- depends on level
         jsr     AddFruitPoints
         lda     #FRUIT_POINTS_TIMEOUT
         sta     FruitPointsClock
@@ -91,11 +100,12 @@ HandleFruit:
         jmp     ClearFruitGraphic
 
 
-; Input:
-;   A = ID of fruit (CHERRY, etc.)
 AddFruitPoints:
+        jsr     GetFruitId
+
         ; First entry of PointsTbl is dummy entry
         add     #1
+
         ; Entries are 8 bytes
         asl
         asl
@@ -206,5 +216,26 @@ PointsTbl:
         .addr   0                           ; blank (will clear fruit graphic if drawn)
         .byte   $20, $20, $20, $20, 0, 0    ; (address is dummy address)
 
-        .addr   Points100
+        .addr   Points100                   ; cherry
         .byte   $20, $c0, $c1, $20, 0, 0
+
+        .addr   Points300                   ; strawberry
+        .byte   $20, $20, $20, $20, 0, 0
+
+        .addr   Points500                   ; peach
+        .byte   $20, $20, $20, $20, 0, 0
+
+        .addr   Points700                   ; apple
+        .byte   $20, $20, $20, $20, 0, 0
+
+        .addr   Points1000                  ; grapes
+        .byte   $20, $20, $20, $20, 0, 0
+
+        .addr   Points2000                  ; galaxian
+        .byte   $20, $20, $20, $20, 0, 0
+
+        .addr   Points3000                  ; bell
+        .byte   $20, $20, $20, $20, 0, 0
+
+        .addr   Points5000                  ; key
+        .byte   $20, $20, $20, $20, 0, 0
