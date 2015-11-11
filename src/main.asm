@@ -81,6 +81,7 @@ RngSeedH:           .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
+NumLevel:           .res 1
 NumLives:           .res 1
 NumDots:            .res 1
 Score:              .res NUM_SCORE_DIGITS   ; BCD
@@ -259,6 +260,7 @@ NewGame:
         lda     #3
         sta     NumLives
         lda     #0
+        sta     NumLevel
 .repeat NUM_SCORE_DIGITS, I
         sta     Score+I
 .endrepeat
@@ -303,6 +305,11 @@ PlayRound:
         ; Round has been won
         ldy     #120
         jsr     WaitFrames
+        lda     NumLevel
+        cmp     #99 - 1
+        beq     :+
+        inc     NumLevel
+:
         jmp     PlayRound
 
 @pac_dead:
@@ -439,11 +446,33 @@ DrawStatus:
         lda     #$00
         sta     $a001
 
+        ; Draw level number
+        DlAdd   #2, #$2b, #$99
+        ldy     NumLevel
+        iny                                 ; level number is 0-based, but displayed as 1-based
+        jsr     DrawSmallNumber
+
         ; Draw number of lives
-        DlAdd   #1, #$2b, #$99
-        DlAdd   NumLives
+        DlAdd   #2, #$2b, #$b9
+        ldy     NumLives
+        jsr     DrawSmallNumber
 
         DlEnd
+        rts
+
+
+; Adds a two-digit number to the display list.
+; If the number is less than 10, the second digit is a space.
+;
+; Input:
+;   Y = the number (0-99)
+;
+; Call this between DlBegin and DlEnd
+DrawSmallNumber:
+        lda     FirstDigitTbl,y
+        DlAddA
+        lda     SecondDigitTbl,y
+        DlAddA
         rts
 
 
@@ -730,8 +759,8 @@ DeltaYTbl:
 StatusBar:
         .byte   "                                "
         .byte   "                                "
-        .byte   "    1UP   HIGH SCORE   ", $98, $a0, "       "
-        .byte   "                       L=       "
+        .byte   "    1UP   HIGH SCORE   L=       "
+        .byte   "                       ", $98, $a0, "       "
         .byte   0
 
 
@@ -742,6 +771,26 @@ Points200:  .byte   0,0,0,2,0,0
 Points400:  .byte   0,0,0,4,0,0
 Points800:  .byte   0,0,0,8,0,0
 Points1600: .byte   0,0,1,6,0,0
+
+
+FirstDigitTbl:
+.repeat 10, I
+        .byte I
+.endrepeat
+.repeat 9, I
+    .repeat 10
+        .byte I+1
+    .endrepeat
+.endrepeat
+
+SecondDigitTbl:
+.repeat 10
+        .byte ' '
+.endrepeat
+.repeat 90, I
+        .byte I .mod 10
+.endrepeat
+
 
 Palette:
 .incbin "../assets/palette.dat"
