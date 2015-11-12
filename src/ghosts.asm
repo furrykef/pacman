@@ -1272,8 +1272,6 @@ GhostHandleDot:
 @end:
         rts
 
-@global_dot_counter:
-
 
 CalcGhostCoords:
         ldy     #Ghost::PosX
@@ -1303,26 +1301,21 @@ CalcGhostCoords:
         rts
 
 
+.macro CyclePriority ghost
+        lda     ghost+Ghost::Priority
+        add     #1
+        and     #$03
+        sta     ghost+Ghost::Priority
+.endmacro
+
 DrawGhosts:
         lda     fSpriteOverflow
         beq     @no_overflow
         ; More than 8 hardware sprites/scanline on previous frame; cycle priorities
-        lda     Blinky+Ghost::Priority
-        add     #1
-        and     #$03
-        sta     Blinky+Ghost::Priority
-        lda     Pinky+Ghost::Priority
-        add     #1
-        and     #$03
-        sta     Pinky+Ghost::Priority
-        lda     Inky+Ghost::Priority
-        add     #1
-        and     #$03
-        sta     Inky+Ghost::Priority
-        lda     Clyde+Ghost::Priority
-        add     #1
-        and     #$03
-        sta     Clyde+Ghost::Priority
+        CyclePriority Blinky
+        CyclePriority Pinky
+        CyclePriority Inky
+        CyclePriority Clyde
 @no_overflow:
 
         lda     #<Blinky
