@@ -368,6 +368,16 @@ MoveGhosts:
         jsr     EnergizerClockTick
 @eating_ghost:
         jsr     EatingGhostClockTick
+
+        ; Blinky never waits
+        ; (can get in this state if dot counter is active)
+        lda     Blinky+Ghost::State
+        cmp     #GhostState::waiting
+        bne     :+
+        lda     #GhostState::exiting
+        sta     Blinky+Ghost::State
+:
+
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
@@ -468,6 +478,8 @@ DotClockTick:
         rts
 @release_clyde:
         stx     Clyde+Ghost::State
+        lda     #0
+        sta     GhostGlobalDotCounter
         rts
 
 
