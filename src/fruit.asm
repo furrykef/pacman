@@ -6,9 +6,9 @@ FRUIT_POINTS_TIMEOUT = 2*60
 .enum
         CHERRY
         STRAWBERRY
-        PEACH
+        ORANGE
         APPLE
-        GRAPES
+        MELON
         GALAXIAN
         BELL
         KEY
@@ -207,12 +207,12 @@ ClearFruitGraphic:
 LevelToFruit:
         .byte   CHERRY                      ; 0 (level 1)
         .byte   STRAWBERRY                  ; 1
-        .byte   PEACH                       ; 2
-        .byte   PEACH                       ; 3
+        .byte   ORANGE                      ; 2
+        .byte   ORANGE                      ; 3
         .byte   APPLE                       ; 4
         .byte   APPLE                       ; 5
-        .byte   GRAPES                      ; 6
-        .byte   GRAPES                      ; 7
+        .byte   MELON                       ; 6
+        .byte   MELON                       ; 7
         .byte   GALAXIAN                    ; 8
         .byte   GALAXIAN                    ; 9
         .byte   BELL                        ; 10
@@ -226,9 +226,9 @@ LevelToFruit:
 FruitPointsTbl:
         .addr   Points100                   ; cherry
         .addr   Points300                   ; strawberry
-        .addr   Points500                   ; peach
+        .addr   Points500                   ; orange
         .addr   Points700                   ; apple
-        .addr   Points1000                  ; grapes
+        .addr   Points1000                  ; melon
         .addr   Points2000                  ; galaxian
         .addr   Points3000                  ; bell
         .addr   Points5000                  ; key
@@ -249,9 +249,9 @@ FruitPointsGfxTbl:
 FruitPalettes:
         .byte   $16, $27                    ; cherry
         .byte   $16, $30                    ; strawberry
-        .byte   $26, $2a                    ; peach
+        .byte   $27, $2a                    ; orange
         .byte   $16, $27                    ; apple
-        .byte   $2a, $30                    ; grapes
+        .byte   $2a, $30                    ; melon
         .byte   $16, $28                    ; galaxian
         .byte   $28, $30                    ; bell
         .byte   $31, $20                    ; key

@@ -29,6 +29,7 @@ NUM_SCORE_DIGITS = 6
 .export EnergizerClockL
 .export FruitClockL
 .export DotClock
+.export NumLevel
 
 
 MyOAM = $200

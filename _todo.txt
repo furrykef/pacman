@@ -7,6 +7,13 @@ With the previous bug, when Pac-Man is at the very top of the maze and facing up
 I'm not sure the two bugs fully cancel out; Pinky's score for "northish" might be too high. If so, this would remove "westish" and "eastish" from the steering computation.
 
 
+Dot counter bugs
+---------------
+Blinky gets stuck in the ghost house while global dot counter is active.
+
+Global dot counter is supposed to be ignored (but still count down) while Clyde is outside ghost house.
+
+
 To be implemented
 -----------------
 Pac-Man's speed should be adjustable.
