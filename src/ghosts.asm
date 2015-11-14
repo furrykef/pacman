@@ -94,8 +94,42 @@ EnergizerPoints:    .res 1                  ; 0 = 200, 1 = 400...
 
 EatingGhostClock:   .res 1
 
+pModesL:            .res 1
+pModesH:            .res 1
+ElroyDots:          .res 1
+
 
 .segment "CODE"
+
+;.macro GhostDifficultyTblEntry speeds, modes, elroy_dots, scared_timeout
+;        .addr   speeds
+;        .addr   modes
+;        .byte   elroy_dots
+;        .word   scared_timeout
+;        .res 1
+;.endmacro
+;
+;GhostDifficultyTbl:
+;        GhostDifficultyTblEntry Lvl1Speeds, Lvl1Modes, 20, 6*60     ; level 1
+;        GhostDifficultyTblEntry Lvl2Speeds, Lvl2Modes, 30, 5*60     ; level 2
+;        GhostDifficultyTblEntry Lvl2Speeds, Lvl2Modes, 40, 4*60     ; level 3
+;        GhostDifficultyTblEntry Lvl2Speeds, Lvl2Modes, 40, 3*60     ; level 4
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 40, 2*60     ; level 5
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 50, 5*60     ; level 6
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 50, 2*60     ; level 7
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 50, 2*60     ; level 8
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 60, 1*60     ; level 9
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 60, 5*60     ; level 10
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 60, 2*60     ; level 11
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 80, 1*60     ; level 12
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 80, 1*60     ; level 13
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 80, 3*60     ; level 14
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 1*60    ; level 15
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 1*60    ; level 16
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 0       ; level 17
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 1*60    ; level 18
+;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 120, 0       ; level 19
+
 
 ; Times are guessed based on Pac-Man Dossier
 Lvl1Modes:
@@ -125,6 +159,31 @@ Lvl5Modes:
         .word   1037*60                     ; 5 (chase) - 1037 secs
         .word   1                           ; 6 (scatter) - 1/60 sec
 
+ModesMetaTbl:
+        .addr   Lvl1Modes
+.repeat 3
+        .addr   Lvl2Modes
+.endrepeat
+.repeat 15
+        .addr   Lvl5Modes
+.endrepeat
+
+ElroyDotsTbl:
+        ; Level 1   2   3   4   5   6   7   8   9   10  11  12  13  14  15   16   17   18   19
+        .byte   20, 30, 40, 40, 40, 50, 50, 50, 60, 60, 60, 80, 80, 80, 100, 100, 100, 100, 120
+
+EnergizerTimeoutTbl:
+        ; Level 1     2     3     4     5     6     7     8     9     10    11    12    13    14    15    16    17 18    19
+        .word   6*60, 5*60, 4*60, 3*60, 2*60, 5*60, 2*60, 2*60, 1*60, 5*60, 2*60, 1*60, 1*60, 3*60, 1*60, 1*60, 0, 1*60, 0
+
+DotTimeoutTbl:
+.repeat 4
+        .byte   4*60
+.endrepeat
+.repeat 15
+        .byte   3*60
+.endrepeat
+
 
 .macro InitGhostPos ghost, pos_x, pos_y
         lda     #pos_x
@@ -141,10 +200,6 @@ Lvl5Modes:
 InitAI:
         lda     #1
         sta     fScatter
-
-        lda     #0
-        sta     ModeCount
-        jsr     SetModeClock
 
         ; Blinky
         InitGhostPos Blinky, 127, 91
@@ -325,17 +380,6 @@ InitAI:
         sta     Clyde+Ghost::EatenSpeed2
         sta     Clyde+Ghost::EatenSpeed1
 
-        ; @TODO@ -- depends on level
-        lda     #240
-        sta     DotTimeout
-        sta     DotClock
-
-        ; @TODO@ -- depends on level
-        lda     #<360
-        sta     EnergizerTimeoutL
-        lda     #>360
-        sta     EnergizerTimeoutH
-
         lda     #0
         sta     EnergizerClockL
         sta     EnergizerClockH
@@ -356,6 +400,34 @@ InitAI:
         lda     #60 + 1
         sta     Clyde+Ghost::DotCounter
 @died:
+
+        ; Set difficulty level based on level
+        lda     NumLevel
+        cmp     #19                         ; ghost difficulty capped at 18 (level 19)
+        blt     :+
+        lda     #18
+:
+        tax
+        lda     ElroyDotsTbl,x
+        sta     ElroyDots
+        lda     DotTimeoutTbl,x
+        sta     DotTimeout
+        sta     DotClock
+        txa
+        asl
+        tax
+        lda     EnergizerTimeoutTbl,x
+        sta     EnergizerTimeoutL
+        lda     EnergizerTimeoutTbl+1,x
+        sta     EnergizerTimeoutH
+        lda     ModesMetaTbl,x
+        sta     pModesL
+        lda     ModesMetaTbl+1,x
+        sta     pModesH
+
+        lda     #0
+        sta     ModeCount
+        jsr     SetModeClock
 
         rts
 
@@ -441,11 +513,11 @@ SetModeClock:
         ; @TODO@ -- choose table based on level number
         lda     ModeCount
         asl
-        tax
-        lda     Lvl1Modes,x
+        tay
+        lda     (pModesL),y
         sta     ModeClockL
-        inx
-        lda     Lvl1Modes,x
+        iny
+        lda     (pModesL),y
         sta     ModeClockH
         rts
 
