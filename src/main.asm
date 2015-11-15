@@ -35,6 +35,14 @@ NUM_SCORE_DIGITS = 6
 MyOAM = $200
 
 
+.macro CopyDwordFromTbl src, dst
+.repeat 4, I
+        lda src+I,x
+        sta dst+I
+.endrepeat
+.endmacro
+
+
 .macro DlBegin
         ldx     DisplayListIndex
 .endmacro
@@ -90,6 +98,7 @@ Score:              .res NUM_SCORE_DIGITS   ; BCD
 fDiedThisRound:     .res 1
 
 
+.include "speeds.inc"
 .include "pacman.asm"
 .include "ghosts.asm"
 .include "map.asm"

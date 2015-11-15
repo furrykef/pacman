@@ -98,38 +98,17 @@ pModesL:            .res 1
 pModesH:            .res 1
 ElroyDots:          .res 1
 
+Elroy1Speed1:       .res 1
+Elroy1Speed2:       .res 1
+Elroy1Speed3:       .res 1
+Elroy1Speed4:       .res 1
+Elroy2Speed1:       .res 1
+Elroy2Speed2:       .res 1
+Elroy2Speed3:       .res 1
+Elroy2Speed4:       .res 1
+
 
 .segment "CODE"
-
-;.macro GhostDifficultyTblEntry speeds, modes, elroy_dots, scared_timeout
-;        .addr   speeds
-;        .addr   modes
-;        .byte   elroy_dots
-;        .word   scared_timeout
-;        .res 1
-;.endmacro
-;
-;GhostDifficultyTbl:
-;        GhostDifficultyTblEntry Lvl1Speeds, Lvl1Modes, 20, 6*60     ; level 1
-;        GhostDifficultyTblEntry Lvl2Speeds, Lvl2Modes, 30, 5*60     ; level 2
-;        GhostDifficultyTblEntry Lvl2Speeds, Lvl2Modes, 40, 4*60     ; level 3
-;        GhostDifficultyTblEntry Lvl2Speeds, Lvl2Modes, 40, 3*60     ; level 4
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 40, 2*60     ; level 5
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 50, 5*60     ; level 6
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 50, 2*60     ; level 7
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 50, 2*60     ; level 8
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 60, 1*60     ; level 9
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 60, 5*60     ; level 10
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 60, 2*60     ; level 11
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 80, 1*60     ; level 12
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 80, 1*60     ; level 13
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 80, 3*60     ; level 14
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 1*60    ; level 15
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 1*60    ; level 16
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 0       ; level 17
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 100, 1*60    ; level 18
-;        GhostDifficultyTblEntry Lvl5Speeds, Lvl5Modes, 120, 0       ; level 19
-
 
 ; Times are guessed based on Pac-Man Dossier
 Lvl1Modes:
@@ -183,6 +162,32 @@ DotTimeoutTbl:
 .repeat 15
         .byte   3*60
 .endrepeat
+
+
+.macro MakeSpeedTbl lvl1speed, lvl2speed, lvl5speed
+        .dword lvl1speed
+.repeat 3
+        .dword lvl2speed
+.endrepeat
+.repeat 15
+        .dword lvl5speed
+.endrepeat
+.endmacro
+
+GhostSpeedTbl:
+        MakeSpeedTbl Speed75, Speed85, Speed95
+
+GhostScaredSpeedTbl:
+        MakeSpeedTbl Speed50, Speed55, Speed60
+
+GhostTunnelSpeedTbl:
+        MakeSpeedTbl Speed40, Speed45, Speed50
+
+GhostElroy1SpeedTbl:
+        MakeSpeedTbl Speed80, Speed90, Speed100
+
+GhostElroy2SpeedTbl:
+        MakeSpeedTbl Speed85, Speed95, Speed105
 
 
 .macro InitGhostPos ghost, pos_x, pos_y
@@ -281,28 +286,6 @@ InitAI:
         lda     #$03
         sta     Clyde+Ghost::Palette
 
-        ; Speed
-        ; @TODO@ -- change depending on level
-        lda     #$55
-        sta     Blinky+Ghost::Speed4
-        sta     Blinky+Ghost::Speed3
-        sta     Pinky+Ghost::Speed4
-        sta     Pinky+Ghost::Speed3
-        sta     Inky+Ghost::Speed4
-        sta     Inky+Ghost::Speed3
-        sta     Clyde+Ghost::Speed4
-        sta     Clyde+Ghost::Speed3
-        lda     #$2a
-        sta     Blinky+Ghost::Speed2
-        sta     Pinky+Ghost::Speed2
-        sta     Inky+Ghost::Speed2
-        sta     Clyde+Ghost::Speed2
-        lda     #$aa
-        sta     Blinky+Ghost::Speed1
-        sta     Pinky+Ghost::Speed1
-        sta     Inky+Ghost::Speed1
-        sta     Clyde+Ghost::Speed1
-
         ; Waiting speed
         lda     #$22
         sta     Blinky+Ghost::WaitingSpeed4
@@ -321,45 +304,6 @@ InitAI:
         sta     Clyde+Ghost::WaitingSpeed3
         sta     Clyde+Ghost::WaitingSpeed2
         sta     Clyde+Ghost::WaitingSpeed1
-
-        ; Tunnel speed
-        lda     #$22
-        sta     Blinky+Ghost::TunnelSpeed4
-        sta     Blinky+Ghost::TunnelSpeed3
-        sta     Blinky+Ghost::TunnelSpeed2
-        sta     Blinky+Ghost::TunnelSpeed1
-        sta     Pinky+Ghost::TunnelSpeed4
-        sta     Pinky+Ghost::TunnelSpeed3
-        sta     Pinky+Ghost::TunnelSpeed2
-        sta     Pinky+Ghost::TunnelSpeed1
-        sta     Inky+Ghost::TunnelSpeed4
-        sta     Inky+Ghost::TunnelSpeed3
-        sta     Inky+Ghost::TunnelSpeed2
-        sta     Inky+Ghost::TunnelSpeed1
-        sta     Clyde+Ghost::TunnelSpeed4
-        sta     Clyde+Ghost::TunnelSpeed3
-        sta     Clyde+Ghost::TunnelSpeed2
-        sta     Clyde+Ghost::TunnelSpeed1
-
-        ; Scared speed
-        lda     #$24
-        sta     Blinky+Ghost::ScaredSpeed4
-        sta     Blinky+Ghost::ScaredSpeed2
-        sta     Pinky+Ghost::ScaredSpeed4
-        sta     Pinky+Ghost::ScaredSpeed2
-        sta     Inky+Ghost::ScaredSpeed4
-        sta     Inky+Ghost::ScaredSpeed2
-        sta     Clyde+Ghost::ScaredSpeed4
-        sta     Clyde+Ghost::ScaredSpeed2
-        lda     #$92
-        sta     Blinky+Ghost::ScaredSpeed3
-        sta     Blinky+Ghost::ScaredSpeed1
-        sta     Pinky+Ghost::ScaredSpeed3
-        sta     Pinky+Ghost::ScaredSpeed1
-        sta     Inky+Ghost::ScaredSpeed3
-        sta     Inky+Ghost::ScaredSpeed1
-        sta     Clyde+Ghost::ScaredSpeed3
-        sta     Clyde+Ghost::ScaredSpeed1
 
         ; Eaten speed
         lda     #$ff
@@ -414,7 +358,7 @@ InitAI:
         sta     DotTimeout
         sta     DotClock
         txa
-        asl
+        asl                                 ; X will now point at 16-bit entries
         tax
         lda     EnergizerTimeoutTbl,x
         sta     EnergizerTimeoutL
@@ -424,6 +368,23 @@ InitAI:
         sta     pModesL
         lda     ModesMetaTbl+1,x
         sta     pModesH
+        txa
+        asl                                 ; X will now point at 32-bit entries
+        tax
+        CopyDwordFromTbl GhostSpeedTbl, Blinky+Ghost::Speed1
+        CopyDwordFromTbl GhostSpeedTbl, Pinky+Ghost::Speed1
+        CopyDwordFromTbl GhostSpeedTbl, Inky+Ghost::Speed1
+        CopyDwordFromTbl GhostSpeedTbl, Clyde+Ghost::Speed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, Blinky+Ghost::ScaredSpeed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, Pinky+Ghost::ScaredSpeed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, Inky+Ghost::ScaredSpeed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, Clyde+Ghost::ScaredSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, Blinky+Ghost::TunnelSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, Pinky+Ghost::TunnelSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, Inky+Ghost::TunnelSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, Clyde+Ghost::TunnelSpeed1
+        CopyDwordFromTbl GhostElroy1SpeedTbl, Elroy1Speed1
+        CopyDwordFromTbl GhostElroy2SpeedTbl, Elroy2Speed1
 
         lda     #0
         sta     ModeCount

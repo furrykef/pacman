@@ -13,7 +13,16 @@ $55552AAA = 01010101010101010010101010101010 = 75% = Ghost speed on level 1
 $24922492 = 00100100100100100010010010010010 = 50% = Scared ghost speed on level 1
 $22222222 = 00100010001000100010001000100010 = 40% = Tunnel speed on level 1
 
-Remember to store these as little-endian (although it probably won't make a significant difference).
+$B5AD5AD6 = 10110101101011010101101011010110 = 95% = Pac-Man energizer speed on level 2
+$49252492 = 01001001001001010010010010010010 = 55% = Scared ghost speed on level 2
+
+$91222448 = 10010001001000100010010001001000 = 45% = Tunnel speed on level 2
+$6D6D6D6D = 01101101011011010110110101101101 = 100% = Pac-Man speed level 5
+$DB6D7DB6 = 11011011011011010111110110110110 = 105% = Elroy 2 speed on level 5
+$25252525 = 00100101001001010010010100100101 = 60% = Scared ghost speed on level 5
+
+
+Remember to store these as little-endian.
 
 
 Eating a dot causes Pac-Man to stop for one frame; eating an energizer causes him to stop for three frames.
