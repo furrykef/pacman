@@ -9,10 +9,6 @@ I'm not sure the two bugs fully cancel out; Pinky's score for "northish" might b
 
 To be implemented
 -----------------
-Pac-Man's speed should be adjustable.
-
-Cruise Elroy.
-
 Do eaten ghosts ever reverse direction with mode changes?
 
 Extra life at 10,000 pts.

@@ -96,7 +96,8 @@ EatingGhostClock:   .res 1
 
 pModesL:            .res 1
 pModesH:            .res 1
-ElroyDots:          .res 1
+Elroy1Dots:         .res 1
+Elroy2Dots:         .res 1
 
 Elroy1Speed1:       .res 1
 Elroy1Speed2:       .res 1
@@ -106,6 +107,9 @@ Elroy2Speed1:       .res 1
 Elroy2Speed2:       .res 1
 Elroy2Speed3:       .res 1
 Elroy2Speed4:       .res 1
+
+fClydeLeft:         .res 1
+ElroyState:         .res 1
 
 
 .segment "CODE"
@@ -328,6 +332,8 @@ InitAI:
         sta     EnergizerClockL
         sta     EnergizerClockH
         sta     EatingGhostClock
+        sta     ElroyState
+        sta     fClydeLeft
 
         lda     #32
         sta     GhostGlobalDotCounter
@@ -353,7 +359,9 @@ InitAI:
 :
         tax
         lda     ElroyDotsTbl,x
-        sta     ElroyDots
+        sta     Elroy1Dots
+        lsr
+        sta     Elroy2Dots
         lda     DotTimeoutTbl,x
         sta     DotTimeout
         sta     DotClock
@@ -403,14 +411,51 @@ MoveGhosts:
         jsr     EatingGhostClockTick
 
         ; Blinky never waits
-        ; (can get in this state if dot counter is active)
+        ; (can get in this state if global dot counter is active)
         lda     Blinky+Ghost::State
         cmp     #GhostState::waiting
-        bne     :+
+        bne     @blinky_not_waiting
         lda     #GhostState::exiting
         sta     Blinky+Ghost::State
-:
+@blinky_not_waiting:
 
+        ; Set fClydeLeft if Clyde left at any point
+        ; (do not clear until end of life or round)
+        lda     Clyde+Ghost::State
+        cmp     #GhostState::waiting
+        beq     @clyde_waiting
+        lda     #1
+        sta     fClydeLeft
+@clyde_waiting:
+
+        ; Cruise Elroy speed
+        ; Do not adjust for Elroy if Clyde never left house
+        lda     fClydeLeft
+        beq     @elroy_done
+        lda     NumDots
+        cmp     Elroy2Dots
+        blt     @elroy2
+        beq     @elroy2
+        cmp     Elroy1Dots
+        beq     @elroy1
+        bge     @elroy_done
+@elroy1:
+        lda     ElroyState
+        bne     @elroy_done                 ; branch if we already changed Blinky's speed
+        lda     #1
+        sta     ElroyState
+        CopyDword Elroy1Speed1, Blinky+Ghost::Speed1
+        jmp     @elroy_done
+@elroy2:
+        lda     ElroyState
+        cmp     #2
+        beq     @elroy_done
+        lda     #2
+        sta     ElroyState
+        CopyDword Elroy2Speed1, Blinky+Ghost::Speed1
+@elroy_done:
+
+        ; Move the ghosts
         lda     #<Blinky
         sta     GhostL
         lda     #>Blinky
@@ -952,10 +997,14 @@ MoveOneGhostNormal:
 
 
 GetBlinkyTargetTile:
-        ; @TODO@ -- do not scatter while Elroy once Clyde has left house
+        ; Blinky never scatters while Elroy
+        lda     ElroyState
+        bne     @chase
+
         lda     fScatter
         bne     @scatter
 
+@chase:
         lda     PacTileX
         sta     TargetTileX
         lda     PacTileY
