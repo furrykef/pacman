@@ -100,7 +100,7 @@ Score:              .res NUM_SCORE_DIGITS   ; BCD
 fDiedThisRound:     .res 1
 
 
-.include "speeds.inc"
+.include "speed.asm"
 .include "pacman.asm"
 .include "ghosts.asm"
 .include "map.asm"
