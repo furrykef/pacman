@@ -701,8 +701,8 @@ GetSpeed:
 @end:
         add     GhostL
         sta     pSpeedL
-        lda     pSpeedH
-        adc     GhostH
+        lda     GhostH
+        adc     #0
         sta     pSpeedH
         rts
 

@@ -416,7 +416,7 @@ AddPoints:
         ; Award life at 10,000 points
         lda     fBonusLifeAwarded
         bne     @no_bonus_life
-        lda     Score+1
+        lda     Score+1                     ; is the ten thousands digit of the score nonzero?
         beq     @no_bonus_life
         ; Score reached 10,000 points for the first time
         inc     NumLives
