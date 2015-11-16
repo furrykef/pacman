@@ -400,15 +400,15 @@ AddPoints:
         bne     @scores_differ
 .endrepeat
         ; Scores are the same!
-        rts
+        jmp     @hiscore_done
 @scores_differ:
-        blt     @end                        ; branch if Score < HiScore
+        blt     @hiscore_done               ; branch if Score < HiScore
         ; Update high score
 .repeat NUM_SCORE_DIGITS, I
         lda     Score+I
         sta     HiScore+I
 .endrepeat
-@end:
+@hiscore_done:
         ; Lock PRG RAM
         lda     #$00
         sta     $a001
