@@ -20,3 +20,5 @@ Extra life at 10,000 pts.
 If we add two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
 
 Initialize random seed better.
+
+Should fEnergizerActive go false as soon as no ghosts are scared?

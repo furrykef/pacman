@@ -30,6 +30,8 @@ NUM_SCORE_DIGITS = 6
 .export FruitClockL
 .export DotClock
 .export NumLevel
+.export PacSpeed1
+.export InitPacMan
 
 
 MyOAM = $200

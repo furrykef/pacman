@@ -17,8 +17,39 @@ PacDelay:           .res 1
 
 fPacDead:           .res 1
 
+PacSpeed1:          .res 1
+PacSpeed2:          .res 1
+PacSpeed3:          .res 1
+PacSpeed4:          .res 1
+PacEnergizerSpeed1: .res 1
+PacEnergizerSpeed2: .res 1
+PacEnergizerSpeed3: .res 1
+PacEnergizerSpeed4: .res 1
+
 
 .segment "CODE"
+
+
+PacSpeedTbl:
+        .dword  Speed80
+.repeat 3
+        .dword  Speed90
+.endrepeat
+.repeat 16
+        .dword  Speed100
+.endrepeat
+        .dword  Speed90
+
+PacEnergizerSpeedTbl:
+        .dword  Speed90
+.repeat 3
+        .dword  Speed95
+.endrepeat
+.repeat 16
+        .dword  Speed100
+.endrepeat
+        .dword  Speed90
+
 
 InitPacMan:
         lda     #127
@@ -31,6 +62,18 @@ InitPacMan:
         lda     #0
         sta     PacDelay
         sta     fPacDead
+
+        lda     NumLevel
+        cmp     #21
+        blt     :+
+        lda     #20                         ; difficulty maxes out at level 21
+:
+        asl
+        asl
+        tax
+        CopyDwordFromTbl PacSpeedTbl, PacSpeed1
+        CopyDwordFromTbl PacEnergizerSpeedTbl, PacEnergizerSpeed1
+
         rts
 
 
@@ -47,6 +90,29 @@ MovePacMan:
         rts
 @no_delay:
 
+        lda     #<PacSpeed1
+        sta     pSpeedL
+        lda     #>PacSpeed1
+        sta     pSpeedH
+        lda     fEnergizerActive
+        beq     @no_energizer
+        lda     #<PacEnergizerSpeed1
+        sta     pSpeedL
+        lda     #>PacEnergizerSpeed1
+        sta     pSpeedH
+@no_energizer:
+        jsr     SpeedTick
+        bcc     :+
+        jsr     MovePacManOneTick
+:
+        jsr     SpeedTick
+        bcc     @end
+        jmp     MovePacManOneTick
+@end:
+        rts
+
+
+MovePacManOneTick:
         jsr     TryTurningPacMan
 
         ; Now try to move
@@ -94,7 +160,6 @@ MovePacMan:
         jsr     CalcPacCoords
         jsr     EatStuff
 @reject_move:
-@end:
         rts
 
 

@@ -597,29 +597,9 @@ HandleOneGhost:
         ; sometimes pass through ghosts.
         jsr     CheckCollisions
 
-.repeat 2
         jsr     GetSpeed
-        ; Get least significant bit of speed value so we can rotate it in
-        lda     (GhostL),y
-        lsr                                 ; put the bit in the carry flag
-        iny                                 ; point y at MSB
-        iny
-        iny
-        lda     (GhostL),y
-        ror
-        sta     (GhostL),y
-        dey
-        lda     (GhostL),y
-        ror
-        sta     (GhostL),y
-        dey
-        lda     (GhostL),y
-        ror
-        sta     (GhostL),y
-        dey
-        lda     (GhostL),y
-        ror
-        sta     (GhostL),y
+.repeat 2
+        jsr     SpeedTick
         bcc     :+
         jsr     MoveOneGhost
         jsr     CalcGhostCoords
@@ -633,7 +613,7 @@ HandleOneGhost:
 
 
 ; Output:
-;   Y = points to first byte of the ghost's speed
+;   pSpeed = pointer to first byte of the ghost's speed
 GetSpeed:
         ldy     #Ghost::State
         lda     (GhostL),y
@@ -660,19 +640,25 @@ GetSpeed:
         lda     (GhostL),y
         bne     @scared
         ; No special conditions apply
-        ldy     #Ghost::Speed1
-        rts
+        lda     #Ghost::Speed1
+        jmp     @end
 @eaten:
-        ldy     #Ghost::EatenSpeed1
-        rts
+        lda     #Ghost::EatenSpeed1
+        jmp     @end
 @in_house:
-        ldy     #Ghost::WaitingSpeed1
-        rts
+        lda     #Ghost::WaitingSpeed1
+        jmp     @end
 @in_tunnel:
-        ldy     #Ghost::TunnelSpeed1
-        rts
+        lda     #Ghost::TunnelSpeed1
+        jmp     @end
 @scared:
-        ldy     #Ghost::ScaredSpeed1
+        lda     #Ghost::ScaredSpeed1
+@end:
+        add     GhostL
+        sta     pSpeedL
+        lda     pSpeedH
+        adc     GhostH
+        sta     pSpeedH
         rts
 
 
