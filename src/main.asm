@@ -105,6 +105,7 @@ NumLives:           .res 1
 NumDots:            .res 1
 Score:              .res NUM_SCORE_DIGITS   ; BCD
 fDiedThisRound:     .res 1
+fBonusLifeAwarded:  .res 1
 
 
 .include "speed.asm"
@@ -282,6 +283,7 @@ NewGame:
         sta     NumLives
         lda     #0
         sta     NumLevel
+        sta     fBonusLifeAwarded
 .repeat NUM_SCORE_DIGITS, I
         sta     Score+I
 .endrepeat
@@ -410,6 +412,18 @@ AddPoints:
         ; Lock PRG RAM
         lda     #$00
         sta     $a001
+
+        ; Award life at 10,000 points
+        lda     fBonusLifeAwarded
+        bne     @no_bonus_life
+        lda     Score+1
+        beq     @no_bonus_life
+        ; Score reached 10,000 points for the first time
+        inc     NumLives
+        lda     #1
+        sta     fBonusLifeAwarded
+@no_bonus_life:
+
         rts
 
 
