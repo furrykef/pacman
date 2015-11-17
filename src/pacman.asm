@@ -412,7 +412,13 @@ DrawPacMan:
 
         ; Attributes
 @attributes:
+        ; Use palette 3 normally, palette 2 while displaying points
         lda     #$03
+        ldx     EatingGhostClock
+        beq     :+
+        lda     #$02
+:
+
         ; Flip priority if Pac-Man is at edges of tunnel
         ldx     PacTileX
         cpx     #3
@@ -420,7 +426,7 @@ DrawPacMan:
         cpx     #29
         blt     @no_flip
 @flip:
-        lda     #$23
+        ora     #$20
 @no_flip:
 
         sta     PacManOAM+2
