@@ -11,13 +11,12 @@
         PINKY
         INKY
         CLYDE
+        NUM_GHOSTS
 .endenum
 
 
 .struct Ghost
         Id              .byte               ; to ease transition away from this struct
-        Direction       .byte
-        TurnDir         .byte               ; direction ghost has planned to turn in
         Speed1          .byte
         Speed2          .byte
         Speed3          .byte
@@ -56,15 +55,18 @@ Clyde:      .tag Ghost
 pGhostL:        .res 1
 pGhostH:        .res 1
 
-GhostsPosX:     .res 4                      ; center of ghost, not upper left
-GhostsPosY:     .res 4
-GhostsTileX:    .res 4
-GhostsTileY:    .res 4
-GhostsHomeX:    .res 4
-GhostsState:    .res 4
-fGhostsScared:  .res 4
-fGhostsReverse: .res 4
-fGhostsBeingEaten: .res 4
+; Each of these is a 4-byte array, one byte per ghost
+GhostsPosX:         .res 4                  ; center of ghost, not upper left
+GhostsPosY:         .res 4
+GhostsTileX:        .res 4
+GhostsTileY:        .res 4
+GhostsHomeX:        .res 4
+GhostsDirection:    .res 4
+GhostsTurnDir:      .res 4                  ; direction ghost has planned to turn in
+GhostsState:        .res 4
+fGhostsScared:      .res 4
+fGhostsReverse:     .res 4
+fGhostsBeingEaten:  .res 4
 
 TileX:          .res 1
 TileY:          .res 1
@@ -220,7 +222,7 @@ InitAI:
         sta     fScatter
 
         ; Common vars
-        ldx     #3
+        ldx     #NUM_GHOSTS - 1
 @loop:
         lda     #0
         sta     fGhostsScared,x
@@ -236,8 +238,8 @@ InitAI:
         lda     #BLINKY
         sta     Blinky+Ghost::Id
         lda     #WEST
-        sta     Blinky+Ghost::Direction
-        sta     Blinky+Ghost::TurnDir
+        sta     GhostsDirection+BLINKY
+        sta     GhostsTurnDir+BLINKY
         lda     #GhostState::active
         sta     GhostsState+BLINKY
         lda     #<GetBlinkyTargetTile
@@ -254,8 +256,8 @@ InitAI:
         lda     #PINKY
         sta     Pinky+Ghost::Id
         lda     #SOUTH
-        sta     Pinky+Ghost::Direction
-        sta     Pinky+Ghost::TurnDir
+        sta     GhostsDirection+PINKY
+        sta     GhostsTurnDir+PINKY
         lda     #<GetPinkyTargetTile
         sta     Pinky+Ghost::pGetTargetTileL
         lda     #>GetPinkyTargetTile
@@ -270,8 +272,8 @@ InitAI:
         lda     #INKY
         sta     Inky+Ghost::Id
         lda     #NORTH
-        sta     Inky+Ghost::Direction
-        sta     Inky+Ghost::TurnDir
+        sta     GhostsDirection+INKY
+        sta     GhostsTurnDir+INKY
         lda     #<GetInkyTargetTile
         sta     Inky+Ghost::pGetTargetTileL
         lda     #>GetInkyTargetTile
@@ -286,8 +288,8 @@ InitAI:
         lda     #CLYDE
         sta     Clyde+Ghost::Id
         lda     #NORTH
-        sta     Clyde+Ghost::Direction
-        sta     Clyde+Ghost::TurnDir
+        sta     GhostsDirection+CLYDE
+        sta     GhostsTurnDir+CLYDE
         lda     #<GetClydeTargetTile
         sta     Clyde+Ghost::pGetTargetTileL
         lda     #>GetClydeTargetTile
@@ -797,9 +799,7 @@ MoveOneGhostWaiting:
         ldy     #Ghost::Id
         lda     (pGhostL),y
         tax
-        ldy     #Ghost::Direction
-        lda     (pGhostL),y
-        tay
+        ldy     GhostsDirection,x
         lda     DeltaYTbl,y
         add     GhostsPosY,x
         sta     GhostsPosY,x
@@ -809,12 +809,10 @@ MoveOneGhostWaiting:
         beq     @reverse
         rts
 @reverse:
-        ldy     #Ghost::Direction
-        lda     (pGhostL),y
+        lda     GhostsDirection,x
         eor     #$03
-        sta     (pGhostL),y
-        ldy     #Ghost::TurnDir
-        sta     (pGhostL),y
+        sta     GhostsDirection,x
+        sta     GhostsTurnDir,x
         rts
 
 
@@ -845,10 +843,8 @@ MoveOneGhostExiting:
         beq     @move_north
         ; Move west
         lda     #WEST
-        ldy     #Ghost::Direction
-        sta     (pGhostL),y
-        ldy     #Ghost::TurnDir
-        sta     (pGhostL),y
+        sta     GhostsDirection,x
+        sta     GhostsTurnDir,x
         ldy     GhostsPosX,x
         dey
         sty     GhostsPosX,x
@@ -856,10 +852,8 @@ MoveOneGhostExiting:
 
 @move_east:
         lda     #EAST
-        ldy     #Ghost::Direction
-        sta     (pGhostL),y
-        ldy     #Ghost::TurnDir
-        sta     (pGhostL),y
+        sta     GhostsDirection,x
+        sta     GhostsTurnDir,x
         ldy     GhostsPosX,x
         iny
         sty     GhostsPosX,x
@@ -867,10 +861,8 @@ MoveOneGhostExiting:
 
 @move_north:
         lda     #NORTH
-        ldy     #Ghost::Direction
-        sta     (pGhostL),y
-        ldy     #Ghost::TurnDir
-        sta     (pGhostL),y
+        sta     GhostsDirection,x
+        sta     GhostsTurnDir,x
         ldy     GhostsPosY,x
         dey
         sty     GhostsPosY,x
@@ -879,10 +871,8 @@ MoveOneGhostExiting:
         rts
 @exited:
         lda     #WEST
-        ldy     #Ghost::Direction
-        sta     (pGhostL),y
-        ldy     #Ghost::TurnDir
-        sta     (pGhostL),y
+        sta     GhostsDirection,x
+        sta     GhostsTurnDir,x
         lda     #GhostState::active
         sta     GhostsState,x
         rts
@@ -892,11 +882,9 @@ MoveOneGhostEntering:
         ldy     #Ghost::Id
         lda     (pGhostL),y
         tax
-        ldy     #Ghost::Direction
         lda     #SOUTH
-        sta     (pGhostL),y
-        ldy     #Ghost::TurnDir
-        sta     (pGhostL),y
+        sta     GhostsDirection,x
+        sta     GhostsTurnDir,x
         lda     GhostsPosY,x
         cmp     #115
         blt     @move_south
@@ -930,9 +918,7 @@ MoveOneGhostNormal:
         ldy     #Ghost::Id
         lda     (pGhostL),y
         tax
-        ldy     #Ghost::Direction 
-        lda     (pGhostL),y
-        tay
+        ldy     GhostsDirection,x
         lda     GhostsPosX,x
         add     DeltaXTbl,y
         sta     GhostsPosX,x
@@ -962,6 +948,11 @@ MoveOneGhostNormal:
         jsr     JsrInd
 @got_target:
 
+        ; X may have gotten clobbered
+        ldy     #Ghost::Id
+        lda     (pGhostL),y
+        tax
+
         ; If ghost is centered in tile, have it turn or reverse if necessary
         ; Then compute next turn
         lda     PixelX
@@ -975,22 +966,19 @@ MoveOneGhostNormal:
         ; Reversing direction
         lda     #0
         sta     fGhostsReverse,x
-        ldy     #Ghost::Direction
-        lda     (pGhostL),y
+        lda     GhostsDirection,x
         eor     #$03
         jmp     @changed_direction
 @no_reverse:
-        ldy     #Ghost::TurnDir
-        lda     (pGhostL),y
+        lda     GhostsTurnDir,x
 @changed_direction:
-        ldy     #Ghost::Direction
-        sta     (pGhostL),y
-        tax
+        sta     GhostsDirection,x
+        tay
         lda     TileX
-        add     DeltaXTbl,x
+        add     DeltaXTbl,y
         sta     NextTileX
         lda     TileY
-        add     DeltaYTbl,x
+        add     DeltaYTbl,y
         sta     NextTileY
         jsr     ComputeTurn
 @not_centered:
@@ -1155,8 +1143,10 @@ SquareTbl:
 
 .macro EvalDirection dir, score
 .local @end
-        ldy     #Ghost::Direction           ; Disallow if going the opposite direction
+        ldy     #Ghost::Id
         lda     (pGhostL),y
+        tax
+        lda     GhostsDirection,x           ; Disallow if going the opposite direction
         cmp     #dir ^ $03
         beq     @end
         ldy     NextTileX
@@ -1179,9 +1169,12 @@ SquareTbl:
         blt     @end
         beq     @end
         sta     MaxScore
+        ; X got clobbered earlier; have to reload it
+        ldy     #Ghost::Id
+        lda     (pGhostL),y
+        tax
         lda     #dir
-        ldy     #Ghost::TurnDir
-        sta     (pGhostL),y
+        sta     GhostsTurnDir,x
 @end:
 .endmacro
 
@@ -1277,7 +1270,7 @@ ComputeScores:
 
 
 StartEnergizer:
-        ldx     #3
+        ldx     #NUM_GHOSTS - 1
 @loop:
         lda     GhostsState,x
         cmp     #GhostState::eaten
@@ -1487,8 +1480,7 @@ DrawOneGhost:
         lda     fGhostsScared,x
         bne     @scared
         ; Ghost is not scared
-        ldy     #Ghost::TurnDir
-        lda     (pGhostL),y
+        lda     GhostsTurnDir,x
         asl
         asl
         jmp     @store_pattern

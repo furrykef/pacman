@@ -1,3 +1,8 @@
+Ghost house bug
+---------------
+Inky and Clyde should leave the ghost house sooner on later levels than earlier ones. By level 5 they should be leaving immediately.
+
+
 Possible wraparound bug
 -----------------------
 The upper-left corner of the maze is considered (0, 0). This can cause underflows with Inky's and Pinky's logic. Do not fix this bug until looking into the next bug.
