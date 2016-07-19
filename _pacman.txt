@@ -2,32 +2,6 @@ dasm of Pac-Man: http://web.archive.org/web/20091003171028/http://www.lomont.org
 dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.20080621.asm
 
 
-Bitfields for motion
---------------------
-In the original game, sprites move according to 32-bit bitfields. For each 0, the ghost stays in place; for each 1, the ghost moves a pixel. This is done twice a frame, so a ghost may move up to two pixels per frame.
-
-$55555555 = 01010101010101010101010101010101 = 80% = Pac-Man's speed on level 1 (1 pixel/frame) / Cruise Elroy 1 on level 1
-$6AD56AD5 = 01101010110101010110101011010101 = 90% = Pac-Man's speed on level 1 after energizer
-$D5556AAA = 11010101010101010110101010101010 = 85% = Cruise Elroy 2 on level 1
-$55552AAA = 01010101010101010010101010101010 = 75% = Ghost speed on level 1
-$24922492 = 00100100100100100010010010010010 = 50% = Scared ghost speed on level 1
-$22222222 = 00100010001000100010001000100010 = 40% = Tunnel speed on level 1
-
-$B5AD5AD6 = 10110101101011010101101011010110 = 95% = Pac-Man energizer speed on level 2
-$49252492 = 01001001001001010010010010010010 = 55% = Scared ghost speed on level 2
-
-$91222448 = 10010001001000100010010001001000 = 45% = Tunnel speed on level 2
-$6D6D6D6D = 01101101011011010110110101101101 = 100% = Pac-Man speed level 5
-$DB6D7DB6 = 11011011011011010111110110110110 = 105% = Elroy 2 speed on level 5
-$25252525 = 00100101001001010010010100100101 = 60% = Scared ghost speed on level 5
-
-
-Remember to store these as little-endian.
-
-
-Eating a dot causes Pac-Man to stop for one frame; eating an energizer causes him to stop for three frames.
-
-
 Fright
 ------
 The fright times in the Pac-Man Dossier are exact; there are no fractions of seconds involved.
@@ -35,8 +9,15 @@ The fright times in the Pac-Man Dossier are exact; there are no fractions of sec
 When flashing: 14 frames to change from blue to white or vice versa, but white to normal may take less than 14 frames (9 frames on level 1, 6 on level 2).
 
 
-Things to remember
-------------------
-Ghosts always move left upon exiting the ghost house, unless the ghost was in the house during a mode chance, in which case they will move right.
-
-For some levels, Pac-Man speeds up while energizer is active.
+Sound
+-----
+00-7F   wait this number of frames plus one before proceeding
+80-CF   notes
+D0-EF   unused
+F0-F2   set duty cycle (low nybble = which)
+F3      set volume envelope (next word = address)
+F4      set sweep (next byte = value to write to $4001/$4005)
+F5-FC   unused
+FD      note cut
+FE      end of pattern
+FF      end of song

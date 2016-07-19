@@ -11,7 +11,7 @@ RowAddrH:       .res 1
 
 .segment "BSS"
 
-CurrentBoard:   .res 32*31
+CurrentBoard:   .res 32*31 + 1              ; add 1 for the terminator
 
 
 .segment "CODE"
@@ -25,30 +25,18 @@ LoadBoard:
         sta     Tmp2L
         lda     #>CurrentBoard
         sta     Tmp2H
-        ldx     #31
-@copy_row:
         ldy     #0
-@copy_cell:
+@loop:
         lda     (TmpL),y
         sta     (Tmp2L),y
+        beq     @end_copy
         iny
-        cpy     #32
-        bne     @copy_cell
-        ; Finished this row; bump pointers by a row
-        lda     TmpL
-        add     #32
-        sta     TmpL
-        lda     TmpH
-        adc     #0
-        sta     TmpH
-        lda     Tmp2L
-        add     #32
-        sta     Tmp2L
-        lda     Tmp2H
-        adc     #0
-        sta     Tmp2H
-        dex
-        bne     @copy_row
+        bne     @loop
+        ; Wrapped around page boundaries; bump MSB of pointers
+        inc     TmpH
+        inc     Tmp2H
+        jmp     @loop
+@end_copy:
         jmp     CopyBoardIntoVram
 
 
@@ -237,6 +225,7 @@ FullBoard:
     .byte $20,$20,$94,$92,$a1,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a3,$92,$a1,$a3,$92,$a1,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a2,$a3,$92,$96,$20,$20
     .byte $20,$20,$94,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$92,$96,$20,$20
     .byte $20,$20,$a4,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a5,$a6,$20,$20
+    .byte 0
 
 ;FullBoardRowAddrL:
 ;.repeat I, 31

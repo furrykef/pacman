@@ -54,8 +54,8 @@ Pinky:      .tag Ghost
 Inky:       .tag Ghost
 Clyde:      .tag Ghost
 
-GhostL:         .res 1
-GhostH:         .res 1
+pGhostL:        .res 1
+pGhostH:        .res 1
 
 TileX:          .res 1
 TileY:          .res 1
@@ -457,24 +457,24 @@ MoveGhosts:
 
         ; Move the ghosts
         lda     #<Blinky
-        sta     GhostL
+        sta     pGhostL
         lda     #>Blinky
-        sta     GhostH
+        sta     pGhostH
         jsr     HandleOneGhost
         lda     #<Pinky
-        sta     GhostL
+        sta     pGhostL
         lda     #>Pinky
-        sta     GhostH
+        sta     pGhostH
         jsr     HandleOneGhost
         lda     #<Inky
-        sta     GhostL
+        sta     pGhostL
         lda     #>Inky
-        sta     GhostH
+        sta     pGhostH
         jsr     HandleOneGhost
         lda     #<Clyde
-        sta     GhostL
+        sta     pGhostL
         lda     #>Clyde
-        sta     GhostH
+        sta     pGhostH
         jmp     HandleOneGhost
 
 
@@ -604,7 +604,7 @@ EatingGhostClockTick:
 HandleOneGhost:
         ; Ghost doesn't move while being eaten
         ldy     #Ghost::fBeingEaten
-        lda     (GhostL),y
+        lda     (pGhostL),y
         bne     @end
 
         ; Only eaten ghosts move if another ghost is being eaten
@@ -612,7 +612,7 @@ HandleOneGhost:
         beq     @can_move
         ; Another ghost is being eaten
         ldy     #Ghost::State
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #GhostState::eaten
         beq     @can_move
         cmp     #GhostState::entering
@@ -625,16 +625,16 @@ HandleOneGhost:
         bne     @no_release
         ; 2) It is waiting
         ldy     #Ghost::State
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #GhostState::waiting
         bne     @no_release
         ; 3) Its dot counter is zero
         ldy     #Ghost::DotCounter
-        lda     (GhostL),y
+        lda     (pGhostL),y
         bne     @no_release
         ldy     #Ghost::State
         lda     #GhostState::exiting
-        sta     (GhostL),y
+        sta     (pGhostL),y
 @no_release:
 
         ; Need to check collisions both before and after moving the ghost.
@@ -661,7 +661,7 @@ HandleOneGhost:
 ;   pSpeed = pointer to first byte of the ghost's speed
 GetSpeed:
         ldy     #Ghost::State
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #GhostState::eaten
         beq     @eaten
         cmp     #GhostState::entering
@@ -671,18 +671,18 @@ GetSpeed:
         cmp     #GhostState::exiting
         beq     @in_house
         ldy     #Ghost::TileY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #14
         bne     @not_in_tunnel
         ldy     #Ghost::TileX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #8
         blt     @in_tunnel
         cmp     #24
         bge     @in_tunnel
 @not_in_tunnel:
         ldy     #Ghost::fScared
-        lda     (GhostL),y
+        lda     (pGhostL),y
         bne     @scared
         ; No special conditions apply
         lda     #Ghost::Speed1
@@ -699,9 +699,9 @@ GetSpeed:
 @scared:
         lda     #Ghost::ScaredSpeed1
 @end:
-        add     GhostL
+        add     pGhostL
         sta     pSpeedL
-        lda     GhostH
+        lda     pGhostH
         adc     #0
         sta     pSpeedH
         rts
@@ -709,24 +709,24 @@ GetSpeed:
 
 CheckCollisions:
         ldy     #Ghost::TileX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     PacTileX
         bne     @no_collision
         iny
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     PacTileY
         bne     @no_collision
         ; Collided
         ; Ignore collision if ghost has been eaten
         ldy     #Ghost::State
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #GhostState::eaten
         beq     @no_collision
         cmp     #GhostState::entering
         beq     @no_collision
         ; Ghost gets eaten if scared
         ldy     #Ghost::fScared
-        lda     (GhostL),y
+        lda     (pGhostL),y
         bne     @scared
         ; Kill Pac-Man
         lda     #1
@@ -735,13 +735,13 @@ CheckCollisions:
 @scared:
         ; Get eaten
         lda     #0                          ; clear fScared
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::fBeingEaten
         lda     #1
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::State
         lda     #GhostState::eaten
-        sta     (GhostL),y
+        sta     (pGhostL),y
         lda     #60
         sta     EatingGhostClock
         lda     EnergizerPoints
@@ -765,7 +765,7 @@ EnergizerPtsTbl:
 
 MoveOneGhost:
         ldy     #Ghost::State
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #GhostState::waiting
         beq     @waiting
         cmp     #GhostState::eaten
@@ -787,12 +787,12 @@ MoveOneGhost:
 
 MoveOneGhostWaiting:
         ldy     #Ghost::Direction
-        lda     (GhostL),y
+        lda     (pGhostL),y
         tax
         lda     DeltaYTbl,x
         ldy     #Ghost::PosY
-        add     (GhostL),y
-        sta     (GhostL),y
+        add     (pGhostL),y
+        sta     (pGhostL),y
         cmp     #111
         beq     @reverse
         cmp     #119
@@ -800,146 +800,146 @@ MoveOneGhostWaiting:
         rts
 @reverse:
         ldy     #Ghost::Direction
-        lda     (GhostL),y
+        lda     (pGhostL),y
         eor     #$03
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::TurnDir
-        sta     (GhostL),y
+        sta     (pGhostL),y
         rts
 
 
 MoveOneGhostEaten:
         jsr     MoveOneGhostNormal
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #127
         bne     @not_above_house
         ldy     #Ghost::PosY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #91
         bne     @not_above_house
         ldy     #Ghost::State
         lda     #GhostState::entering
-        sta     (GhostL),y
+        sta     (pGhostL),y
 @not_above_house:
         rts
 
 
 MoveOneGhostExiting:
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #127
         blt     @move_east
         beq     @move_north
         ; Move west
         lda     #WEST
         ldy     #Ghost::Direction
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::TurnDir
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         sub     #1
-        sta     (GhostL),y
+        sta     (pGhostL),y
         rts
 
 @move_east:
         lda     #EAST
         ldy     #Ghost::Direction
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::TurnDir
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         add     #1
-        sta     (GhostL),y
+        sta     (pGhostL),y
         rts
 
 @move_north:
         lda     #NORTH
         ldy     #Ghost::Direction
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::TurnDir
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::PosY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         sub     #1
-        sta     (GhostL),y
+        sta     (pGhostL),y
         cmp     #91
         beq     @exited
         rts
 @exited:
         lda     #WEST
         ldy     #Ghost::Direction
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::TurnDir
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::State
         lda     #GhostState::active
-        sta     (GhostL),y
+        sta     (pGhostL),y
         rts
 
 
 MoveOneGhostEntering:
         ldy     #Ghost::Direction
         lda     #SOUTH
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::TurnDir
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::PosY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #115
         blt     @move_south
         ; In vertical position
         ldy     #Ghost::HomeX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         sta     TmpL
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     TmpL
         beq     @ready
         blt     @move_east
         ; Move west
         sub     #1
-        sta     (GhostL),y
+        sta     (pGhostL),y
         rts
 @move_south:
 @move_east:
         add     #1
-        sta     (GhostL),y
+        sta     (pGhostL),y
         rts
 @ready:
         ldy     #Ghost::State
         lda     #GhostState::waiting
-        sta     (GhostL),y
+        sta     (pGhostL),y
 @end:
         rts
 
 
 MoveOneGhostNormal:
         ldy     #Ghost::Direction 
-        lda     (GhostL),y
+        lda     (pGhostL),y
         tax
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         add     DeltaXTbl,x
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::PosY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         add     DeltaYTbl,x
-        sta     (GhostL),y
+        sta     (pGhostL),y
 
         jsr     CalcGhostCoords
 
         lda     TileX
         ldy     #Ghost::TileX
-        sta     (GhostL),y
+        sta     (pGhostL),y
         lda     TileY
         iny
-        sta     (GhostL),y
+        sta     (pGhostL),y
 
         ldy     #Ghost::State
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #GhostState::eaten
         bne     @not_eaten
         ; Eaten; target tile is (15, 11)
@@ -951,10 +951,10 @@ MoveOneGhostNormal:
 @not_eaten:
         ; JSR to Ghost::pGetTargetTile
         ldy     #Ghost::pGetTargetTileL
-        lda     (GhostL),y
+        lda     (pGhostL),y
         sta     JsrIndAddrL
         iny
-        lda     (GhostL),y
+        lda     (pGhostL),y
         sta     JsrIndAddrH
         jsr     JsrInd
 @got_target:
@@ -968,21 +968,21 @@ MoveOneGhostNormal:
         cmp     #$03
         bne     @not_centered
         ldy     #Ghost::fReverse
-        lda     (GhostL),y
+        lda     (pGhostL),y
         beq     @no_reverse
         ; Reversing direction
         lda     #0                          ; clear reverse flag
-        sta     (GhostL),y
+        sta     (pGhostL),y
         ldy     #Ghost::Direction
-        lda     (GhostL),y
+        lda     (pGhostL),y
         eor     #$03
         jmp     @changed_direction
 @no_reverse:
         ldy     #Ghost::TurnDir
-        lda     (GhostL),y
+        lda     (pGhostL),y
 @changed_direction:
         ldy     #Ghost::Direction
-        sta     (GhostL),y
+        sta     (pGhostL),y
         tax
         lda     TileX
         add     DeltaXTbl,x
@@ -1154,7 +1154,7 @@ SquareTbl:
 .macro EvalDirection dir, score
 .local @end
         ldy     #Ghost::Direction           ; Disallow if going the opposite direction
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #dir ^ $03
         beq     @end
         ldy     NextTileX
@@ -1179,7 +1179,7 @@ SquareTbl:
         sta     MaxScore
         lda     #dir
         ldy     #Ghost::TurnDir
-        sta     (GhostL),y
+        sta     (pGhostL),y
 @end:
 .endmacro
 
@@ -1217,7 +1217,7 @@ ComputeScores:
         sta     MaxScore
 
         ldy     #Ghost::fScared
-        lda     (GhostL),y
+        lda     (pGhostL),y
         bne     @random
 
         ; Scores here will be $00..$ff, but think of $00 = -128, $01 = -127 ... $ff = 127
@@ -1246,7 +1246,7 @@ ComputeScores:
 
         ; Ban northward turns in certain regions of the maze
         ldy     #Ghost::TileY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #11
         beq     @maybe_restricted
         cmp     #23
@@ -1254,7 +1254,7 @@ ComputeScores:
         jmp     @north_ok
 @maybe_restricted:
         ldy     #Ghost::TileX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #13
         blt     @north_ok
         cmp     #18 + 1
@@ -1355,26 +1355,26 @@ GhostHandleDot:
 
 CalcGhostCoords:
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         tax
         lsr
         lsr
         lsr
         sta     TileX
         ldy     #Ghost::TileX
-        sta     (GhostL),y
+        sta     (pGhostL),y
         txa
         and     #$07
         sta     PixelX
         ldy     #Ghost::PosY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         tax
         lsr
         lsr
         lsr
         sta     TileY
         ldy     #Ghost::TileY
-        sta     (GhostL),y
+        sta     (pGhostL),y
         txa
         and     #$07
         sta     PixelY
@@ -1399,30 +1399,30 @@ DrawGhosts:
 @no_overflow:
 
         lda     #<Blinky
-        sta     GhostL
+        sta     pGhostL
         lda     #>Blinky
-        sta     GhostH
+        sta     pGhostH
         jsr     DrawOneGhost
         lda     #<Pinky
-        sta     GhostL
+        sta     pGhostL
         lda     #>Pinky
-        sta     GhostH
+        sta     pGhostH
         jsr     DrawOneGhost
         lda     #<Inky
-        sta     GhostL
+        sta     pGhostL
         lda     #>Inky
-        sta     GhostH
+        sta     pGhostH
         jsr     DrawOneGhost
         lda     #<Clyde
-        sta     GhostL
+        sta     pGhostL
         lda     #>Clyde
-        sta     GhostH
+        sta     pGhostH
         jmp     DrawOneGhost
 
 DrawOneGhost:
         ; Update ghost in OAM
         ldy     #Ghost::Priority
-        lda     (GhostL),y
+        lda     (pGhostL),y
         asl
         asl
         asl
@@ -1433,7 +1433,7 @@ DrawOneGhost:
 
         ; Don't draw ghost if it's being eaten
         ldy     #Ghost::fBeingEaten
-        lda     (GhostL),y
+        lda     (pGhostL),y
         beq     @not_being_eaten
         lda     #$ff
         ldy     #0
@@ -1445,7 +1445,7 @@ DrawOneGhost:
 
         ; Y position
         ldy     #Ghost::PosY
-        lda     (GhostL),y
+        lda     (pGhostL),y
         add     #24                         ; -8 to get top edge, +32 to compensate for status
         bcc     @not_too_low
         ; Carry here means ghost is at very bottom of the maze and its
@@ -1467,7 +1467,7 @@ DrawOneGhost:
 
         ; Pattern index
         ldy     #Ghost::State
-        lda     (GhostL),y
+        lda     (pGhostL),y
         cmp     #GhostState::eaten
         beq     @eaten
         cmp     #GhostState::entering
@@ -1485,11 +1485,11 @@ DrawOneGhost:
 @first_frame:
         sta     TmpL
         ldy     #Ghost::fScared
-        lda     (GhostL),y
+        lda     (pGhostL),y
         bne     @scared
         ; Ghost is not scared
         ldy     #Ghost::TurnDir
-        lda     (GhostL),y
+        lda     (pGhostL),y
         asl
         asl
         jmp     @store_pattern
@@ -1517,14 +1517,14 @@ DrawOneGhost:
 
         ; Attributes
         ldy     #Ghost::TileX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         tax
         ; Scared ghosts use palette 0
         ldy     #Ghost::fScared
-        lda     (GhostL),y
+        lda     (pGhostL),y
         bne     @scared2
         ldy     #Ghost::Palette
-        lda     (GhostL),y                  ; get palette
+        lda     (pGhostL),y                  ; get palette
         jmp     @got_palette
 @scared2:
         lda     #0
@@ -1544,7 +1544,7 @@ DrawOneGhost:
 
         ; X position
         ldy     #Ghost::PosX
-        lda     (GhostL),y
+        lda     (pGhostL),y
         sub     #7
         ldy     #3
         sta     (GhostOamL),y

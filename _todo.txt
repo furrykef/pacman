@@ -7,6 +7,13 @@ With the previous bug, when Pac-Man is at the very top of the maze and facing up
 I'm not sure the two bugs fully cancel out; Pinky's score for "northish" might be too high. If so, this would remove "westish" and "eastish" from the steering computation.
 
 
+Killer scared ghosts
+--------------------
+(5:24:02 AM) furrykef: wow, that was weird
+(5:24:20 AM) furrykef: I was playing it myself and I ate an energizer and collided with a ghost on the same frame
+(5:24:26 AM) furrykef: The ghost turned blue and I died anyway
+
+
 To be implemented
 -----------------
 Do eaten ghosts ever reverse direction with mode changes?

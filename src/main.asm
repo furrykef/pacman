@@ -192,7 +192,7 @@ Main:
         iny
         stx     $8000
         sty     $8001
-        ldx     #$c2
+        inx
         stx     $8000
         inx
         ldy     #0
