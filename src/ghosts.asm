@@ -38,10 +38,6 @@
         EatenSpeed2     .byte
         EatenSpeed3     .byte
         EatenSpeed4     .byte
-        State           .byte
-        fScared         .byte
-        fReverse        .byte
-        fBeingEaten     .byte
         DotCounter      .byte
         pGetTargetTileL .byte
         pGetTargetTileH .byte
@@ -65,6 +61,10 @@ GhostsPosY:     .res 4
 GhostsTileX:    .res 4
 GhostsTileY:    .res 4
 GhostsHomeX:    .res 4
+GhostsState:    .res 4
+fGhostsScared:  .res 4
+fGhostsReverse: .res 4
+fGhostsBeingEaten: .res 4
 
 TileX:          .res 1
 TileY:          .res 1
@@ -219,6 +219,18 @@ InitAI:
         lda     #1
         sta     fScatter
 
+        ; Common vars
+        ldx     #3
+@loop:
+        lda     #0
+        sta     fGhostsScared,x
+        sta     fGhostsReverse,x
+        sta     fGhostsBeingEaten,x
+        lda     #GhostState::waiting
+        sta     GhostsState,x
+        dex
+        bpl     @loop
+
         ; Blinky
         InitGhostPos BLINKY, 127, 91
         lda     #BLINKY
@@ -227,11 +239,7 @@ InitAI:
         sta     Blinky+Ghost::Direction
         sta     Blinky+Ghost::TurnDir
         lda     #GhostState::active
-        sta     Blinky+Ghost::State
-        lda     #0
-        sta     Blinky+Ghost::fReverse
-        sta     Blinky+Ghost::fScared
-        sta     Blinky+Ghost::fBeingEaten
+        sta     GhostsState+BLINKY
         lda     #<GetBlinkyTargetTile
         sta     Blinky+Ghost::pGetTargetTileL
         lda     #>GetBlinkyTargetTile
@@ -248,12 +256,6 @@ InitAI:
         lda     #SOUTH
         sta     Pinky+Ghost::Direction
         sta     Pinky+Ghost::TurnDir
-        lda     #GhostState::waiting
-        sta     Pinky+Ghost::State
-        lda     #0
-        sta     Pinky+Ghost::fReverse
-        sta     Pinky+Ghost::fScared
-        sta     Pinky+Ghost::fBeingEaten
         lda     #<GetPinkyTargetTile
         sta     Pinky+Ghost::pGetTargetTileL
         lda     #>GetPinkyTargetTile
@@ -270,12 +272,6 @@ InitAI:
         lda     #NORTH
         sta     Inky+Ghost::Direction
         sta     Inky+Ghost::TurnDir
-        lda     #GhostState::waiting
-        sta     Inky+Ghost::State
-        lda     #0
-        sta     Inky+Ghost::fReverse
-        sta     Inky+Ghost::fScared
-        sta     Inky+Ghost::fBeingEaten
         lda     #<GetInkyTargetTile
         sta     Inky+Ghost::pGetTargetTileL
         lda     #>GetInkyTargetTile
@@ -292,12 +288,6 @@ InitAI:
         lda     #NORTH
         sta     Clyde+Ghost::Direction
         sta     Clyde+Ghost::TurnDir
-        lda     #GhostState::waiting
-        sta     Clyde+Ghost::State
-        lda     #0
-        sta     Clyde+Ghost::fReverse
-        sta     Clyde+Ghost::fScared
-        sta     Clyde+Ghost::fBeingEaten
         lda     #<GetClydeTargetTile
         sta     Clyde+Ghost::pGetTargetTileL
         lda     #>GetClydeTargetTile
@@ -429,16 +419,16 @@ MoveGhosts:
 
         ; Blinky never waits
         ; (can get in this state if global dot counter is active)
-        lda     Blinky+Ghost::State
+        lda     GhostsState+BLINKY
         cmp     #GhostState::waiting
         bne     @blinky_not_waiting
         lda     #GhostState::exiting
-        sta     Blinky+Ghost::State
+        sta     GhostsState+BLINKY
 @blinky_not_waiting:
 
         ; Set fClydeLeft if Clyde left at any point
         ; (do not clear until end of life or round)
-        lda     Clyde+Ghost::State
+        lda     GhostsState+CLYDE
         cmp     #GhostState::waiting
         beq     @clyde_waiting
         lda     #1
@@ -522,10 +512,10 @@ ModeClockTick:
         eor     #$01
         sta     fScatter
         lda     #1
-        sta     Blinky+Ghost::fReverse
-        sta     Pinky+Ghost::fReverse
-        sta     Inky+Ghost::fReverse
-        sta     Clyde+Ghost::fReverse
+        sta     fGhostsReverse+BLINKY
+        sta     fGhostsReverse+PINKY
+        sta     fGhostsReverse+INKY
+        sta     fGhostsReverse+CLYDE
         inc     ModeCount
         jsr     SetModeClock
 @end:
@@ -546,33 +536,33 @@ SetModeClock:
 
 
 DotClockTick:
-        ldx     DotClock
+        ldy     DotClock
         beq     @release_ghost
-        dex
-        stx     DotClock
+        dey
+        sty     DotClock
         rts
 @release_ghost:
         lda     DotTimeout
         sta     DotClock
-        ldx     #GhostState::exiting
-        lda     Pinky+Ghost::State
+        ldy     #GhostState::exiting
+        lda     GhostsState+PINKY
         cmp     #GhostState::waiting
         beq     @release_pinky
-        lda     Inky+Ghost::State
+        lda     GhostsState+INKY
         cmp     #GhostState::waiting
         beq     @release_inky
-        lda     Clyde+Ghost::State
+        lda     GhostsState+CLYDE
         cmp     #GhostState::waiting
         beq     @release_clyde
         rts
 @release_pinky:
-        stx     Pinky+Ghost::State          ; GhostState::exiting
+        sty     GhostsState+PINKY           ; GhostState::exiting
         rts
 @release_inky:
-        stx     Inky+Ghost::State
+        sty     GhostsState+INKY
         rts
 @release_clyde:
-        stx     Clyde+Ghost::State
+        sty     GhostsState+CLYDE
         lda     #0
         sta     GhostGlobalDotCounter
         rts
@@ -597,10 +587,10 @@ EnergizerClockTick:
 @zero:
         lda     #0
         sta     fEnergizerActive
-        sta     Blinky+Ghost::fScared
-        sta     Pinky+Ghost::fScared
-        sta     Inky+Ghost::fScared
-        sta     Clyde+Ghost::fScared
+        sta     fGhostsScared+BLINKY
+        sta     fGhostsScared+PINKY
+        sta     fGhostsScared+INKY
+        sta     fGhostsScared+CLYDE
         rts
 
 
@@ -611,47 +601,47 @@ EatingGhostClockTick:
         rts
 @no_ghost_being_eaten:
         lda     #0
-        sta     Blinky+Ghost::fBeingEaten
-        sta     Inky+Ghost::fBeingEaten
-        sta     Pinky+Ghost::fBeingEaten
-        sta     Clyde+Ghost::fBeingEaten
+        sta     fGhostsBeingEaten+BLINKY
+        sta     fGhostsBeingEaten+PINKY
+        sta     fGhostsBeingEaten+INKY
+        sta     fGhostsBeingEaten+CLYDE
         rts
 
 
 HandleOneGhost:
-        ; Ghost doesn't move while being eaten
-        ldy     #Ghost::fBeingEaten
+        ldy     #Ghost::Id
         lda     (pGhostL),y
+        tax
+
+        ; Ghost doesn't move while being eaten
+        lda     fGhostsBeingEaten,x
         bne     @end
 
         ; Only eaten ghosts move if another ghost is being eaten
         lda     EatingGhostClock
         beq     @can_move
         ; Another ghost is being eaten
-        ldy     #Ghost::State
-        lda     (pGhostL),y
+        lda     GhostsState,x
         cmp     #GhostState::eaten
         beq     @can_move
         cmp     #GhostState::entering
         bne     @end                        ; we're not an eaten ghost
 @can_move:
 
-        ; Release ghost if:
+        ; Release ghost if (all must apply):
         ; 1) Global dot counter is inactive
         lda     GhostGlobalDotCounter
         bne     @no_release
         ; 2) It is waiting
-        ldy     #Ghost::State
-        lda     (pGhostL),y
+        lda     GhostsState,x
         cmp     #GhostState::waiting
         bne     @no_release
         ; 3) Its dot counter is zero
         ldy     #Ghost::DotCounter
         lda     (pGhostL),y
         bne     @no_release
-        ldy     #Ghost::State
         lda     #GhostState::exiting
-        sta     (pGhostL),y
+        sta     GhostsState,x
 @no_release:
 
         ; Need to check collisions both before and after moving the ghost.
@@ -683,8 +673,7 @@ GetSpeed:
         ldy     #Ghost::Id
         lda     (pGhostL),y
         tax
-        ldy     #Ghost::State
-        lda     (pGhostL),y
+        lda     GhostsState,x
         cmp     #GhostState::eaten
         beq     @eaten
         cmp     #GhostState::entering
@@ -702,8 +691,7 @@ GetSpeed:
         cmp     #24
         bge     @in_tunnel
 @not_in_tunnel:
-        ldy     #Ghost::fScared
-        lda     (pGhostL),y
+        lda     fGhostsScared,x
         bne     @scared
         ; No special conditions apply
         lda     #Ghost::Speed1
@@ -740,15 +728,13 @@ CheckCollisions:
         bne     @no_collision
         ; Collided
         ; Ignore collision if ghost has been eaten
-        ldy     #Ghost::State
-        lda     (pGhostL),y
+        lda     GhostsState,x
         cmp     #GhostState::eaten
         beq     @no_collision
         cmp     #GhostState::entering
         beq     @no_collision
         ; Ghost gets eaten if scared
-        ldy     #Ghost::fScared
-        lda     (pGhostL),y
+        lda     fGhostsScared,x
         bne     @scared
         ; Kill Pac-Man
         lda     #1
@@ -756,14 +742,12 @@ CheckCollisions:
         rts
 @scared:
         ; Get eaten
-        lda     #0                          ; clear fScared
-        sta     (pGhostL),y
-        ldy     #Ghost::fBeingEaten
+        lda     #0
+        sta     fGhostsScared,x
         lda     #1
-        sta     (pGhostL),y
-        ldy     #Ghost::State
+        sta     fGhostsBeingEaten,x
         lda     #GhostState::eaten
-        sta     (pGhostL),y
+        sta     GhostsState,x
         lda     #60
         sta     EatingGhostClock
         lda     EnergizerPoints
@@ -786,8 +770,10 @@ EnergizerPtsTbl:
 
 
 MoveOneGhost:
-        ldy     #Ghost::State
+        ldy     #Ghost::Id
         lda     (pGhostL),y
+        tax
+        lda     GhostsState,x
         cmp     #GhostState::waiting
         beq     @waiting
         cmp     #GhostState::eaten
@@ -843,9 +829,8 @@ MoveOneGhostEaten:
         lda     GhostsPosY,x
         cmp     #91
         bne     @not_above_house
-        ldy     #Ghost::State
         lda     #GhostState::entering
-        sta     (pGhostL),y
+        sta     GhostsState,x
 @not_above_house:
         rts
 
@@ -898,9 +883,8 @@ MoveOneGhostExiting:
         sta     (pGhostL),y
         ldy     #Ghost::TurnDir
         sta     (pGhostL),y
-        ldy     #Ghost::State
         lda     #GhostState::active
-        sta     (pGhostL),y
+        sta     GhostsState,x
         rts
 
 
@@ -925,17 +909,19 @@ MoveOneGhostEntering:
         blt     @move_east
         ; Move west
         sub     #1
-        sta     (pGhostL),y
+        sta     GhostsPosX,x
         rts
 @move_south:
+        add     #1
+        sta     GhostsPosY,x
+        rts
 @move_east:
         add     #1
-        sta     (pGhostL),y
+        sta     GhostsPosX,x
         rts
 @ready:
-        ldy     #Ghost::State
         lda     #GhostState::waiting
-        sta     (pGhostL),y
+        sta     GhostsState,x
 @end:
         rts
 
@@ -956,8 +942,7 @@ MoveOneGhostNormal:
 
         jsr     CalcGhostCoords
 
-        ldy     #Ghost::State
-        lda     (pGhostL),y
+        lda     GhostsState,x
         cmp     #GhostState::eaten
         bne     @not_eaten
         ; Eaten; target tile is (15, 11)
@@ -985,12 +970,11 @@ MoveOneGhostNormal:
         lda     PixelY
         cmp     #$03
         bne     @not_centered
-        ldy     #Ghost::fReverse
-        lda     (pGhostL),y
+        lda     fGhostsReverse,x
         beq     @no_reverse
         ; Reversing direction
-        lda     #0                          ; clear reverse flag
-        sta     (pGhostL),y
+        lda     #0
+        sta     fGhostsReverse,x
         ldy     #Ghost::Direction
         lda     (pGhostL),y
         eor     #$03
@@ -1238,8 +1222,7 @@ ComputeScores:
         lda     #0
         sta     MaxScore
 
-        ldy     #Ghost::fScared
-        lda     (pGhostL),y
+        lda     fGhostsScared,x
         bne     @random
 
         ; Scores here will be $00..$ff, but think of $00 = -128, $01 = -127 ... $ff = 127
@@ -1293,24 +1276,21 @@ ComputeScores:
         rts
 
 
-.macro GhostHandleEnergizer ghost
-.local @end
-        lda     ghost+Ghost::State
-        cmp     #GhostState::eaten
-        beq     @end
-        cmp     #GhostState::entering
-        beq     @end
-        lda     #1
-        sta     ghost+Ghost::fReverse
-        sta     ghost+Ghost::fScared
-@end:
-.endmacro
-
 StartEnergizer:
-        GhostHandleEnergizer Blinky
-        GhostHandleEnergizer Inky
-        GhostHandleEnergizer Pinky
-        GhostHandleEnergizer Clyde
+        ldx     #3
+@loop:
+        lda     GhostsState,x
+        cmp     #GhostState::eaten
+        beq     @skip
+        cmp     #GhostState::entering
+        beq     @skip
+        lda     #1
+        sta     fGhostsReverse,x
+        sta     fGhostsScared,x
+@skip:
+        dex
+        bpl     @loop
+
         lda     EnergizerTimeoutL
         sta     EnergizerClockL
         lda     EnergizerTimeoutH
@@ -1326,11 +1306,11 @@ StartEnergizer:
 .local @end
         cmp     #32 - count
         bne     @end
-        ldx     ghost+Ghost::State
-        cpx     #GhostState::waiting
+        ldy     GhostsState+ghost
+        cpy     #GhostState::waiting
         bne     @end
-        ldx     #GhostState::exiting
-        stx     ghost+Ghost::State
+        ldy     #GhostState::exiting
+        sty     GhostsState+ghost
 @end:
 .endmacro
 
@@ -1341,19 +1321,19 @@ GhostHandleDot:
         lda     GhostGlobalDotCounter
         beq     @individual_counters
         ; Use individual counters if Clyde is out and about
-        ldx     Clyde+Ghost::State
-        cpx     #GhostState::waiting
+        ldy     GhostsState+CLYDE
+        cpy     #GhostState::waiting
         bne     @individual_counters
         ; Using global dot counter
         sub     #1
         sta     GhostGlobalDotCounter
-        TestGlobalDotCounter Pinky, 7
-        TestGlobalDotCounter Inky, 17
+        TestGlobalDotCounter PINKY, 7
+        TestGlobalDotCounter INKY, 17
         rts
 
 @individual_counters:
         ; Individual dot counters
-        lda     Inky+Ghost::State
+        lda     GhostsState+INKY
         cmp     #GhostState::waiting
         bne     @try_clyde
         ; Inky is waiting
@@ -1362,7 +1342,7 @@ GhostHandleDot:
         dec     Inky+Ghost::DotCounter
         rts
 @try_clyde:
-        lda     Clyde+Ghost::State
+        lda     GhostsState+CLYDE
         cmp     #GhostState::waiting
         bne     @end
         ; Clyde is waiting
@@ -1455,8 +1435,7 @@ DrawOneGhost:
         sta     GhostOamH
 
         ; Don't draw ghost if it's being eaten
-        ldy     #Ghost::fBeingEaten
-        lda     (pGhostL),y
+        lda     fGhostsBeingEaten,x
         beq     @not_being_eaten
         lda     #$ff
         ldy     #0
@@ -1488,8 +1467,7 @@ DrawOneGhost:
         sta     (GhostOamL),y
 
         ; Pattern index
-        ldy     #Ghost::State
-        lda     (pGhostL),y
+        lda     GhostsState,x
         cmp     #GhostState::eaten
         beq     @eaten
         cmp     #GhostState::entering
@@ -1506,8 +1484,7 @@ DrawOneGhost:
         lda     #$10                        ; Second frame is $10 tiles after first frame
 @first_frame:
         sta     TmpL
-        ldy     #Ghost::fScared
-        lda     (pGhostL),y
+        lda     fGhostsScared,x
         bne     @scared
         ; Ghost is not scared
         ldy     #Ghost::TurnDir
@@ -1539,8 +1516,7 @@ DrawOneGhost:
 
         ; Attributes
         ; Scared ghosts use palette 0
-        ldy     #Ghost::fScared
-        lda     (pGhostL),y
+        lda     fGhostsScared,x
         bne     @scared2
         ldy     #Ghost::Palette
         lda     (pGhostL),y                  ; get palette
