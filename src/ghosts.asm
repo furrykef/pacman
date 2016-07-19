@@ -6,13 +6,16 @@
         entering
 .endenum
 
+.enum
+        BLINKY
+        PINKY
+        INKY
+        CLYDE
+.endenum
+
 
 .struct Ghost
-        PosX            .byte               ; center of ghost, not upper left
-        PosY            .byte
-        HomeX           .byte
-        TileX           .byte
-        TileY           .byte               ; must follow TileX in memory
+        Id              .byte               ; to ease transition away from this struct
         Direction       .byte
         TurnDir         .byte               ; direction ghost has planned to turn in
         Speed1          .byte
@@ -56,6 +59,12 @@ Clyde:      .tag Ghost
 
 pGhostL:        .res 1
 pGhostH:        .res 1
+
+GhostsPosX:     .res 4                      ; center of ghost, not upper left
+GhostsPosY:     .res 4
+GhostsTileX:    .res 4
+GhostsTileY:    .res 4
+GhostsHomeX:    .res 4
 
 TileX:          .res 1
 TileY:          .res 1
@@ -196,14 +205,14 @@ GhostElroy2SpeedTbl:
 
 .macro InitGhostPos ghost, pos_x, pos_y
         lda     #pos_x
-        sta     ghost+Ghost::PosX
-        sta     ghost+Ghost::HomeX
+        sta     GhostsPosX+ghost
+        sta     GhostsHomeX+ghost
         lda     #pos_y
-        sta     ghost+Ghost::PosY
+        sta     GhostsPosY+ghost
         lda     #pos_x / 8
-        sta     ghost+Ghost::TileX
+        sta     GhostsTileX+ghost
         lda     #pos_y / 8
-        sta     ghost+Ghost::TileY
+        sta     GhostsTileY+ghost
 .endmacro
 
 InitAI:
@@ -211,7 +220,9 @@ InitAI:
         sta     fScatter
 
         ; Blinky
-        InitGhostPos Blinky, 127, 91
+        InitGhostPos BLINKY, 127, 91
+        lda     #BLINKY
+        sta     Blinky+Ghost::Id
         lda     #WEST
         sta     Blinky+Ghost::Direction
         sta     Blinky+Ghost::TurnDir
@@ -231,7 +242,9 @@ InitAI:
         sta     Blinky+Ghost::Palette
 
         ; Pinky
-        InitGhostPos Pinky, 127, 115
+        InitGhostPos PINKY, 127, 115
+        lda     #PINKY
+        sta     Pinky+Ghost::Id
         lda     #SOUTH
         sta     Pinky+Ghost::Direction
         sta     Pinky+Ghost::TurnDir
@@ -251,7 +264,9 @@ InitAI:
         sta     Pinky+Ghost::Palette
 
         ; Inky
-        InitGhostPos Inky, 111, 115
+        InitGhostPos INKY, 111, 115
+        lda     #INKY
+        sta     Inky+Ghost::Id
         lda     #NORTH
         sta     Inky+Ghost::Direction
         sta     Inky+Ghost::TurnDir
@@ -271,7 +286,9 @@ InitAI:
         sta     Inky+Ghost::Palette
 
         ; Clyde
-        InitGhostPos Clyde, 143, 115
+        InitGhostPos CLYDE, 143, 115
+        lda     #CLYDE
+        sta     Clyde+Ghost::Id
         lda     #NORTH
         sta     Clyde+Ghost::Direction
         sta     Clyde+Ghost::TurnDir
@@ -647,6 +664,9 @@ HandleOneGhost:
         jsr     SpeedTick
         bcc     :+
         jsr     MoveOneGhost
+        ldy     #Ghost::Id
+        lda     (pGhostL),y
+        tax
         jsr     CalcGhostCoords
 :
 .endrepeat
@@ -660,6 +680,9 @@ HandleOneGhost:
 ; Output:
 ;   pSpeed = pointer to first byte of the ghost's speed
 GetSpeed:
+        ldy     #Ghost::Id
+        lda     (pGhostL),y
+        tax
         ldy     #Ghost::State
         lda     (pGhostL),y
         cmp     #GhostState::eaten
@@ -670,12 +693,10 @@ GetSpeed:
         beq     @in_house
         cmp     #GhostState::exiting
         beq     @in_house
-        ldy     #Ghost::TileY
-        lda     (pGhostL),y
+        lda     GhostsTileY,x
         cmp     #14
         bne     @not_in_tunnel
-        ldy     #Ghost::TileX
-        lda     (pGhostL),y
+        lda     GhostsTileX,x
         cmp     #8
         blt     @in_tunnel
         cmp     #24
@@ -708,12 +729,13 @@ GetSpeed:
 
 
 CheckCollisions:
-        ldy     #Ghost::TileX
+        ldy     #Ghost::Id
         lda     (pGhostL),y
+        tax
+        lda     GhostsTileX,x
         cmp     PacTileX
         bne     @no_collision
-        iny
-        lda     (pGhostL),y
+        lda     GhostsTileY,x
         cmp     PacTileY
         bne     @no_collision
         ; Collided
@@ -786,13 +808,15 @@ MoveOneGhost:
 
 
 MoveOneGhostWaiting:
-        ldy     #Ghost::Direction
+        ldy     #Ghost::Id
         lda     (pGhostL),y
         tax
-        lda     DeltaYTbl,x
-        ldy     #Ghost::PosY
-        add     (pGhostL),y
-        sta     (pGhostL),y
+        ldy     #Ghost::Direction
+        lda     (pGhostL),y
+        tay
+        lda     DeltaYTbl,y
+        add     GhostsPosY,x
+        sta     GhostsPosY,x
         cmp     #111
         beq     @reverse
         cmp     #119
@@ -810,12 +834,13 @@ MoveOneGhostWaiting:
 
 MoveOneGhostEaten:
         jsr     MoveOneGhostNormal
-        ldy     #Ghost::PosX
+        ldy     #Ghost::Id
         lda     (pGhostL),y
+        tax
+        lda     GhostsPosX,x
         cmp     #127
         bne     @not_above_house
-        ldy     #Ghost::PosY
-        lda     (pGhostL),y
+        lda     GhostsPosY,x
         cmp     #91
         bne     @not_above_house
         ldy     #Ghost::State
@@ -826,8 +851,10 @@ MoveOneGhostEaten:
 
 
 MoveOneGhostExiting:
-        ldy     #Ghost::PosX
+        ldy     #Ghost::Id
         lda     (pGhostL),y
+        tax
+        lda     GhostsPosX,x
         cmp     #127
         blt     @move_east
         beq     @move_north
@@ -837,10 +864,9 @@ MoveOneGhostExiting:
         sta     (pGhostL),y
         ldy     #Ghost::TurnDir
         sta     (pGhostL),y
-        ldy     #Ghost::PosX
-        lda     (pGhostL),y
-        sub     #1
-        sta     (pGhostL),y
+        ldy     GhostsPosX,x
+        dey
+        sty     GhostsPosX,x
         rts
 
 @move_east:
@@ -849,10 +875,9 @@ MoveOneGhostExiting:
         sta     (pGhostL),y
         ldy     #Ghost::TurnDir
         sta     (pGhostL),y
-        ldy     #Ghost::PosX
-        lda     (pGhostL),y
-        add     #1
-        sta     (pGhostL),y
+        ldy     GhostsPosX,x
+        iny
+        sty     GhostsPosX,x
         rts
 
 @move_north:
@@ -861,11 +886,10 @@ MoveOneGhostExiting:
         sta     (pGhostL),y
         ldy     #Ghost::TurnDir
         sta     (pGhostL),y
-        ldy     #Ghost::PosY
-        lda     (pGhostL),y
-        sub     #1
-        sta     (pGhostL),y
-        cmp     #91
+        ldy     GhostsPosY,x
+        dey
+        sty     GhostsPosY,x
+        cpy     #91
         beq     @exited
         rts
 @exited:
@@ -881,21 +905,21 @@ MoveOneGhostExiting:
 
 
 MoveOneGhostEntering:
+        ldy     #Ghost::Id
+        lda     (pGhostL),y
+        tax
         ldy     #Ghost::Direction
         lda     #SOUTH
         sta     (pGhostL),y
         ldy     #Ghost::TurnDir
         sta     (pGhostL),y
-        ldy     #Ghost::PosY
-        lda     (pGhostL),y
+        lda     GhostsPosY,x
         cmp     #115
         blt     @move_south
         ; In vertical position
-        ldy     #Ghost::HomeX
-        lda     (pGhostL),y
+        lda     GhostsHomeX,x
         sta     TmpL
-        ldy     #Ghost::PosX
-        lda     (pGhostL),y
+        lda     GhostsPosX,x
         cmp     TmpL
         beq     @ready
         blt     @move_east
@@ -917,26 +941,20 @@ MoveOneGhostEntering:
 
 
 MoveOneGhostNormal:
-        ldy     #Ghost::Direction 
+        ldy     #Ghost::Id
         lda     (pGhostL),y
         tax
-        ldy     #Ghost::PosX
+        ldy     #Ghost::Direction 
         lda     (pGhostL),y
-        add     DeltaXTbl,x
-        sta     (pGhostL),y
-        ldy     #Ghost::PosY
-        lda     (pGhostL),y
-        add     DeltaYTbl,x
-        sta     (pGhostL),y
+        tay
+        lda     GhostsPosX,x
+        add     DeltaXTbl,y
+        sta     GhostsPosX,x
+        lda     GhostsPosY,x
+        add     DeltaYTbl,y
+        sta     GhostsPosY,x
 
         jsr     CalcGhostCoords
-
-        lda     TileX
-        ldy     #Ghost::TileX
-        sta     (pGhostL),y
-        lda     TileY
-        iny
-        sta     (pGhostL),y
 
         ldy     #Ghost::State
         lda     (pGhostL),y
@@ -1024,12 +1042,12 @@ GetPinkyTargetTile:
         lda     fScatter
         bne     @scatter
 
-        ldx     PacDirection
+        ldy     PacDirection
         lda     PacTileX
-        add     DeltaX4Tbl,x
+        add     DeltaX4Tbl,y
         sta     TargetTileX
         lda     PacTileY
-        add     DeltaY4Tbl,x
+        add     DeltaY4Tbl,y
         sta     TargetTileY
         rts
 
@@ -1052,17 +1070,17 @@ GetInkyTargetTile:
         ; TargetX = SubtargetX*2 - Blinky's X
         ; This is akin to drawing a line from Blinky to SubtargetX,
         ; then doubling the length of the line.
-        ldx     PacDirection
+        ldy     PacDirection
         lda     PacTileX
-        add     DeltaX2Tbl,x
+        add     DeltaX2Tbl,y
         asl
-        sub     Blinky+Ghost::TileX
+        sub     GhostsTileX+BLINKY
         sta     TargetTileX
         ; Target Y is computed the same way.
         lda     PacTileY
-        add     DeltaY2Tbl,x
+        add     DeltaY2Tbl,y
         asl
-        sub     Blinky+Ghost::TileY
+        sub     GhostsTileY+BLINKY
         sta     TargetTileY
         rts
 
@@ -1213,6 +1231,10 @@ ComputeTurn:
 .endmacro
 
 ComputeScores:
+        ldy     #Ghost::Id
+        lda     (pGhostL),y
+        tax
+
         lda     #0
         sta     MaxScore
 
@@ -1225,36 +1247,34 @@ ComputeScores:
         ; This is done because signed comparisons suck on 6502.
         lda     NextTileX
         sub     TargetTileX
-        tax
+        tay
         add     #$80
         sta     ScoreWest
-        txa
+        tya
         eor     #$ff                        ; negate and add $80
         sec
         adc     #$80
         sta     ScoreEast
         lda     NextTileY
         sub     TargetTileY
-        tax
+        tay
         add     #$80
         sta     ScoreNorth
-        txa
+        tya
         eor     #$ff
         sec
         adc     #$80
         sta     ScoreSouth
 
         ; Ban northward turns in certain regions of the maze
-        ldy     #Ghost::TileY
-        lda     (pGhostL),y
+        lda     GhostsTileY,x
         cmp     #11
         beq     @maybe_restricted
         cmp     #23
         beq     @maybe_restricted
         jmp     @north_ok
 @maybe_restricted:
-        ldy     #Ghost::TileX
-        lda     (pGhostL),y
+        lda     GhostsTileX,x
         cmp     #13
         blt     @north_ok
         cmp     #18 + 1
@@ -1353,31 +1373,30 @@ GhostHandleDot:
         rts
 
 
+; Ghost ID is in X (will be preserved)
 CalcGhostCoords:
-        ldy     #Ghost::PosX
-        lda     (pGhostL),y
-        tax
+        lda     GhostsPosX,x
+        tay
         lsr
         lsr
         lsr
         sta     TileX
-        ldy     #Ghost::TileX
-        sta     (pGhostL),y
-        txa
+        sta     GhostsTileX,x
+        tya
         and     #$07
         sta     PixelX
-        ldy     #Ghost::PosY
-        lda     (pGhostL),y
-        tax
+
+        lda     GhostsPosY,x
+        tay
         lsr
         lsr
         lsr
         sta     TileY
-        ldy     #Ghost::TileY
-        sta     (pGhostL),y
-        txa
+        sta     GhostsTileY,x
+        tya
         and     #$07
         sta     PixelY
+
         rts
 
 
@@ -1420,6 +1439,10 @@ DrawGhosts:
         jmp     DrawOneGhost
 
 DrawOneGhost:
+        ldy     #Ghost::Id
+        lda     (pGhostL),y
+        tax
+
         ; Update ghost in OAM
         ldy     #Ghost::Priority
         lda     (pGhostL),y
@@ -1444,8 +1467,7 @@ DrawOneGhost:
 @not_being_eaten:
 
         ; Y position
-        ldy     #Ghost::PosY
-        lda     (pGhostL),y
+        lda     GhostsPosY,x
         add     #24                         ; -8 to get top edge, +32 to compensate for status
         bcc     @not_too_low
         ; Carry here means ghost is at very bottom of the maze and its
@@ -1516,9 +1538,6 @@ DrawOneGhost:
         sta     (GhostOamL),y
 
         ; Attributes
-        ldy     #Ghost::TileX
-        lda     (pGhostL),y
-        tax
         ; Scared ghosts use palette 0
         ldy     #Ghost::fScared
         lda     (pGhostL),y
@@ -1530,9 +1549,10 @@ DrawOneGhost:
         lda     #0
 @got_palette:
         ; Flip priority if ghost is at edges of tunnel
-        cpx     #3
+        ldy     GhostsTileX,x
+        cpy     #3
         blt     @flip
-        cpx     #29
+        cpy     #29
         blt     @no_flip
 @flip:
         ora     #$20
@@ -1543,8 +1563,7 @@ DrawOneGhost:
         sta     (GhostOamL),y
 
         ; X position
-        ldy     #Ghost::PosX
-        lda     (pGhostL),y
+        lda     GhostsPosX,x
         sub     #7
         ldy     #3
         sta     (GhostOamL),y

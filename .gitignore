@@ -2,6 +2,7 @@
 *.nes
 *.srm
 *.deb
+*.dbg
 *.nl
 *.pyc
 */__pycache__/
