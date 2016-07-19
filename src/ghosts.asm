@@ -6,6 +6,7 @@
         entering
 .endenum
 
+; Order and indexes are significant
 .enum
         BLINKY
         PINKY
@@ -37,8 +38,6 @@
         EatenSpeed2     .byte
         EatenSpeed3     .byte
         EatenSpeed4     .byte
-        pGetTargetTileL .byte
-        pGetTargetTileH .byte
         Priority        .byte
         Palette         .byte
 .endstruct
@@ -242,10 +241,6 @@ InitAI:
         sta     GhostsTurnDir+BLINKY
         lda     #GhostState::active
         sta     GhostsState+BLINKY
-        lda     #<GetBlinkyTargetTile
-        sta     Blinky+Ghost::pGetTargetTileL
-        lda     #>GetBlinkyTargetTile
-        sta     Blinky+Ghost::pGetTargetTileH
         lda     #0
         sta     Blinky+Ghost::Priority
         lda     #$00
@@ -258,10 +253,6 @@ InitAI:
         lda     #SOUTH
         sta     GhostsDirection+PINKY
         sta     GhostsTurnDir+PINKY
-        lda     #<GetPinkyTargetTile
-        sta     Pinky+Ghost::pGetTargetTileL
-        lda     #>GetPinkyTargetTile
-        sta     Pinky+Ghost::pGetTargetTileH
         lda     #1
         sta     Pinky+Ghost::Priority
         lda     #$01
@@ -274,10 +265,6 @@ InitAI:
         lda     #NORTH
         sta     GhostsDirection+INKY
         sta     GhostsTurnDir+INKY
-        lda     #<GetInkyTargetTile
-        sta     Inky+Ghost::pGetTargetTileL
-        lda     #>GetInkyTargetTile
-        sta     Inky+Ghost::pGetTargetTileH
         lda     #2
         sta     Inky+Ghost::Priority
         lda     #$02
@@ -290,10 +277,6 @@ InitAI:
         lda     #NORTH
         sta     GhostsDirection+CLYDE
         sta     GhostsTurnDir+CLYDE
-        lda     #<GetClydeTargetTile
-        sta     Clyde+Ghost::pGetTargetTileL
-        lda     #>GetClydeTargetTile
-        sta     Clyde+Ghost::pGetTargetTileH
         lda     #3
         sta     Clyde+Ghost::Priority
         lda     #$03
@@ -937,12 +920,10 @@ MoveOneGhostNormal:
         sta     TargetTileY
         jmp     @got_target
 @not_eaten:
-        ; JSR to Ghost::pGetTargetTile
-        ldy     #Ghost::pGetTargetTileL
-        lda     (pGhostL),y
+        ; JSR to Get[Ghost]TargetTile
+        lda     GetTargetTileLTbl,x
         sta     JsrIndAddrL
-        iny
-        lda     (pGhostL),y
+        lda     GetTargetTileHTbl,x
         sta     JsrIndAddrH
         jsr     JsrInd
 @got_target:
@@ -1108,6 +1089,10 @@ GetClydeTargetTile:
         lda     #32
         sta     TargetTileY
         rts
+
+
+GetTargetTileLTbl:      .byte <GetBlinkyTargetTile, <GetPinkyTargetTile, <GetInkyTargetTile, <GetClydeTargetTile
+GetTargetTileHTbl:      .byte >GetBlinkyTargetTile, >GetPinkyTargetTile, >GetInkyTargetTile, >GetClydeTargetTile
 
 
 DeltaX2Tbl:
