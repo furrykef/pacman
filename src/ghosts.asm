@@ -37,7 +37,6 @@
         EatenSpeed2     .byte
         EatenSpeed3     .byte
         EatenSpeed4     .byte
-        DotCounter      .byte
         pGetTargetTileL .byte
         pGetTargetTileH .byte
         Priority        .byte
@@ -67,6 +66,7 @@ GhostsState:        .res 4
 fGhostsScared:      .res 4
 fGhostsReverse:     .res 4
 fGhostsBeingEaten:  .res 4
+GhostsDotCounter:   .res 4
 
 TileX:          .res 1
 TileY:          .res 1
@@ -352,12 +352,12 @@ InitAI:
         bne     @died
         lda     #0
         sta     GhostGlobalDotCounter       ; global dot counter only active when Pac-Man had died
-        sta     Blinky+Ghost::DotCounter
-        sta     Pinky+Ghost::DotCounter
+        sta     GhostsDotCounter+BLINKY
+        sta     GhostsDotCounter+PINKY
         lda     #30 + 1
-        sta     Inky+Ghost::DotCounter
+        sta     GhostsDotCounter+INKY
         lda     #60 + 1
-        sta     Clyde+Ghost::DotCounter
+        sta     GhostsDotCounter+CLYDE
 @died:
 
         ; Set difficulty level based on level
@@ -639,8 +639,7 @@ HandleOneGhost:
         cmp     #GhostState::waiting
         bne     @no_release
         ; 3) Its dot counter is zero
-        ldy     #Ghost::DotCounter
-        lda     (pGhostL),y
+        lda     GhostsDotCounter,x
         bne     @no_release
         lda     #GhostState::exiting
         sta     GhostsState,x
@@ -1330,18 +1329,18 @@ GhostHandleDot:
         cmp     #GhostState::waiting
         bne     @try_clyde
         ; Inky is waiting
-        lda     Inky+Ghost::DotCounter
+        lda     GhostsDotCounter+INKY
         beq     @end
-        dec     Inky+Ghost::DotCounter
+        dec     GhostsDotCounter+INKY
         rts
 @try_clyde:
         lda     GhostsState+CLYDE
         cmp     #GhostState::waiting
         bne     @end
         ; Clyde is waiting
-        lda     Clyde+Ghost::DotCounter
+        lda     GhostsDotCounter+CLYDE
         beq     @end
-        dec     Clyde+Ghost::DotCounter
+        dec     GhostsDotCounter+CLYDE
 @end:
         rts
 
