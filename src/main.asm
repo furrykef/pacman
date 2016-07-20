@@ -15,25 +15,6 @@ NUM_SCORE_DIGITS = 6
 .endenum
 
 
-; Exports for easy debugging
-.export HandleVblank
-.export WaitForVblank
-.export HandleIrq
-.export ReadJoys
-.export ComputeTurn
-.export MovePacMan
-.export MoveGhosts
-.export DisplayList
-.export Blinky
-.export Pinky
-.export EnergizerClockL
-.export FruitClockL
-.export DotClock
-.export NumLevel
-.export PacSpeed1
-.export InitPacMan
-
-
 MyOAM = $200
 
 

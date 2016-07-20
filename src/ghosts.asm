@@ -38,8 +38,6 @@
         EatenSpeed2     .byte
         EatenSpeed3     .byte
         EatenSpeed4     .byte
-        Priority        .byte
-        Palette         .byte
 .endstruct
 
 
@@ -66,6 +64,8 @@ fGhostsScared:      .res 4
 fGhostsReverse:     .res 4
 fGhostsBeingEaten:  .res 4
 GhostsDotCounter:   .res 4
+GhostsPriority:     .res 4
+GhostsPalette:      .res 4
 
 TileX:          .res 1
 TileY:          .res 1
@@ -229,6 +229,9 @@ InitAI:
         sta     fGhostsBeingEaten,x
         lda     #GhostState::waiting
         sta     GhostsState,x
+        txa
+        sta     GhostsPriority,x
+        sta     GhostsPalette,x
         dex
         bpl     @loop
 
@@ -241,10 +244,6 @@ InitAI:
         sta     GhostsTurnDir+BLINKY
         lda     #GhostState::active
         sta     GhostsState+BLINKY
-        lda     #0
-        sta     Blinky+Ghost::Priority
-        lda     #$00
-        sta     Blinky+Ghost::Palette
 
         ; Pinky
         InitGhostPos PINKY, 127, 115
@@ -253,10 +252,6 @@ InitAI:
         lda     #SOUTH
         sta     GhostsDirection+PINKY
         sta     GhostsTurnDir+PINKY
-        lda     #1
-        sta     Pinky+Ghost::Priority
-        lda     #$01
-        sta     Pinky+Ghost::Palette
 
         ; Inky
         InitGhostPos INKY, 111, 115
@@ -265,10 +260,6 @@ InitAI:
         lda     #NORTH
         sta     GhostsDirection+INKY
         sta     GhostsTurnDir+INKY
-        lda     #2
-        sta     Inky+Ghost::Priority
-        lda     #$02
-        sta     Inky+Ghost::Palette
 
         ; Clyde
         InitGhostPos CLYDE, 143, 115
@@ -277,10 +268,6 @@ InitAI:
         lda     #NORTH
         sta     GhostsDirection+CLYDE
         sta     GhostsTurnDir+CLYDE
-        lda     #3
-        sta     Clyde+Ghost::Priority
-        lda     #$03
-        sta     Clyde+Ghost::Palette
 
         ; Waiting speed
         lda     #$22
@@ -1357,23 +1344,20 @@ CalcGhostCoords:
         rts
 
 
-.macro CyclePriority ghost
-        lda     ghost+Ghost::Priority
-        add     #1
-        and     #$03
-        sta     ghost+Ghost::Priority
-.endmacro
-
 DrawGhosts:
         lda     fSpriteOverflow
         beq     @no_overflow
         ; More than 8 hardware sprites/scanline on previous frame; cycle priorities
-        CyclePriority Blinky
-        CyclePriority Pinky
-        CyclePriority Inky
-        CyclePriority Clyde
-@no_overflow:
+        ldx     #NUM_GHOSTS - 1
+@loop:
+        lda     GhostsPriority,x
+        add     #1
+        and     #$03
+        sta     GhostsPriority,x
+        dex
+        bpl     @loop
 
+@no_overflow:
         lda     #<Blinky
         sta     pGhostL
         lda     #>Blinky
@@ -1401,8 +1385,7 @@ DrawOneGhost:
         tax
 
         ; Update ghost in OAM
-        ldy     #Ghost::Priority
-        lda     (pGhostL),y
+        lda     GhostsPriority,x
         asl
         asl
         asl
@@ -1494,8 +1477,7 @@ DrawOneGhost:
         ; Scared ghosts use palette 0
         lda     fGhostsScared,x
         bne     @scared2
-        ldy     #Ghost::Palette
-        lda     (pGhostL),y                  ; get palette
+        lda     GhostsPalette,x
         jmp     @got_palette
 @scared2:
         lda     #0
