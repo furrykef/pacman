@@ -220,8 +220,16 @@ InitAI:
 @loop:
         lda     GhostsStartX,x
         sta     GhostsPosX,x
+        lsr
+        lsr
+        lsr
+        sta     GhostsTileX,x
         lda     GhostsStartY,x
         sta     GhostsPosY,x
+        lsr
+        lsr
+        lsr
+        sta     GhostsTileY,x
         lda     GhostsStartDir,x
         sta     GhostsDirection,x
         sta     GhostsTurnDir,x
