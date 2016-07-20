@@ -16,8 +16,7 @@
 .endenum
 
 
-.struct Ghost
-        Id              .byte               ; to ease transition away from this struct
+.struct GhostSpeeds
         Speed1          .byte
         Speed2          .byte
         Speed3          .byte
@@ -43,20 +42,19 @@
 
 .segment "ZEROPAGE"
 
-Blinky:     .tag Ghost
-Pinky:      .tag Ghost
-Inky:       .tag Ghost
-Clyde:      .tag Ghost
+BlinkySpeeds:   .tag GhostSpeeds
+PinkySpeeds:    .tag GhostSpeeds
+InkySpeeds:     .tag GhostSpeeds
+ClydeSpeeds:    .tag GhostSpeeds
 
-pGhostL:        .res 1
-pGhostH:        .res 1
+GhostId:        .res 1
 
 ; Each of these is a 4-byte array, one byte per ghost
 GhostsPosX:         .res 4                  ; center of ghost, not upper left
 GhostsPosY:         .res 4
 GhostsTileX:        .res 4
 GhostsTileY:        .res 4
-GhostsHomeX:        .res 4
+GhostsHomeX:        .res 4                  ; @TODO@ -- doesn't need to be in RAM
 GhostsDirection:    .res 4
 GhostsTurnDir:      .res 4                  ; direction ghost has planned to turn in
 GhostsState:        .res 4
@@ -65,7 +63,7 @@ fGhostsReverse:     .res 4
 fGhostsBeingEaten:  .res 4
 GhostsDotCounter:   .res 4
 GhostsPriority:     .res 4
-GhostsPalette:      .res 4
+GhostsPalette:      .res 4                  ; @TODO@ -- doesn't need to be in RAM
 
 TileX:          .res 1
 TileY:          .res 1
@@ -204,6 +202,10 @@ GhostElroy2SpeedTbl:
         MakeSpeedTbl Speed85, Speed95, Speed105
 
 
+GhostSpeedsAddrLTbl:    .byte <BlinkySpeeds, <PinkySpeeds, <InkySpeeds, <ClydeSpeeds
+GhostSpeedsAddrHTbl:    .byte >BlinkySpeeds, >PinkySpeeds, >InkySpeeds, >ClydeSpeeds
+
+
 .macro InitGhostPos ghost, pos_x, pos_y
         lda     #pos_x
         sta     GhostsPosX+ghost
@@ -237,8 +239,6 @@ InitAI:
 
         ; Blinky
         InitGhostPos BLINKY, 127, 91
-        lda     #BLINKY
-        sta     Blinky+Ghost::Id
         lda     #WEST
         sta     GhostsDirection+BLINKY
         sta     GhostsTurnDir+BLINKY
@@ -247,65 +247,59 @@ InitAI:
 
         ; Pinky
         InitGhostPos PINKY, 127, 115
-        lda     #PINKY
-        sta     Pinky+Ghost::Id
         lda     #SOUTH
         sta     GhostsDirection+PINKY
         sta     GhostsTurnDir+PINKY
 
         ; Inky
         InitGhostPos INKY, 111, 115
-        lda     #INKY
-        sta     Inky+Ghost::Id
         lda     #NORTH
         sta     GhostsDirection+INKY
         sta     GhostsTurnDir+INKY
 
         ; Clyde
         InitGhostPos CLYDE, 143, 115
-        lda     #CLYDE
-        sta     Clyde+Ghost::Id
         lda     #NORTH
         sta     GhostsDirection+CLYDE
         sta     GhostsTurnDir+CLYDE
 
         ; Waiting speed
         lda     #$22
-        sta     Blinky+Ghost::WaitingSpeed4
-        sta     Blinky+Ghost::WaitingSpeed3
-        sta     Blinky+Ghost::WaitingSpeed2
-        sta     Blinky+Ghost::WaitingSpeed1
-        sta     Pinky+Ghost::WaitingSpeed4
-        sta     Pinky+Ghost::WaitingSpeed3
-        sta     Pinky+Ghost::WaitingSpeed2
-        sta     Pinky+Ghost::WaitingSpeed1
-        sta     Inky+Ghost::WaitingSpeed4
-        sta     Inky+Ghost::WaitingSpeed3
-        sta     Inky+Ghost::WaitingSpeed2
-        sta     Inky+Ghost::WaitingSpeed1
-        sta     Clyde+Ghost::WaitingSpeed4
-        sta     Clyde+Ghost::WaitingSpeed3
-        sta     Clyde+Ghost::WaitingSpeed2
-        sta     Clyde+Ghost::WaitingSpeed1
+        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed4
+        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed3
+        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed2
+        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed1
+        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed4
+        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed3
+        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed2
+        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed1
+        sta     InkySpeeds+GhostSpeeds::WaitingSpeed4
+        sta     InkySpeeds+GhostSpeeds::WaitingSpeed3
+        sta     InkySpeeds+GhostSpeeds::WaitingSpeed2
+        sta     InkySpeeds+GhostSpeeds::WaitingSpeed1
+        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed4
+        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed3
+        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed2
+        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed1
 
         ; Eaten speed
         lda     #$ff
-        sta     Blinky+Ghost::EatenSpeed4
-        sta     Blinky+Ghost::EatenSpeed3
-        sta     Blinky+Ghost::EatenSpeed2
-        sta     Blinky+Ghost::EatenSpeed1
-        sta     Pinky+Ghost::EatenSpeed4
-        sta     Pinky+Ghost::EatenSpeed3
-        sta     Pinky+Ghost::EatenSpeed2
-        sta     Pinky+Ghost::EatenSpeed1
-        sta     Inky+Ghost::EatenSpeed4
-        sta     Inky+Ghost::EatenSpeed3
-        sta     Inky+Ghost::EatenSpeed2
-        sta     Inky+Ghost::EatenSpeed1
-        sta     Clyde+Ghost::EatenSpeed4
-        sta     Clyde+Ghost::EatenSpeed3
-        sta     Clyde+Ghost::EatenSpeed2
-        sta     Clyde+Ghost::EatenSpeed1
+        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed4
+        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed3
+        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed2
+        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed1
+        sta     PinkySpeeds+GhostSpeeds::EatenSpeed4
+        sta     PinkySpeeds+GhostSpeeds::EatenSpeed3
+        sta     PinkySpeeds+GhostSpeeds::EatenSpeed2
+        sta     PinkySpeeds+GhostSpeeds::EatenSpeed1
+        sta     InkySpeeds+GhostSpeeds::EatenSpeed4
+        sta     InkySpeeds+GhostSpeeds::EatenSpeed3
+        sta     InkySpeeds+GhostSpeeds::EatenSpeed2
+        sta     InkySpeeds+GhostSpeeds::EatenSpeed1
+        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed4
+        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed3
+        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed2
+        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed1
 
         lda     #0
         sta     EnergizerClockL
@@ -358,18 +352,18 @@ InitAI:
         txa
         asl                                 ; X will now point at 32-bit entries
         tax
-        CopyDwordFromTbl GhostSpeedTbl, Blinky+Ghost::Speed1
-        CopyDwordFromTbl GhostSpeedTbl, Pinky+Ghost::Speed1
-        CopyDwordFromTbl GhostSpeedTbl, Inky+Ghost::Speed1
-        CopyDwordFromTbl GhostSpeedTbl, Clyde+Ghost::Speed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, Blinky+Ghost::ScaredSpeed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, Pinky+Ghost::ScaredSpeed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, Inky+Ghost::ScaredSpeed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, Clyde+Ghost::ScaredSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, Blinky+Ghost::TunnelSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, Pinky+Ghost::TunnelSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, Inky+Ghost::TunnelSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, Clyde+Ghost::TunnelSpeed1
+        CopyDwordFromTbl GhostSpeedTbl, BlinkySpeeds+GhostSpeeds::Speed1
+        CopyDwordFromTbl GhostSpeedTbl, PinkySpeeds+GhostSpeeds::Speed1
+        CopyDwordFromTbl GhostSpeedTbl, InkySpeeds+GhostSpeeds::Speed1
+        CopyDwordFromTbl GhostSpeedTbl, ClydeSpeeds+GhostSpeeds::Speed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, BlinkySpeeds+GhostSpeeds::ScaredSpeed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, PinkySpeeds+GhostSpeeds::ScaredSpeed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, InkySpeeds+GhostSpeeds::ScaredSpeed1
+        CopyDwordFromTbl GhostScaredSpeedTbl, ClydeSpeeds+GhostSpeeds::ScaredSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, BlinkySpeeds+GhostSpeeds::TunnelSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, PinkySpeeds+GhostSpeeds::TunnelSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, InkySpeeds+GhostSpeeds::TunnelSpeed1
+        CopyDwordFromTbl GhostTunnelSpeedTbl, ClydeSpeeds+GhostSpeeds::TunnelSpeed1
         CopyDwordFromTbl GhostElroy1SpeedTbl, Elroy1Speed1
         CopyDwordFromTbl GhostElroy2SpeedTbl, Elroy2Speed1
 
@@ -423,7 +417,7 @@ MoveGhosts:
         bne     @elroy_done                 ; branch if we already changed Blinky's speed
         lda     #1
         sta     ElroyState
-        CopyDword Elroy1Speed1, Blinky+Ghost::Speed1
+        CopyDword Elroy1Speed1, BlinkySpeeds+GhostSpeeds::Speed1
         jmp     @elroy_done
 @elroy2:
         lda     ElroyState
@@ -431,30 +425,18 @@ MoveGhosts:
         beq     @elroy_done
         lda     #2
         sta     ElroyState
-        CopyDword Elroy2Speed1, Blinky+Ghost::Speed1
+        CopyDword Elroy2Speed1, BlinkySpeeds+GhostSpeeds::Speed1
 @elroy_done:
 
         ; Move the ghosts
-        lda     #<Blinky
-        sta     pGhostL
-        lda     #>Blinky
-        sta     pGhostH
+        ldx     #NUM_GHOSTS - 1
+@move_loop:
+        stx     GhostId
         jsr     HandleOneGhost
-        lda     #<Pinky
-        sta     pGhostL
-        lda     #>Pinky
-        sta     pGhostH
-        jsr     HandleOneGhost
-        lda     #<Inky
-        sta     pGhostL
-        lda     #>Inky
-        sta     pGhostH
-        jsr     HandleOneGhost
-        lda     #<Clyde
-        sta     pGhostL
-        lda     #>Clyde
-        sta     pGhostH
-        jmp     HandleOneGhost
+        dex
+        bpl     @move_loop
+
+        rts
 
 
 ModeClockTick:
@@ -545,7 +527,7 @@ EnergizerClockTick:
         beq     @maybe_zero
         jmp     @nonzero
 @maybe_zero:
-        ldx     EnergizerClockH
+        ldy     EnergizerClockH
         beq     @zero
 @nonzero:
         sub     #1
@@ -580,11 +562,8 @@ EatingGhostClockTick:
         rts
 
 
+; X = ghost ID (also in GhostId var) on entry and exit
 HandleOneGhost:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
-
         ; Ghost doesn't move while being eaten
         lda     fGhostsBeingEaten,x
         bne     @end
@@ -625,9 +604,6 @@ HandleOneGhost:
         jsr     SpeedTick
         bcc     :+
         jsr     MoveOneGhost
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         jsr     CalcGhostCoords
 :
 .endrepeat
@@ -641,9 +617,11 @@ HandleOneGhost:
 ; Output:
 ;   pSpeed = pointer to first byte of the ghost's speed
 GetSpeed:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
+        lda     GhostSpeedsAddrLTbl,x
+        sta     TmpL
+        lda     GhostSpeedsAddrHTbl,x
+        sta     TmpH
+
         lda     GhostsState,x
         cmp     #GhostState::eaten
         beq     @eaten
@@ -665,32 +643,29 @@ GetSpeed:
         lda     fGhostsScared,x
         bne     @scared
         ; No special conditions apply
-        lda     #Ghost::Speed1
+        lda     #GhostSpeeds::Speed1
         jmp     @end
 @eaten:
-        lda     #Ghost::EatenSpeed1
+        lda     #GhostSpeeds::EatenSpeed1
         jmp     @end
 @in_house:
-        lda     #Ghost::WaitingSpeed1
+        lda     #GhostSpeeds::WaitingSpeed1
         jmp     @end
 @in_tunnel:
-        lda     #Ghost::TunnelSpeed1
+        lda     #GhostSpeeds::TunnelSpeed1
         jmp     @end
 @scared:
-        lda     #Ghost::ScaredSpeed1
+        lda     #GhostSpeeds::ScaredSpeed1
 @end:
-        add     pGhostL
+        add     TmpL                        ; add address of GhostSpeeds struct
         sta     pSpeedL
-        lda     pGhostH
+        lda     TmpH
         adc     #0
         sta     pSpeedH
         rts
 
 
 CheckCollisions:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         lda     GhostsTileX,x
         cmp     PacTileX
         bne     @no_collision
@@ -723,10 +698,10 @@ CheckCollisions:
         sta     EatingGhostClock
         lda     EnergizerPoints
         asl                                 ; 16-bit entries
-        tax
-        lda     EnergizerPtsTbl,x
+        tay
+        lda     EnergizerPtsTbl,y
         sta     TmpL
-        lda     EnergizerPtsTbl+1,x
+        lda     EnergizerPtsTbl+1,y
         sta     TmpH
         jsr     AddPoints
         inc     EnergizerPoints
@@ -741,9 +716,6 @@ EnergizerPtsTbl:
 
 
 MoveOneGhost:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         lda     GhostsState,x
         cmp     #GhostState::waiting
         beq     @waiting
@@ -765,9 +737,6 @@ MoveOneGhost:
 
 
 MoveOneGhostWaiting:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         ldy     GhostsDirection,x
         lda     DeltaYTbl,y
         add     GhostsPosY,x
@@ -787,9 +756,6 @@ MoveOneGhostWaiting:
 
 MoveOneGhostEaten:
         jsr     MoveOneGhostNormal
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         lda     GhostsPosX,x
         cmp     #127
         bne     @not_above_house
@@ -803,9 +769,6 @@ MoveOneGhostEaten:
 
 
 MoveOneGhostExiting:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         lda     GhostsPosX,x
         cmp     #127
         blt     @move_east
@@ -848,9 +811,6 @@ MoveOneGhostExiting:
 
 
 MoveOneGhostEntering:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         lda     #SOUTH
         sta     GhostsDirection,x
         sta     GhostsTurnDir,x
@@ -884,9 +844,6 @@ MoveOneGhostEntering:
 
 
 MoveOneGhostNormal:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         ldy     GhostsDirection,x
         lda     GhostsPosX,x
         add     DeltaXTbl,y
@@ -914,11 +871,6 @@ MoveOneGhostNormal:
         sta     JsrIndAddrH
         jsr     JsrInd
 @got_target:
-
-        ; X may have gotten clobbered
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
 
         ; If ghost is centered in tile, have it turn or reverse if necessary
         ; Then compute next turn
@@ -1033,6 +985,11 @@ GetInkyTargetTile:
 
 
 GetClydeTargetTile:
+        ; Preserve X, since we clobber it
+        ; @TODO@ -- maybe rewrite routine not to clobber X?
+        txa
+        pha
+
         lda     fScatter
         bne     @scatter
 
@@ -1067,6 +1024,10 @@ GetClydeTargetTile:
         sta     TargetTileX
         lda     PacTileY
         sta     TargetTileY
+
+        ; restore X
+        pla
+        tax
         rts
 
 @scatter:
@@ -1075,6 +1036,10 @@ GetClydeTargetTile:
         sta     TargetTileX
         lda     #32
         sta     TargetTileY
+
+        ; restore X
+        pla
+        tax
         rts
 
 
@@ -1114,9 +1079,6 @@ SquareTbl:
 
 .macro EvalDirection dir, score
 .local @end
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
         lda     GhostsDirection,x           ; Disallow if going the opposite direction
         cmp     #dir ^ $03
         beq     @end
@@ -1126,7 +1088,7 @@ SquareTbl:
 .elseif dir = EAST
         iny
 .endif
-        ldx     NextTileY
+        ldx     NextTileY                   ; clobber X; it'll be restored later
 .if dir = NORTH
         dex
 .elseif dir = SOUTH
@@ -1141,12 +1103,12 @@ SquareTbl:
         beq     @end
         sta     MaxScore
         ; X got clobbered earlier; have to reload it
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
+        ldx     GhostId
         lda     #dir
         sta     GhostsTurnDir,x
 @end:
+        ; Reload X in case we skipped over the reload a few lines up
+        ldx     GhostId
 .endmacro
 
 ComputeTurn:
@@ -1179,10 +1141,6 @@ ComputeTurn:
 .endmacro
 
 ComputeScores:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
-
         lda     #0
         sta     MaxScore
 
@@ -1349,41 +1307,26 @@ DrawGhosts:
         beq     @no_overflow
         ; More than 8 hardware sprites/scanline on previous frame; cycle priorities
         ldx     #NUM_GHOSTS - 1
-@loop:
+@priority_loop:
         lda     GhostsPriority,x
         add     #1
         and     #$03
         sta     GhostsPriority,x
         dex
-        bpl     @loop
+        bpl     @priority_loop
 
 @no_overflow:
-        lda     #<Blinky
-        sta     pGhostL
-        lda     #>Blinky
-        sta     pGhostH
+        ldx     #NUM_GHOSTS - 1
+@draw_loop:
+        stx     GhostId
         jsr     DrawOneGhost
-        lda     #<Pinky
-        sta     pGhostL
-        lda     #>Pinky
-        sta     pGhostH
-        jsr     DrawOneGhost
-        lda     #<Inky
-        sta     pGhostL
-        lda     #>Inky
-        sta     pGhostH
-        jsr     DrawOneGhost
-        lda     #<Clyde
-        sta     pGhostL
-        lda     #>Clyde
-        sta     pGhostH
-        jmp     DrawOneGhost
+        dex
+        bpl     @draw_loop
 
+        rts
+
+; X is ghost ID (also in GhostId var) on entry and exit
 DrawOneGhost:
-        ldy     #Ghost::Id
-        lda     (pGhostL),y
-        tax
-
         ; Update ghost in OAM
         lda     GhostsPriority,x
         asl
