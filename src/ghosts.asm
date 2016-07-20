@@ -1,3 +1,11 @@
+; In most code in this file, the X register is reserved for the ID of the
+; ghost being operated on. If a routine uses the X register without first
+; putting anything in it, that's what it is unless otherwise specified.
+; These routines are expected to preserve the X register on exit as well.
+; The variable GhostId remembers what X should be in case it needs to be
+; clobbered temporarily.
+
+
 .enum GhostState
         active
         eaten
@@ -424,6 +432,8 @@ MoveGhosts:
         rts
 
 
+; Decrements ModeClock every tick and progresses to the next ghost mode
+; (chase/scatter) when it hits zero.
 ModeClockTick:
         ; Mode clock paused while energizer is active
         lda     fEnergizerActive
@@ -461,8 +471,8 @@ ModeClockTick:
         rts
 
 
+; Initialize ModeClock based on ModeCount.
 SetModeClock:
-        ; @TODO@ -- choose table based on level number
         lda     ModeCount
         asl
         tay
@@ -474,6 +484,8 @@ SetModeClock:
         rts
 
 
+; Decrements DotClock every frame and releases a ghost if it's zero.
+; (Eating a dot resets the clock.)
 DotClockTick:
         ldy     DotClock
         beq     @release_ghost
@@ -970,11 +982,6 @@ GetInkyTargetTile:
 
 
 GetClydeTargetTile:
-        ; Preserve X, since we clobber it
-        ; @TODO@ -- maybe rewrite routine not to clobber X?
-        txa
-        pha
-
         lda     fScatter
         bne     @scatter
 
@@ -1010,9 +1017,7 @@ GetClydeTargetTile:
         lda     PacTileY
         sta     TargetTileY
 
-        ; restore X
-        pla
-        tax
+        ldx     GhostId
         rts
 
 @scatter:
@@ -1022,9 +1027,7 @@ GetClydeTargetTile:
         lda     #32
         sta     TargetTileY
 
-        ; restore X
-        pla
-        tax
+        ldx     GhostId
         rts
 
 
@@ -1081,19 +1084,18 @@ SquareTbl:
 .endif
         jsr     GetTile
         jsr     IsTileEnterable
-        bne     @end
+        php
+        ldx     GhostId                     ; restore X
+        plp
+        bne     @end                        ; skip to end if tile not enterable
         lda     score
         cmp     MaxScore
         blt     @end
         beq     @end
         sta     MaxScore
-        ; X got clobbered earlier; have to reload it
-        ldx     GhostId
         lda     #dir
         sta     GhostsTurnDir,x
 @end:
-        ; Reload X in case we skipped over the reload a few lines up
-        ldx     GhostId
 .endmacro
 
 ComputeTurn:
@@ -1177,6 +1179,7 @@ ComputeScores:
         rts
 
 @random:
+        ; Scared ghosts move randomly
         GenRandomScore ScoreNorth
         GenRandomScore ScoreWest
         GenRandomScore ScoreSouth
@@ -1185,6 +1188,7 @@ ComputeScores:
 
 
 StartEnergizer:
+        ; All non-eaten ghosts become scared and reverse direction
         ldx     #NUM_GHOSTS - 1
 @loop:
         lda     GhostsState,x
