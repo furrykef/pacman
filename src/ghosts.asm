@@ -1109,6 +1109,7 @@ ComputeTurn:
 
 .macro GenRandomScore score
         jsr     Rand
+        ldx     GhostId                     ; Rand can clobber X
         ; Don't allow a score of 0 (reserved for invalid directions)
         cmp     #0
         bne     :+

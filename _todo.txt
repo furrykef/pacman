@@ -1,8 +1,3 @@
-Ghosts going through walls!
----------------------------
-Sometimes ghosts escape the maze. This seems to happen while they're frightened. I don't think this bug existed before the Great AI Refactoring, but I don't know which revision introduced it.
-
-
 Ghost house bug
 ---------------
 Inky and Clyde should leave the ghost house sooner on later levels than earlier ones. By level 5 they should be leaving immediately. This bug is long-standing; this feature might never have been implemented.
