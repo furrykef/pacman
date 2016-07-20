@@ -54,7 +54,6 @@ GhostsPosX:         .res 4                  ; center of ghost, not upper left
 GhostsPosY:         .res 4
 GhostsTileX:        .res 4
 GhostsTileY:        .res 4
-GhostsHomeX:        .res 4                  ; @TODO@ -- doesn't need to be in RAM
 GhostsDirection:    .res 4
 GhostsTurnDir:      .res 4                  ; direction ghost has planned to turn in
 GhostsState:        .res 4
@@ -63,7 +62,6 @@ fGhostsReverse:     .res 4
 fGhostsBeingEaten:  .res 4
 GhostsDotCounter:   .res 4
 GhostsPriority:     .res 4
-GhostsPalette:      .res 4                  ; @TODO@ -- doesn't need to be in RAM
 
 TileX:          .res 1
 TileY:          .res 1
@@ -206,17 +204,12 @@ GhostSpeedsAddrLTbl:    .byte <BlinkySpeeds, <PinkySpeeds, <InkySpeeds, <ClydeSp
 GhostSpeedsAddrHTbl:    .byte >BlinkySpeeds, >PinkySpeeds, >InkySpeeds, >ClydeSpeeds
 
 
-.macro InitGhostPos ghost, pos_x, pos_y
-        lda     #pos_x
-        sta     GhostsPosX+ghost
-        sta     GhostsHomeX+ghost
-        lda     #pos_y
-        sta     GhostsPosY+ghost
-        lda     #pos_x / 8
-        sta     GhostsTileX+ghost
-        lda     #pos_y / 8
-        sta     GhostsTileY+ghost
-.endmacro
+                            ; Blinky    Pinky       Inky        Clyde
+GhostsStartX:       .byte   127,        127,        111,        143
+GhostsStartY:       .byte   91,         115,        115,        115
+GhostsStartDir:     .byte   WEST,       SOUTH,      NORTH,      NORTH
+GhostsPalette:      .byte   0,          1,          2,          3
+
 
 InitAI:
         lda     #1
@@ -225,6 +218,13 @@ InitAI:
         ; Common vars
         ldx     #NUM_GHOSTS - 1
 @loop:
+        lda     GhostsStartX,x
+        sta     GhostsPosX,x
+        lda     GhostsStartY,x
+        sta     GhostsPosY,x
+        lda     GhostsStartDir,x
+        sta     GhostsDirection,x
+        sta     GhostsTurnDir,x
         lda     #0
         sta     fGhostsScared,x
         sta     fGhostsReverse,x
@@ -233,35 +233,12 @@ InitAI:
         sta     GhostsState,x
         txa
         sta     GhostsPriority,x
-        sta     GhostsPalette,x
         dex
         bpl     @loop
 
-        ; Blinky
-        InitGhostPos BLINKY, 127, 91
-        lda     #WEST
-        sta     GhostsDirection+BLINKY
-        sta     GhostsTurnDir+BLINKY
+        ; Blinky starts active
         lda     #GhostState::active
         sta     GhostsState+BLINKY
-
-        ; Pinky
-        InitGhostPos PINKY, 127, 115
-        lda     #SOUTH
-        sta     GhostsDirection+PINKY
-        sta     GhostsTurnDir+PINKY
-
-        ; Inky
-        InitGhostPos INKY, 111, 115
-        lda     #NORTH
-        sta     GhostsDirection+INKY
-        sta     GhostsTurnDir+INKY
-
-        ; Clyde
-        InitGhostPos CLYDE, 143, 115
-        lda     #NORTH
-        sta     GhostsDirection+CLYDE
-        sta     GhostsTurnDir+CLYDE
 
         ; Waiting speed
         lda     #$22
@@ -818,7 +795,7 @@ MoveOneGhostEntering:
         cmp     #115
         blt     @move_south
         ; In vertical position
-        lda     GhostsHomeX,x
+        lda     GhostsStartX,x
         sta     TmpL
         lda     GhostsPosX,x
         cmp     TmpL
