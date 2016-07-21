@@ -87,7 +87,6 @@ CopyBoardIntoVram:
         sta     PPUADDR
         lda     #$c0
         sta     PPUADDR
-        lda     #$00
         jsr     ClearAttr
         lda     #$2b
         sta     PPUADDR
@@ -140,6 +139,7 @@ CopyBoardIntoVram:
         rts
 
 ClearAttr:
+        lda     #0
         ldx     #64
 @loop:
         sta     PPUDATA

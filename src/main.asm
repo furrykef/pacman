@@ -4,6 +4,8 @@
 
 NUM_SCORE_DIGITS = 6
 
+; Appears at the start of save file
+; If not present, save file is uninitialized
 .define MAGIC_COOKIE "You're a dirty cheater, aren't you?"
 
 ; This ordering is used so that you can reverse direction using EOR #$03
@@ -153,14 +155,14 @@ Main:
         sta     PPUADDR
         lda     #' '
         sta     PPUADDR
-        tax                                 ; X := 0
+        ldx     #0
         ldy     #$10
 @clear_vram:
         sta     PPUDATA
-        dex
+        inx
         bne     @clear_vram
         dey
-        bne     @clear_vram
+        bpl     @clear_vram
 
         ; Init mapper
         ; Set CHR banks
@@ -784,6 +786,7 @@ StatusBar:
         .byte   0
 
 
+; BCD representations of points
 Points10:   .byte   0,0,0,0,1,0
 Points50:   .byte   0,0,0,0,5,0
 Points100:  .byte   0,0,0,1,0,0
@@ -800,6 +803,7 @@ Points3000: .byte   0,0,3,0,0,0
 Points5000: .byte   0,0,5,0,0,0
 
 
+; Tables for displaying two-digit numbers
 FirstDigitTbl:
 .repeat 10, I
         .byte I
@@ -823,6 +827,7 @@ Palette:
 .incbin "../assets/palette.dat"
 PaletteSize = * - Palette
 
+; Palette cycle for flashing energizers
 ColorCycle:
         .byte   $0f, $36, $30, $36
 

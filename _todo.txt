@@ -28,3 +28,5 @@ If we add two-player play, don't forget that the ghosts' dot counters need to be
 Initialize random seed better.
 
 Should fEnergizerActive go false as soon as no ghosts are scared?
+
+Can Pac-Man's rendering logic be merged with the ghosts'?
