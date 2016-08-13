@@ -701,6 +701,7 @@ CheckCollisions:
         lda     EnergizerPtsTbl+1,y
         sta     TmpH
         jsr     AddPoints
+        ldx     GhostId                     ; AddPoints can clobber X
         inc     EnergizerPoints
 @no_collision:
         rts

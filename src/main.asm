@@ -2,9 +2,11 @@
 .include "header.inc"
 
 
+; Number of digits used in unpacked BCD numbers representing point values
 NUM_SCORE_DIGITS = 6
 
-; Appears at the start of save file
+
+; Signature that appears at the start of save file
 ; If not present, save file is uninitialized
 .define MAGIC_COOKIE "You're a dirty cheater, aren't you?"
 
@@ -352,8 +354,11 @@ InitLife:
 
 ; Input:
 ;   TmpL,H = address of number of points to add
+;   Y = number of digit (0 = most significant)
+;   carry flag
 ;
 ; Output:
+;   Y = Y-1
 ;   carry flag
 .macro AddDigit num
 .local @end
@@ -549,6 +554,8 @@ HandleVblank:
         sta     OAMDMA
 
         ; Check if sprites overflowed on previous frame
+        ; NB: If you remove this, remember that you still need to read
+        ;     PPUSTATUS during vblank to clear the vblank flag.
         lda     PPUSTATUS
         and     #$20
         sta     fSpriteOverflow
@@ -610,8 +617,8 @@ HandleVblank:
         sta     PPUMASK
 
         ; Save VScroll for IRQ handler
-        ; (IRQ using VScroll directly causes a race condition and IRQ may use
-        ;  the value for the next frame)
+        ; (IRQ using VScroll directly causes a race condition where IRQ might
+        ;  use the value for the next frame)
         lda     VScroll
         sta     IrqVScroll
 
@@ -663,18 +670,21 @@ HandleIrq:
         beq     @end
 
         ; Wait until we're nearly at hblank
+        ; Doing this correctly with a loop is trickier, because the loop's
+        ; branch instruction takes longer if it crosses a page boundary.
+        ; We can't easily tell if that would be the case or not.
+        ; This way, we don't need to worry about it.
 .repeat 30
         nop
 .endrepeat
 
         ; See: http://wiki.nesdev.com/w/index.php/PPU_scrolling#Split_X.2FY_scroll
         ; NES hardware is weird, man
-        lda     #0
-        sta     PPUADDR
+        ldx     #0
+        stx     PPUADDR
         lda     IrqVScroll
         sta     PPUSCROLL
-        lda     #0
-        sta     PPUSCROLL
+        stx     PPUSCROLL
         lda     IrqVScroll
         and     #$f8
         asl
@@ -716,7 +726,6 @@ ReadJoys:
 ; Expects Joy2State to follow Joy1State in memory
 ; Expects Joy2PrevState to follow Joy1PrevState in memory
 ; Expects Joy2Down to follow Joy1Down in memory
-; Expects controllers to already have been strobed
 ReadOneJoy:
         lda     Joy1State,y
         sta     Joy1PrevState,y
@@ -787,7 +796,7 @@ StatusBar:
         .byte   0
 
 
-; BCD representations of points
+; Unpacked BCD representations of points
 Points10:   .byte   0,0,0,0,1,0
 Points50:   .byte   0,0,0,0,5,0
 Points100:  .byte   0,0,0,1,0,0
