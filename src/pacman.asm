@@ -59,14 +59,11 @@ InitPacMan:
         sta     PacDelay
         sta     fPacDead
 
-        lda     NumLevel
-        cmp     #21
+        ldx     NumLevel
+        cpx     #21
         blt     :+
-        lda     #20                         ; difficulty maxes out at level 21
+        ldx     #20                         ; difficulty maxes out at level 21
 :
-        asl
-        asl
-        tax
         lda PacBaseSpeedTbl,x
         sta PacBaseSpeed
         lda PacEnergizerSpeedTbl,x
