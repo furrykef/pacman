@@ -576,11 +576,11 @@ HandleOneGhost:
         bne     @end                        ; we're not an eaten ghost
 @can_move:
 
-        ; Release ghost if (all must apply):
+        ; Release ghost from ghost house if (all must apply):
         ; 1) Global dot counter is inactive
         lda     GhostGlobalDotCounter
         bne     @no_release
-        ; 2) It is waiting
+        ; 2) It is waiting in the ghost house
         lda     GhostsState,x
         cmp     #GhostState::waiting
         bne     @no_release
