@@ -24,36 +24,7 @@
 .endenum
 
 
-.struct GhostSpeeds
-        Speed1          .byte
-        Speed2          .byte
-        Speed3          .byte
-        Speed4          .byte
-        WaitingSpeed1   .byte
-        WaitingSpeed2   .byte
-        WaitingSpeed3   .byte
-        WaitingSpeed4   .byte
-        TunnelSpeed1    .byte
-        TunnelSpeed2    .byte
-        TunnelSpeed3    .byte
-        TunnelSpeed4    .byte
-        ScaredSpeed1    .byte
-        ScaredSpeed2    .byte
-        ScaredSpeed3    .byte
-        ScaredSpeed4    .byte
-        EatenSpeed1     .byte
-        EatenSpeed2     .byte
-        EatenSpeed3     .byte
-        EatenSpeed4     .byte
-.endstruct
-
-
 .segment "ZEROPAGE"
-
-BlinkySpeeds:   .tag GhostSpeeds
-PinkySpeeds:    .tag GhostSpeeds
-InkySpeeds:     .tag GhostSpeeds
-ClydeSpeeds:    .tag GhostSpeeds
 
 GhostId:        .res 1
 
@@ -64,12 +35,19 @@ GhostsTileX:        .res 4
 GhostsTileY:        .res 4
 GhostsDirection:    .res 4
 GhostsTurnDir:      .res 4                  ; direction ghost has planned to turn in
+GhostsMoveCounter:  .res 4
 GhostsState:        .res 4
 fGhostsScared:      .res 4
 fGhostsReverse:     .res 4
 fGhostsBeingEaten:  .res 4
 GhostsDotCounter:   .res 4
 GhostsPriority:     .res 4
+
+GhostBaseSpeed:     .res 1
+GhostScaredSpeed:   .res 1
+GhostTunnelSpeed:   .res 1
+GhostElroy1Speed:   .res 1
+GhostElroy2Speed:   .res 1
 
 TileX:          .res 1
 TileY:          .res 1
@@ -112,15 +90,6 @@ pModesL:            .res 1
 pModesH:            .res 1
 Elroy1Dots:         .res 1
 Elroy2Dots:         .res 1
-
-Elroy1Speed1:       .res 1
-Elroy1Speed2:       .res 1
-Elroy1Speed3:       .res 1
-Elroy1Speed4:       .res 1
-Elroy2Speed1:       .res 1
-Elroy2Speed2:       .res 1
-Elroy2Speed3:       .res 1
-Elroy2Speed4:       .res 1
 
 fClydeLeft:         .res 1
 ElroyState:         .res 1
@@ -183,16 +152,16 @@ DotTimeoutTbl:
 
 
 .macro MakeSpeedTbl lvl1speed, lvl2speed, lvl5speed
-        .dword lvl1speed
+        .byte lvl1speed
 .repeat 3
-        .dword lvl2speed
+        .byte lvl2speed
 .endrepeat
 .repeat 15
-        .dword lvl5speed
+        .byte lvl5speed
 .endrepeat
 .endmacro
 
-GhostSpeedTbl:
+GhostBaseSpeedTbl:
         MakeSpeedTbl Speed75, Speed85, Speed95
 
 GhostScaredSpeedTbl:
@@ -207,12 +176,8 @@ GhostElroy1SpeedTbl:
 GhostElroy2SpeedTbl:
         MakeSpeedTbl Speed85, Speed95, Speed105
 
-
-GhostSpeedsAddrLTbl:    .byte <BlinkySpeeds, <PinkySpeeds, <InkySpeeds, <ClydeSpeeds
-GhostSpeedsAddrHTbl:    .byte >BlinkySpeeds, >PinkySpeeds, >InkySpeeds, >ClydeSpeeds
-
-
-                            ; Blinky    Pinky       Inky        Clyde
+;                           Blinky      Pinky       Inky        Clyde
+;                           -------------------------------------------
 GhostsStartX:       .byte   127,        127,        111,        143
 GhostsStartY:       .byte   91,         115,        115,        115
 GhostsStartDir:     .byte   WEST,       SOUTH,      NORTH,      NORTH
@@ -242,6 +207,7 @@ InitAI:
         sta     GhostsDirection,x
         sta     GhostsTurnDir,x
         lda     #0
+        sta     GhostsMoveCounter,x
         sta     fGhostsScared,x
         sta     fGhostsReverse,x
         sta     fGhostsBeingEaten,x
@@ -255,44 +221,6 @@ InitAI:
         ; Blinky starts active
         lda     #GhostState::active
         sta     GhostsState+BLINKY
-
-        ; Waiting speed
-        lda     #$22
-        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed4
-        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed3
-        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed2
-        sta     BlinkySpeeds+GhostSpeeds::WaitingSpeed1
-        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed4
-        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed3
-        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed2
-        sta     PinkySpeeds+GhostSpeeds::WaitingSpeed1
-        sta     InkySpeeds+GhostSpeeds::WaitingSpeed4
-        sta     InkySpeeds+GhostSpeeds::WaitingSpeed3
-        sta     InkySpeeds+GhostSpeeds::WaitingSpeed2
-        sta     InkySpeeds+GhostSpeeds::WaitingSpeed1
-        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed4
-        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed3
-        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed2
-        sta     ClydeSpeeds+GhostSpeeds::WaitingSpeed1
-
-        ; Eaten speed
-        lda     #$ff
-        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed4
-        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed3
-        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed2
-        sta     BlinkySpeeds+GhostSpeeds::EatenSpeed1
-        sta     PinkySpeeds+GhostSpeeds::EatenSpeed4
-        sta     PinkySpeeds+GhostSpeeds::EatenSpeed3
-        sta     PinkySpeeds+GhostSpeeds::EatenSpeed2
-        sta     PinkySpeeds+GhostSpeeds::EatenSpeed1
-        sta     InkySpeeds+GhostSpeeds::EatenSpeed4
-        sta     InkySpeeds+GhostSpeeds::EatenSpeed3
-        sta     InkySpeeds+GhostSpeeds::EatenSpeed2
-        sta     InkySpeeds+GhostSpeeds::EatenSpeed1
-        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed4
-        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed3
-        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed2
-        sta     ClydeSpeeds+GhostSpeeds::EatenSpeed1
 
         lda     #0
         sta     EnergizerClockL
@@ -331,6 +259,18 @@ InitAI:
         lda     DotTimeoutTbl,x
         sta     DotTimeout
         sta     DotClock
+
+        lda GhostBaseSpeedTbl,x
+        sta GhostBaseSpeed
+        lda GhostScaredSpeedTbl,x
+        sta GhostScaredSpeed
+        lda GhostTunnelSpeedTbl,x
+        sta GhostTunnelSpeed
+        lda GhostElroy1SpeedTbl,x
+        sta GhostElroy1Speed
+        lda GhostElroy2SpeedTbl,x
+        sta GhostElroy2Speed
+
         txa
         asl                                 ; X will now point at 16-bit entries
         tax
@@ -342,23 +282,6 @@ InitAI:
         sta     pModesL
         lda     ModesMetaTbl+1,x
         sta     pModesH
-        txa
-        asl                                 ; X will now point at 32-bit entries
-        tax
-        CopyDwordFromTbl GhostSpeedTbl, BlinkySpeeds+GhostSpeeds::Speed1
-        CopyDwordFromTbl GhostSpeedTbl, PinkySpeeds+GhostSpeeds::Speed1
-        CopyDwordFromTbl GhostSpeedTbl, InkySpeeds+GhostSpeeds::Speed1
-        CopyDwordFromTbl GhostSpeedTbl, ClydeSpeeds+GhostSpeeds::Speed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, BlinkySpeeds+GhostSpeeds::ScaredSpeed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, PinkySpeeds+GhostSpeeds::ScaredSpeed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, InkySpeeds+GhostSpeeds::ScaredSpeed1
-        CopyDwordFromTbl GhostScaredSpeedTbl, ClydeSpeeds+GhostSpeeds::ScaredSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, BlinkySpeeds+GhostSpeeds::TunnelSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, PinkySpeeds+GhostSpeeds::TunnelSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, InkySpeeds+GhostSpeeds::TunnelSpeed1
-        CopyDwordFromTbl GhostTunnelSpeedTbl, ClydeSpeeds+GhostSpeeds::TunnelSpeed1
-        CopyDwordFromTbl GhostElroy1SpeedTbl, Elroy1Speed1
-        CopyDwordFromTbl GhostElroy2SpeedTbl, Elroy2Speed1
 
         lda     #0
         sta     ModeCount
@@ -394,7 +317,7 @@ MoveGhosts:
         sta     fClydeLeft
 @clyde_waiting:
 
-        ; Cruise Elroy speed
+        ; Set Blinky to "Cruise Elroy" mode if enough dots have been eaten
         ; Do not adjust for Elroy if Clyde never left house
         lda     fClydeLeft
         beq     @elroy_done
@@ -406,19 +329,12 @@ MoveGhosts:
         beq     @elroy1
         bge     @elroy_done
 @elroy1:
-        lda     ElroyState
-        bne     @elroy_done                 ; branch if we already changed Blinky's speed
         lda     #1
         sta     ElroyState
-        CopyDword Elroy1Speed1, BlinkySpeeds+GhostSpeeds::Speed1
         jmp     @elroy_done
 @elroy2:
-        lda     ElroyState
-        cmp     #2
-        beq     @elroy_done
         lda     #2
         sta     ElroyState
-        CopyDword Elroy2Speed1, BlinkySpeeds+GhostSpeeds::Speed1
 @elroy_done:
 
         ; Move the ghosts
@@ -597,13 +513,18 @@ HandleOneGhost:
         jsr     CheckCollisions
 
         jsr     GetSpeed
-.repeat 2
-        jsr     SpeedTick
+        pha                                 ; save speed for later
+        AddSpeedX GhostsMoveCounter
         bcc     :+
         jsr     MoveOneGhost
         jsr     CalcGhostCoords
 :
-.endrepeat
+        pla                                 ; get speed back
+        AddSpeedX GhostsMoveCounter
+        bcc     :+
+        jsr     MoveOneGhost
+        jsr     CalcGhostCoords
+:
 
         jmp     CheckCollisions
 
@@ -612,13 +533,8 @@ HandleOneGhost:
 
 
 ; Output:
-;   pSpeed = pointer to first byte of the ghost's speed
+;   A = ghost's speed
 GetSpeed:
-        lda     GhostSpeedsAddrLTbl,x
-        sta     TmpL
-        lda     GhostSpeedsAddrHTbl,x
-        sta     TmpH
-
         lda     GhostsState,x
         cmp     #GhostState::eaten
         beq     @eaten
@@ -639,26 +555,33 @@ GetSpeed:
 @not_in_tunnel:
         lda     fGhostsScared,x
         bne     @scared
+        cpx     #BLINKY                     ; only Blinky has Elroy mode
+        bne     @no_elroy
+        lda     ElroyState
+        beq     @no_elroy
+        cmp     #1
+        beq     @elroy1
+        ; Elroy 2
+        lda     GhostElroy2Speed
+        rts
+@elroy1:
+        lda     GhostElroy1Speed
+        rts
+@no_elroy:
         ; No special conditions apply
-        lda     #GhostSpeeds::Speed1
-        jmp     @end
+        lda     GhostBaseSpeed
+        rts
 @eaten:
-        lda     #GhostSpeeds::EatenSpeed1
-        jmp     @end
+        lda     #SpeedMax
+        rts
 @in_house:
-        lda     #GhostSpeeds::WaitingSpeed1
-        jmp     @end
+        lda     #Speed40
+        rts
 @in_tunnel:
-        lda     #GhostSpeeds::TunnelSpeed1
-        jmp     @end
+        lda     GhostTunnelSpeed
+        rts
 @scared:
-        lda     #GhostSpeeds::ScaredSpeed1
-@end:
-        add     TmpL                        ; add address of GhostSpeeds struct
-        sta     pSpeedL
-        lda     TmpH
-        adc     #0
-        sta     pSpeedH
+        lda     GhostScaredSpeed
         rts
 
 

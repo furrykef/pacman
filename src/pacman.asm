@@ -10,6 +10,7 @@ PacTileY:           .res 1
 PacPixelX:          .res 1
 PacPixelY:          .res 1
 PacDirection:       .res 1
+PacMoveCounter:     .res 1
 
 PacTryDirection:    .res 1
 
@@ -17,38 +18,32 @@ PacDelay:           .res 1
 
 fPacDead:           .res 1
 
-PacSpeed1:          .res 1
-PacSpeed2:          .res 1
-PacSpeed3:          .res 1
-PacSpeed4:          .res 1
-PacEnergizerSpeed1: .res 1
-PacEnergizerSpeed2: .res 1
-PacEnergizerSpeed3: .res 1
-PacEnergizerSpeed4: .res 1
+PacBaseSpeed:       .res 1
+PacEnergizerSpeed:  .res 1
 
 
 .segment "CODE"
 
 
-PacSpeedTbl:
-        .dword  Speed80
+PacBaseSpeedTbl:
+        .byte  Speed80
 .repeat 3
-        .dword  Speed90
+        .byte  Speed90
 .endrepeat
 .repeat 16
-        .dword  Speed100
+        .byte  Speed100
 .endrepeat
-        .dword  Speed90
+        .byte  Speed90
 
 PacEnergizerSpeedTbl:
-        .dword  Speed90
+        .byte  Speed90
 .repeat 3
-        .dword  Speed95
+        .byte  Speed95
 .endrepeat
 .repeat 16
-        .dword  Speed100
+        .byte  Speed100
 .endrepeat
-        .dword  Speed90
+        .byte  Speed90
 
 
 InitPacMan:
@@ -60,6 +55,7 @@ InitPacMan:
         lda     #WEST
         sta     PacDirection
         lda     #0
+        sta     PacMoveCounter
         sta     PacDelay
         sta     fPacDead
 
@@ -71,8 +67,10 @@ InitPacMan:
         asl
         asl
         tax
-        CopyDwordFromTbl PacSpeedTbl, PacSpeed1
-        CopyDwordFromTbl PacEnergizerSpeedTbl, PacEnergizerSpeed1
+        lda PacBaseSpeedTbl,x
+        sta PacBaseSpeed
+        lda PacEnergizerSpeedTbl,x
+        sta PacEnergizerSpeed
 
         rts
 
@@ -90,22 +88,18 @@ MovePacMan:
         rts
 @no_delay:
 
-        lda     #<PacSpeed1
-        sta     pSpeedL
-        lda     #>PacSpeed1
-        sta     pSpeedH
-        lda     fEnergizerActive
+        lda     PacBaseSpeed
+        ldx     fEnergizerActive
         beq     @no_energizer
-        lda     #<PacEnergizerSpeed1
-        sta     pSpeedL
-        lda     #>PacEnergizerSpeed1
-        sta     pSpeedH
+        lda     PacEnergizerSpeed
 @no_energizer:
-        jsr     SpeedTick
+        pha                                 ; save speed for later
+        AddSpeed PacMoveCounter
         bcc     :+
         jsr     MovePacManOneTick
 :
-        jsr     SpeedTick
+        pla                                 ; get speed back
+        AddSpeed PacMoveCounter
         bcc     @end
         jmp     MovePacManOneTick
 @end:

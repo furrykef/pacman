@@ -22,21 +22,6 @@ NUM_SCORE_DIGITS = 6
 MyOAM = $200
 
 
-.macro CopyDword src, dst
-.repeat 4, I
-        lda src+I
-        sta dst+I
-.endrepeat
-.endmacro
-
-.macro CopyDwordFromTbl src, dst
-.repeat 4, I
-        lda src+I,x
-        sta dst+I
-.endrepeat
-.endmacro
-
-
 .macro DlBegin
         ldx     DisplayListIndex
 .endmacro
