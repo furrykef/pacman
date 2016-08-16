@@ -208,6 +208,7 @@ InitAI:
         sta     GhostsTurnDir,x
         lda     #0
         sta     GhostsMoveCounter,x
+        sta     GhostsDotCounter,x
         sta     fGhostsScared,x
         sta     fGhostsReverse,x
         sta     fGhostsBeingEaten,x
@@ -237,21 +238,14 @@ InitAI:
         bne     @died
         lda     #0
         sta     GhostGlobalDotCounter       ; global dot counter only active when Pac-Man had died
-        sta     GhostsDotCounter+BLINKY
-        sta     GhostsDotCounter+PINKY
-        lda     #30 + 1
-        sta     GhostsDotCounter+INKY
-        lda     #60 + 1
-        sta     GhostsDotCounter+CLYDE
 @died:
 
         ; Set difficulty level based on level
-        lda     NumLevel
-        cmp     #19                         ; ghost difficulty capped at 18 (level 19)
+        ldx     NumLevel
+        cpx     #19                         ; ghost difficulty capped at 18 (level 19)
         blt     :+
-        lda     #18
+        ldx     #18
 :
-        tax
         lda     ElroyDotsTbl,x
         sta     Elroy1Dots
         lsr
@@ -270,6 +264,22 @@ InitAI:
         sta GhostElroy1Speed
         lda GhostElroy2SpeedTbl,x
         sta GhostElroy2Speed
+
+        ; Inky and Clyde's dot counters depend on level
+        cpx     #0
+        beq     @level1
+        cpx     #1
+        bne     @end_dot_counters
+        ; Level 2
+        lda     #50 + 1
+        sta     GhostsDotCounter+CLYDE
+        bne     @end_dot_counters           ; always taken
+@level1:
+        lda     #30 + 1
+        sta     GhostsDotCounter+INKY
+        lda     #60 + 1
+        sta     GhostsDotCounter+CLYDE
+@end_dot_counters:
 
         txa
         asl                                 ; X will now point at 16-bit entries

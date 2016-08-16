@@ -1,8 +1,3 @@
-Ghost house bug
----------------
-Inky and Clyde should leave the ghost house sooner on later levels than earlier ones. By level 5 they should be leaving immediately. This bug is long-standing; this feature might never have been implemented.
-
-
 Possible blue ghost bug
 -----------------------
 Ghosts turn blue for one frame in later levels instead of reversing direction immediately. Check behavior against arcade version.
