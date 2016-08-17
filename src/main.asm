@@ -339,15 +339,12 @@ WonRound:
         lda     #4
 @loop:
         pha
-        DlBegin
-        DlAdd   #1, #$3f, #$01
-        DlAdd   #$30                        ; white
-        DlEnd
+        lda     #$30                        ; white
+        jsr     SetMazeColor
         ldy     #12
         jsr     WaitFrames
-        DlAdd   #1, #$3f, #$01
-        DlAdd   #$12                        ; blue
-        DlEnd
+        lda     #$12                        ; blue
+        jsr     SetMazeColor
         ldy     #12
         jsr     WaitFrames
         pla
@@ -360,6 +357,17 @@ WonRound:
         beq     :+
         inc     NumLevel
 :
+        rts
+
+
+SetMazeColor:
+        sta     TmpL
+        DlBegin
+        DlAdd   #1, #$3f, #$01, TmpL
+        DlAdd   #1, #$3f, #$05, TmpL
+        DlAdd   #1, #$3f, #$09, TmpL
+        DlAdd   #1, #$3f, #$0d, TmpL
+        DlEnd
         rts
 
 
