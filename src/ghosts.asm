@@ -94,6 +94,8 @@ Elroy2Dots:         .res 1
 fClydeLeft:         .res 1
 ElroyState:         .res 1
 
+GhostAnim:          .res 1                  ; counter used to toggle between animation frames
+
 
 .segment "CODE"
 
@@ -254,16 +256,16 @@ InitAI:
         sta     DotTimeout
         sta     DotClock
 
-        lda GhostBaseSpeedTbl,x
-        sta GhostBaseSpeed
-        lda GhostScaredSpeedTbl,x
-        sta GhostScaredSpeed
-        lda GhostTunnelSpeedTbl,x
-        sta GhostTunnelSpeed
-        lda GhostElroy1SpeedTbl,x
-        sta GhostElroy1Speed
-        lda GhostElroy2SpeedTbl,x
-        sta GhostElroy2Speed
+        lda     GhostBaseSpeedTbl,x
+        sta     GhostBaseSpeed
+        lda     GhostScaredSpeedTbl,x
+        sta     GhostScaredSpeed
+        lda     GhostTunnelSpeedTbl,x
+        sta     GhostTunnelSpeed
+        lda     GhostElroy1SpeedTbl,x
+        sta     GhostElroy1Speed
+        lda     GhostElroy2SpeedTbl,x
+        sta     GhostElroy2Speed
 
         ; Inky and Clyde's dot counters depend on level
         cpx     #0
@@ -306,6 +308,7 @@ MoveGhosts:
         jsr     ModeClockTick
         jsr     DotClockTick
         jsr     EnergizerClockTick
+        inc     GhostAnim
 @eating_ghost:
         jsr     EatingGhostClockTick
 
@@ -1305,7 +1308,7 @@ DrawOneGhost:
         jmp     @first_frame
 @not_eaten:
         ; Toggle between two frames
-        lda     FrameCounter
+        lda     GhostAnim
         and     #$08
         beq     @first_frame                ; This will store $00 to TmpL
         lda     #$10                        ; Second frame is $10 tiles after first frame
