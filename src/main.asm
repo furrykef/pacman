@@ -299,13 +299,7 @@ PlayRound:
         lda     NumDots
         bne     @game_loop
         ; Round has been won
-        ldy     #120
-        jsr     WaitFrames
-        lda     NumLevel
-        cmp     #99 - 1
-        beq     :+
-        inc     NumLevel
-:
+        jsr     WonRound
         jmp     PlayRound
 
 @pac_dead:
@@ -334,6 +328,38 @@ InitLife:
         jsr     InitAI
         jsr     InitPacMan
         jsr     InitFruit
+        rts
+
+
+WonRound:
+        ldy     #60
+        jsr     WaitFrames
+
+        ; Make the maze flash
+        lda     #4
+@loop:
+        pha
+        DlBegin
+        DlAdd   #1, #$3f, #$01
+        DlAdd   #$30                        ; white
+        DlEnd
+        ldy     #12
+        jsr     WaitFrames
+        DlAdd   #1, #$3f, #$01
+        DlAdd   #$12                        ; blue
+        DlEnd
+        ldy     #12
+        jsr     WaitFrames
+        pla
+        sub     #1
+        bne     @loop
+
+
+        lda     NumLevel
+        cmp     #99 - 1
+        beq     :+
+        inc     NumLevel
+:
         rts
 
 
