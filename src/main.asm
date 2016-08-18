@@ -335,6 +335,15 @@ WonRound:
         ldy     #60
         jsr     WaitFrames
 
+        ; Hide ghosts
+        ; @XXX@ better way to do this
+        lda     #1
+        sta     fGhostsBeingEaten+BLINKY
+        sta     fGhostsBeingEaten+PINKY
+        sta     fGhostsBeingEaten+INKY
+        sta     fGhostsBeingEaten+CLYDE
+        jsr     DrawGhosts
+
         ; Make the maze flash
         lda     #4
 @loop:

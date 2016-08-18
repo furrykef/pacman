@@ -1,6 +1,6 @@
-Possible blue ghost bug
------------------------
-Ghosts turn blue for one frame in later levels instead of reversing direction immediately. Check behavior against arcade version.
+Blue ghost bug
+--------------
+Ghosts turn blue for one frame in later levels instead of only reversing direction.
 
 
 Possible wraparound bug
