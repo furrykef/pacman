@@ -8,7 +8,7 @@ NUM_SCORE_DIGITS = 6
 
 ; Signature that appears at the start of save file
 ; If not present, save file is uninitialized
-.define MAGIC_COOKIE "You're a dirty cheater, aren't you?"
+.define MAGIC_COOKIE "Cheaters never prosper."
 
 ; This ordering is used so that you can reverse direction using EOR #$03
 .enum
@@ -374,7 +374,6 @@ SetMazeColor:
         DlBegin
         DlAdd   #1, #$3f, #$01, TmpL
         DlAdd   #1, #$3f, #$05, TmpL
-        DlAdd   #1, #$3f, #$09, TmpL
         DlAdd   #1, #$3f, #$0d, TmpL
         DlEnd
         rts
