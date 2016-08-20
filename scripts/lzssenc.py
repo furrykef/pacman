@@ -19,8 +19,8 @@ def main(argv=None):
         group_bit = 1
         group = []
         while src_idx < len(src):
-            match_offset, match_size = find_longest_match(src[:src_idx], window)
-            if match_size <= 2:
+            match, match_offset = find_longest_match(src[src_idx:], window)
+            if len(match) <= 2:
                 # Write a literal
                 window.append(src[src_idx])
                 group.append(src[src_idx])
@@ -28,40 +28,49 @@ def main(argv=None):
                 window_idx += 1
             else:
                 # Write a backref
+                window += match
                 group_flags |= group_bit
-                group += [match_size, (window_idx + match_offset) & 0xff]
-                src_idx += match_size
-                window_idx += match_size
+                group += [len(match), (window_idx + match_offset) & 0xff]
+                src_idx += len(match)
+                window_idx += len(match)
             window = window[-256:]
             window_idx &= 0xff
             group_bit <<= 1
             if group_bit == 0x100:
-                outfile.write(group_flags)
+                outfile.write(bytes([group_flags]))
                 outfile.write(bytes(group))
                 group = []
+                group_flags = 0
                 group_bit = 1
         group.append(0)
         group_flags |= group_bit
-        outfile.write(group_flags)
+        outfile.write(bytes([group_flags]))
         outfile.write(bytes(group))
 
 
 def find_longest_match(data, window):
-    best_match_size = -1
+    if len(window) == 0:
+        return ([], 0)
+    best_match = []
     best_match_pos = 0
-    for i in range(len(data)):
-        match_size = match(data, window[i:])
-        if match_size > best_match_size:
+    for i in range(len(window)):
+        match = match_data(data, window[i:])
+        if len(match) > len(best_match):
             best_match_pos = i
-            best_match_size = match_size
-    return best_match_pos - len(data), best_match
+            best_match = match
+    return best_match, best_match_pos - len(window)
 
 
-def match(data, subwindow):
+def match_data(data, subwindow):
+    match = []
     for i in range(255):
-        if i == len(data) or data[i] != subwindow[i % len(subwindow)]:
-            return i
-    return 255
+        if i == len(data):
+            break
+        next = subwindow[i % len(subwindow)]
+        if data[i] != next:
+            break
+        match.append(next)
+    return match
 
 
 def get_args(argv):

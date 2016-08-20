@@ -83,10 +83,13 @@ fBonusLifeAwarded:  .res 1
 .include "ghosts.asm"
 .include "map.asm"
 .include "fruit.asm"
+.include "lzss.asm"
 
 
 .segment "BSS"
 
+; Use same memory for LZSS sliding window and display list
+LzssBuf:
 DisplayList:        .res 256
 
 

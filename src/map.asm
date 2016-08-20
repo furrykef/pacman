@@ -7,37 +7,45 @@ ENERGIZER       = $95
 
 RowAddrL:       .res 1
 RowAddrH:       .res 1
+pCurrentBoardL: .res 1
+pCurrentBoardH: .res 1
 
 
 .segment "BSS"
 
-CurrentBoard:   .res 32*31 + 1              ; add 1 for the terminator
+CurrentBoard:   .res 32*31
 
 
 .segment "CODE"
 
 LoadBoard:
-        lda     #<FullBoard
-        sta     TmpL
-        lda     #>FullBoard
-        sta     TmpH
+        lda     #<FullBoardCompressed
+        sta     pCompressedDataL
+        lda     #>FullBoardCompressed
+        sta     pCompressedDataH
+        lda     #<LoadBoardByte
+        sta     JsrIndAddrL
+        lda     #>LoadBoardByte
+        sta     JsrIndAddrH
         lda     #<CurrentBoard
-        sta     Tmp2L
+        sta     pCurrentBoardL
         lda     #>CurrentBoard
-        sta     Tmp2H
-        ldy     #0
-@loop:
-        lda     (TmpL),y
-        sta     (Tmp2L),y
-        beq     @end_copy
-        iny
-        bne     @loop
-        ; Wrapped around page boundaries; bump MSB of pointers
-        inc     TmpH
-        inc     Tmp2H
-        jmp     @loop
-@end_copy:
+        sta     pCurrentBoardH
+        jsr     LzssDecode
         jmp     CopyBoardIntoVram
+
+
+; Must preserve X and Y
+LoadBoardByte:
+        sty     TmpL
+        ldy     #0
+        sta     (pCurrentBoardL),y
+        inc     pCurrentBoardL
+        bne     :+
+        inc     pCurrentBoardH
+:
+        ldy     TmpL
+        rts
 
 
 CopyBoardIntoVram:
@@ -193,9 +201,8 @@ IsTileEnterable:
 ;   $90 = mask, enterable
 ;   $92 = dot
 ;   $95 = energizer
-FullBoard:
-    .incbin "../assets/map.dat"
-    .byte 0
+FullBoardCompressed:
+    .incbin "../assets/map.lzss"
 
 ;FullBoardRowAddrL:
 ;.repeat I, 31

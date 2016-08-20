@@ -1,21 +1,27 @@
-LOOP:
-    load flag byte
-    for i = 1 to 8
-        load byte
-        shift flag byte
-        if carry:
-            handle run
-        else:
-            copy byte
+; Display list doubles as LZSS buffer.
+; Don't use LZSS while rendering!
+
+.segment "ZEROPAGE"
+
+pCompressedDataL:   .res 1
+pCompressedDataH:   .res 1
+LzssFlagCount:      .res 1
+LzssFlags:          .res 1
+LzssSrcIdx:         .res 1
+LzssBackrefLen:     .res 1
 
 
+.segment "CODE"
 
-Calls JsrInd for each byte written to buffer.
-Algorithm ends when backref size is 0.
-Backreference indexes are absolute, not relative offsets.
-
-
+; Algorithm ends when backref size is 0.
+; Backreference indexes are absolute, not relative offsets.
+;
+; Input:
+;   JsrInd: Called for every byte output
+;   pCompressedData: Pointer to compressed data
+LzssDecode:
         ldx     #0
+        ldy     #0
 @outer:
         lda     #8
         sta     LzssFlagCount
@@ -28,6 +34,7 @@ Backreference indexes are absolute, not relative offsets.
         ; Not a backref; copy one byte
         lda     (pCompressedDataL),y
         jsr     BumpPtr
+        sta     LzssBuf,x
         inx
         jsr     JsrInd
         jmp     @chunk_processed
@@ -37,7 +44,7 @@ Backreference indexes are absolute, not relative offsets.
         lda     (pCompressedDataL),y
         beq     @end
         jsr     BumpPtr
-        sta     BackrefLen
+        sta     LzssBackrefLen
 
         ; Get backref source index
         lda     (pCompressedDataL),y
@@ -52,7 +59,7 @@ Backreference indexes are absolute, not relative offsets.
         sta     LzssBuf,x
         inx
         jsr     JsrInd
-        dec     BackrefLen
+        dec     LzssBackrefLen
         bne     @backref_loop
 
         ldy     LzssSrcIdx
@@ -69,7 +76,7 @@ Backreference indexes are absolute, not relative offsets.
 
 BumpPtr:
         iny
-        bne     +
+        bne     :+
         inc     pCompressedDataH
 :
         rts
