@@ -98,7 +98,6 @@ HiScore:            .res NUM_SCORE_DIGITS   ; BCD
 
 .segment "CODE"
 
-
 Main:
         sei
         cld
