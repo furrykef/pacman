@@ -475,7 +475,7 @@ DoPacManDeathAnimation:
         jsr     WaitFrames
         pla
         tax
-        cpx     #$f1
+        cpx     #$f5
         bne     @loop
 
         ldy     #60
