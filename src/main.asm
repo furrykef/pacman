@@ -78,6 +78,7 @@ fDiedThisRound:     .res 1
 fBonusLifeAwarded:  .res 1
 
 
+;.include "sound.asm"
 .include "speed.asm"
 .include "pacman.asm"
 .include "ghosts.asm"
@@ -119,9 +120,6 @@ Main:
 @vblank1:
         bit     PPUSTATUS
         bpl     @vblank1
-
-        ; Init sound regs and other stuff here
-        ; @XXX@
 
         ; Init main RAM
         ; Value >= $ef should be used to clear OAM
@@ -236,6 +234,9 @@ Main:
         lda     #$00
         sta     $a001
 
+        ; Init sound
+        ;jsr     InitSound
+
         ; Second wait for vblank
 @vblank2:
         bit     PPUSTATUS
@@ -320,6 +321,9 @@ PlayRound:
         DlBegin
         DlAdd   #10, #$22, #$2b
         DlAdd   #'G', #'A', #'M', #'E', #' ', #' ', #'O', #'V', #'E', #'R'
+        ; Change fruit palette so GAME OVER will be in red
+        DlAdd   #1, #$3f, #$0e
+        DlAdd   #$16
         DlEnd
         ldy     #180
         jsr     WaitFrames

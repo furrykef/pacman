@@ -1,3 +1,10 @@
+; Some codes used in the map:
+;   $20 = blank, enterable
+;   $80 = mask, non-enterable (blank tile that sprites should move behind instead of in front of)
+;   $90 = mask, enterable
+;   $92 = dot
+;   $95 = energizer
+
 SPACE           = $20                       ; enterable
 DOT             = $92
 ENERGIZER       = $95
@@ -126,12 +133,17 @@ CopyBoardIntoVram:
         sty     PPUADDR
         sta     PPUDATA
 
-        ; Attributes for fruit area (X=14..17, Y=16..18)
+        ; Attributes for fruit area (X=11..20, Y=16..18)
+        ; It's wide to accommodate the "GAME OVER" message
         stx     PPUADDR
-        lda     #$e3
+        lda     #$e2
         sta     PPUADDR
+        lda     #%11001100
+        sta     PPUDATA
         lda     #%11111111
         sta     PPUDATA
+        sta     PPUDATA
+        lda     #%00110011
         sta     PPUDATA
 
         ; Attributes for status area
@@ -195,24 +207,9 @@ IsTileEnterable:
         rts
 
 
-; Some codes:
-;   $20 = blank, enterable
-;   $80 = mask, non-enterable (blank tile that sprites should move behind instead of in front of)
-;   $90 = mask, enterable
-;   $92 = dot
-;   $95 = energizer
 FullBoardCompressed:
     .incbin "../assets/map.lzss"
 
-;FullBoardRowAddrL:
-;.repeat I, 31
-;    .byte <FullBoard+(32*I)
-;.endrepeat
-;
-;FullBoardRowAddrH:
-;.repeat I, 31
-;    .byte <FullBoard+(32*I)
-;.endrepeat
 
 CurrentBoardRowAddrL:
 .repeat 31, I
