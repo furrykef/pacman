@@ -196,7 +196,9 @@ SetBGM:
         sta     $4015                       ; channel enable
         lda     #0
         sta     $4011                       ; DMC counter
+        sta     $4000                       ; pulse 1 volume
         sta     $4001                       ; pulse 1 sweep
+        sta     $4004                       ; pulse 2 volume
         sta     $4005                       ; pulse 2 sweep
 
         rts
