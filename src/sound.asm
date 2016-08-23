@@ -378,25 +378,25 @@ BgmIntroSq2Init:
         .byte   DUTYVOL, $93, DUR(4), REST, NEXT
 
 BgmIntroSqPattern1:
-        .byte   LEN(5)
+        .byte   LEN($10)
         .byte   DUR(8), C4, C5, G4, E4
         .byte   DUR(4), C5, DUR(12), G4
-        .byte   DUR(16), LEN($d), E4
+        .byte   DUR(16), LEN($12), E4
         .byte   NEXT
 
 BgmIntroSqPattern2:
-        .byte   LEN(5)
+        .byte   LEN($10)
         .byte   DUR(8), Cs4, Cs5, Gs4, F4
         .byte   DUR(4), Cs5, DUR(12), Gs4
-        .byte   DUR(16), LEN($d), F4
+        .byte   DUR(16), LEN($12), F4
         .byte   NEXT
 
 BgmIntroSqPattern3:
-        .byte   LEN(5)
+        .byte   LEN($10)
         .byte   DUR(4), Ds4, E4, F4, REST
         .byte   F4, Fs4, G4, REST
         .byte   G4, Gs4, A4, REST
-        .byte   LEN(9), DUR(8), C5
+        .byte   LEN($12), DUR(8), C5
         .byte   END
 
 BgmIntroTriPattern1:
