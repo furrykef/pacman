@@ -78,7 +78,7 @@ fDiedThisRound:     .res 1
 fBonusLifeAwarded:  .res 1
 
 
-;.include "sound.asm"
+.include "sound.asm"
 .include "speed.asm"
 .include "pacman.asm"
 .include "ghosts.asm"
@@ -235,7 +235,7 @@ Main:
         sta     $a001
 
         ; Init sound
-        ;jsr     InitSound
+        jsr     InitSound
 
         ; Second wait for vblank
 @vblank2:
@@ -260,6 +260,8 @@ NewGame:
 .repeat NUM_SCORE_DIGITS, I
         sta     Score+I
 .endrepeat
+        lda     #BGM_INTRO
+        sta     BGM
         ; FALL THROUGH to PlayRound
 
 PlayRound:
@@ -661,6 +663,8 @@ HandleVblank:
         sta     $c000
         sta     $c001                       ; reload IRQ counter (value irrelevant)
         sta     $e001                       ; enable IRQ (value irrelevant)
+
+        jsr     SoundTick
 
 @end:
         inc     FrameCounter

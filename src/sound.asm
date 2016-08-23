@@ -24,69 +24,67 @@ G2      = $16
 Gs2     = $17
 A2      = $18
 As2     = $19
-B1      = $1a
-C2      = $1b
-Cs2     = $1c
-D2      = $1d
-Ds2     = $1e
-E2      = $1f
-F2      = $20
-Fs2     = $21
-G2      = $22
-Gs2     = $23
-A2      = $24
-As2     = $25
-B2      = $26
-C3      = $27
-Cs3     = $28
-D3      = $29
-Ds3     = $2a
-E3      = $2b
-F3      = $2c
-Fs3     = $2d
-G3      = $2e
-Gs3     = $2f
-A3      = $30
-As3     = $31
-B3      = $32
-C4      = $33
-Cs4     = $34
-D4      = $35
-Ds4     = $36
-E4      = $37
-F4      = $38
-Fs4     = $39
-G4      = $3a
-Gs4     = $3b
-A4      = $3c
-As4     = $3d
-B4      = $3e
-C5      = $3f
-Cs5     = $40
-D5      = $41
-Ds5     = $42
-E5      = $43
-F5      = $44
-Fs5     = $45
-G5      = $46
-Gs5     = $47
-A5      = $48
-As5     = $49
-B5      = $4a
+B2      = $1a
+C3      = $1b
+Cs3     = $1c
+D3      = $1d
+Ds3     = $1e
+E3      = $1f
+F3      = $20
+Fs3     = $21
+G3      = $22
+Gs3     = $23
+A3      = $24
+As3     = $25
+B3      = $26
+C4      = $27
+Cs4     = $28
+D4      = $29
+Ds4     = $2a
+E4      = $2b
+F4      = $2c
+Fs4     = $2d
+G4      = $2e
+Gs4     = $2f
+A4      = $30
+As4     = $31
+B4      = $32
+C5      = $33
+Cs5     = $34
+D5      = $35
+Ds5     = $36
+E5      = $37
+F5      = $38
+Fs5     = $39
+G5      = $3a
+Gs5     = $3b
+A5      = $3c
+As5     = $3d
+B5      = $3e
+C6      = $3f
+Cs6     = $40
+D6      = $41
+Ds6     = $42
+E6      = $43
+F6      = $44
+Fs6     = $45
+G6      = $46
+Gs6     = $47
+A6      = $48
+As6     = $49
+B6      = $4a
 
 LEN_BASE    = $60
 DUR_BASE    = $80
-VOL_BASE    = $d0
-DUTY_BASE   = $e0
 CMD_BASE    = $f0
 
 NEXT        = CMD_BASE+0
 END         = CMD_BASE+1
+DUTYVOL     = CMD_BASE+2
+REST        = CMD_BASE+3
 
 .define LEN(length)     LEN_BASE + (length)
 .define DUR(duration)   DUR_BASE + (duration)
-.define VOL(volume)     VOL_BASE + (volume)
-.define DUTY(duty)      DUTY_BASE + (duty)
 
 
 .segment "ZEROPAGE"
@@ -100,7 +98,8 @@ END         = CMD_BASE+1
         DMC
 .endenum
 
-fSoundOn:           .res 1
+BGM:                .res 1
+PrevBGM:            .res 1
 
 ; One byte per channel
 pPatternListL:      .res 3
@@ -136,9 +135,6 @@ InitSound:
 ; NB: This routine (or anything it calls) must NOT clobber temp
 ; variables like TmpL that can be used by other modules
 SoundTick:
-        lda     fSoundOn
-        beq     @end
-
         lda     BGM
         cmp     PrevBGM
         beq     :+
@@ -148,12 +144,11 @@ SoundTick:
         ldx     #2
 @loop:
         stx     CurChannel
-        jsr     PatternTick
+        jsr     ChannelTick
         ldx     CurChannel                  ; X might have gotten clobbered
         dex
         bpl     @loop
 
-@end:
         rts
 
 
@@ -163,17 +158,16 @@ SoundTick:
 ; Must not clobber temp variables used by other modules
 ; (called by SoundTick)
 SetBGM:
-        ldx     #0
-        stx     fSoundOn
+        sta     PrevBGM
+
         ldy     #2
 @init_loop:
         stx     PatternListIdx,y
         stx     PatternIdx,y
         stx     Wait,y
         dey
-        bpl     @loop
+        bpl     @init_loop
 
-        asl                                 ; 16-bit table entries
         tax
 
         ; Get pointer to song data from song table
@@ -198,47 +192,88 @@ SetBGM:
         blt     @load_pattern_list
 
         ; Init sound regs
-        lda     #0
+        lda     #$03                        ; squares only
         sta     $4015                       ; channel enable
+        lda     #0
         sta     $4011                       ; DMC counter
         sta     $4001                       ; pulse 1 sweep
         sta     $4005                       ; pulse 2 sweep
-        XXX
 
-        lda     #1
-        sta     fSoundOn
         rts
 
 
 ; Input:
 ;   X = CurChannel = number of channel to process
-PatternTick:
+ChannelTick:
+        ; Keep processing commands until we get a wait
+        ; (END generates a wait for this reason)
+        lda     Wait,x
+        bne     @waiting
+        jsr     NextPatternCmd
+        ldx     CurChannel                  ; might have gotten clobbered
+        jmp     ChannelTick
+@waiting:
+        dec     Wait,x
+        rts
+
+
+; Input:
+;   CurChannel = number of channel to process
+NextPatternCmd:
+        ldx     CurChannel
+        lda     pPatternListL,x
+        sta     SoundTmpL
+        lda     pPatternListH,x
+        sta     SoundTmpH
+        ldy     PatternListIdx,x
+        lda     (SoundTmpL),y
+        sta     pCurPatternL
+        iny
+        lda     (SoundTmpL),y
+        sta     pCurPatternH
+
         ldy     PatternIdx,x
         lda     (pCurPatternL),y
+        iny
+        sty     PatternIdx,x
         cmp     #LEN_BASE
         blt     @handle_note
         cmp     #DUR_BASE
         blt     @handle_length
-        cmp     #VOL_BASE
-        blt     @handle_duration
-        cmp     #DUTY_BASE
-        blt     @handle_volume
         cmp     #CMD_BASE
-        blt     @handle_duty
+        blt     @handle_duration
         ; Handle command
         sub     #CMD_BASE
-        tax
-        lda     CmdTblL,x
+        tay
+        lda     CmdLTbl,y
         sta     SoundTmpL
-        lda     CmdTblH,x
+        lda     CmdHTbl,y
         sta     SoundTmpH
         jmp     (SoundTmpL)
 
 @handle_note:
-        jmp     HandleNote
+        tay
+        lda     NoteDuration,x
+        sta     Wait,x
+        txa
+        asl
+        asl
+        tax
+        stx     SoundTmpL                   ; keep CurChannel*4 for later
+        lda     PeriodLTbl,y
+        sta     $4002,x
+        lda     PeriodHTbl,y
+        ldx     CurChannel
+        ora     NoteLength,x
+        ldx     SoundTmpL                   ; get CurChannel*4 back
+        sta     $4003,x
+        rts
 
 @handle_length:
         sub     #LEN_BASE
+        asl
+        asl
+        asl
         sta     NoteLength,x
         rts
 
@@ -247,16 +282,56 @@ PatternTick:
         sta     NoteDuration,x
         rts
 
-@handle_duty:
-        sub     #DUTY_BASE
-        sta     NoteDuty,x
+
+CmdNext:
+        inc     PatternListIdx,x
+        inc     PatternListIdx,x
+        lda     #0
+        sta     PatternIdx,x
         rts
 
+
+CmdEnd:
+        dec     PatternIdx,x                ; point back at END command so we loop infinitely
+        lda     #$ff                        ; force moving to next channel
+        sta     Wait,x
+        rts
+
+CmdDutyVol:
+        ldy     PatternIdx,x
+        txa
+        asl
+        asl
+        tax
+        lda     (pCurPatternL),y
+        sta     $4000,x
+        ldx     CurChannel
+        inc     PatternIdx,x
+        rts
+
+
+; @TODO@ -- set volume to 0?
+CmdRest:
+        lda     NoteDuration,x
+        sta     Wait,x
+        rts
+.export CmdRest
+
+
+CmdLTbl:
+        .byte   <CmdNext, <CmdEnd, <CmdDutyVol, <CmdRest
+CmdHTbl:
+        .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest
+
+
+BGM_NONE    = 0
+BGM_INTRO   = 2
+BGM_ALARM1  = 4
 
 SongTbl:
         .addr   BgmNone
         .addr   BgmIntro
-        .addr   BgmAlarm1
+        ;.addr   BgmAlarm1
 
 
 BgmNone:
@@ -297,31 +372,31 @@ BgmIntroTri:
         .addr   BgmIntroTriPattern3
 
 BgmIntroSq1Init:
-        .byte   VOL $a, NEXT
+        .byte   DUTYVOL, $9a, NEXT
 
 BgmIntroSq2Init:
-        .byte   VOL 3, NEXT
+        .byte   DUTYVOL, $93, DUR(4), REST, NEXT
 
 BgmIntroSqPattern1:
-        .byte   DUTY(2), LEN(4)
+        .byte   LEN(5)
         .byte   DUR(8), C4, C5, G4, E4
         .byte   DUR(4), C5, DUR(12), G4
-        .byte   DUR(16), LEN(12), E4
+        .byte   DUR(16), LEN($d), E4
         .byte   NEXT
 
 BgmIntroSqPattern2:
-        .byte   LEN(4)
-        .byte   DUR(8), Cs4, Cs5, Gs4, Es4
+        .byte   LEN(5)
+        .byte   DUR(8), Cs4, Cs5, Gs4, F4
         .byte   DUR(4), Cs5, DUR(12), Gs4
-        .byte   DUR(16), LEN(12), F4
+        .byte   DUR(16), LEN($d), F4
         .byte   NEXT
 
 BgmIntroSqPattern3:
-        .byte   LEN(4)
-        .byte   DUR(8), Ds4, E4, F4, REST
+        .byte   LEN(5)
+        .byte   DUR(4), Ds4, E4, F4, REST
         .byte   F4, Fs4, G4, REST
         .byte   G4, Gs4, A4, REST
-        .byte   LEN(8), DUR(8), C5
+        .byte   LEN(9), DUR(8), C5
         .byte   END
 
 BgmIntroTriPattern1:
