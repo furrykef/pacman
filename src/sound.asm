@@ -107,8 +107,10 @@ pPatternListH:      .res 3
 PatternListIdx:     .res 3
 PatternIdx:         .res 3
 Wait:               .res 3
+LengthCounter:      .res 3
 NoteDuration:       .res 3
 NoteLength:         .res 3
+DutyVol:            .res 3
 pPatternL:          .res 3
 pPatternH:          .res 3
 
@@ -165,6 +167,8 @@ SetBGM:
         stx     PatternListIdx,y
         stx     PatternIdx,y
         stx     Wait,y
+        stx     LengthCounter,y
+        stx     DutyVol,y
         dey
         bpl     @init_loop
 
@@ -192,7 +196,7 @@ SetBGM:
         blt     @load_pattern_list
 
         ; Init sound regs
-        lda     #$03                        ; squares only
+        lda     #$07                        ; squares and tri only
         sta     $4015                       ; channel enable
         lda     #0
         sta     $4011                       ; DMC counter
@@ -200,6 +204,8 @@ SetBGM:
         sta     $4001                       ; pulse 1 sweep
         sta     $4004                       ; pulse 2 volume
         sta     $4005                       ; pulse 2 sweep
+        sta     $4008                       ; tri linear counter setup
+        sta     $400b                       ; tri length counter
 
         rts
 
@@ -216,6 +222,17 @@ ChannelTick:
         jmp     ChannelTick
 @waiting:
         dec     Wait,x
+        lda     LengthCounter,x
+        bne     @end
+        ; Duration ended; silence channel
+        txa
+        asl
+        asl
+        tay
+        lda     #$10
+        sta     $4000,y
+@end:
+        dec     LengthCounter,x
         rts
 
 
@@ -257,25 +274,24 @@ NextPatternCmd:
         tay
         lda     NoteDuration,x
         sta     Wait,x
+        lda     NoteLength,x
+        sta     LengthCounter,x
+        lda     DutyVol,x
+        pha
         txa
         asl
         asl
         tax
-        stx     SoundTmpL                   ; keep CurChannel*4 for later
+        pla                                 ; get DutyVol back
+        sta     $4000,x
         lda     PeriodLTbl,y
         sta     $4002,x
         lda     PeriodHTbl,y
-        ldx     CurChannel
-        ora     NoteLength,x
-        ldx     SoundTmpL                   ; get CurChannel*4 back
         sta     $4003,x
         rts
 
 @handle_length:
         sub     #LEN_BASE
-        asl
-        asl
-        asl
         sta     NoteLength,x
         rts
 
@@ -301,18 +317,14 @@ CmdEnd:
 
 CmdDutyVol:
         ldy     PatternIdx,x
-        txa
-        asl
-        asl
-        tax
         lda     (pCurPatternL),y
-        sta     $4000,x
+        sta     DutyVol,x
         ldx     CurChannel
         inc     PatternIdx,x
         rts
 
 
-; @TODO@ -- set volume to 0?
+; @TODO@ -- set LengthCounter to 0?
 CmdRest:
         lda     NoteDuration,x
         sta     Wait,x
@@ -369,40 +381,51 @@ BgmIntroSq2:
 
 BgmIntroTri:
         .addr   BgmIntroTriPattern1
+        .addr   BgmIntroTriPattern1
         .addr   BgmIntroTriPattern2
+        .addr   BgmIntroTriPattern2
+        .addr   BgmIntroTriPattern1
         .addr   BgmIntroTriPattern1
         .addr   BgmIntroTriPattern3
 
 BgmIntroSq1Init:
-        .byte   DUTYVOL, $9a, NEXT
+        .byte   DUTYVOL, $ba, NEXT
 
 BgmIntroSq2Init:
-        .byte   DUTYVOL, $93, DUR(4), REST, NEXT
+        .byte   DUTYVOL, $b3, DUR(4), REST, NEXT
 
 BgmIntroSqPattern1:
-        .byte   LEN($10)
+        .byte   LEN(4)
         .byte   DUR(8), C4, C5, G4, E4
         .byte   DUR(4), C5, DUR(12), G4
-        .byte   DUR(16), LEN($12), E4
+        .byte   DUR(16), LEN(12), E4
         .byte   NEXT
 
 BgmIntroSqPattern2:
-        .byte   LEN($10)
+        .byte   LEN(4)
         .byte   DUR(8), Cs4, Cs5, Gs4, F4
         .byte   DUR(4), Cs5, DUR(12), Gs4
-        .byte   DUR(16), LEN($12), F4
+        .byte   DUR(16), LEN(12), F4
         .byte   NEXT
 
 BgmIntroSqPattern3:
-        .byte   LEN($10)
+        .byte   LEN(4)
         .byte   DUR(4), Ds4, E4, F4, REST
         .byte   F4, Fs4, G4, REST
         .byte   G4, Gs4, A4, REST
-        .byte   LEN($12), DUR(8), C5
+        .byte   LEN(8), DUR(8), C5
         .byte   END
 
 BgmIntroTriPattern1:
+        .byte   LEN(20), DUR(24), C2
+        .byte   LEN(7), DUR(8), G2
+        .byte   NEXT
+
 BgmIntroTriPattern2:
+        .byte   LEN(20), DUR(24), Cs2
+        .byte   LEN(7), DUR(8), Gs2
+        .byte   NEXT
+
 BgmIntroTriPattern3:
         .byte   END
 
