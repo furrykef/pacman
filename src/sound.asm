@@ -229,8 +229,9 @@ ChannelTick:
         asl
         asl
         tay
-        lda     #$10                        ; @TODO@ -- wrong for triangle
-        sta     $4000,y
+        lda     #0
+        sta     $4002,y
+        sta     $4003,y
         rts
 @end:
         dec     LengthCounter,x
