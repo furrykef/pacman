@@ -76,6 +76,7 @@ NumDots:            .res 1
 Score:              .res NUM_SCORE_DIGITS   ; BCD
 fDiedThisRound:     .res 1
 fBonusLifeAwarded:  .res 1
+fStartOfGame:       .res 1
 
 
 .include "sound.asm"
@@ -260,8 +261,8 @@ NewGame:
 .repeat NUM_SCORE_DIGITS, I
         sta     Score+I
 .endrepeat
-        lda     #BGM_INTRO
-        sta     BGM
+        lda     #1
+        sta     fStartOfGame
         ; FALL THROUGH to PlayRound
 
 PlayRound:
@@ -285,8 +286,19 @@ PlayRound:
 @start_life:
         jsr     InitLife
         jsr     Render
+        lda     fStartOfGame
+        beq     @not_start_of_game
+        lda     #0
+        sta     fStartOfGame
+        lda     #BGM_INTRO
+        sta     BGM
+        ldy     #200
+        jsr     WaitFrames
+@not_start_of_game:
         ldy     #60
         jsr     WaitFrames
+        lda     #BGM_ALARM1
+        sta     BGM
 @game_loop:
         jsr     WaitForVblank
         jsr     ReadJoys
@@ -308,6 +320,8 @@ PlayRound:
         jmp     PlayRound
 
 @pac_dead:
+        lda     #BGM_NONE
+        sta     BGM
         ldy     #60
         jsr     WaitFrames
         jsr     ClearMyOAM
@@ -340,6 +354,8 @@ InitLife:
 
 
 WonRound:
+        lda     #BGM_NONE
+        sta     BGM
         ldy     #60
         jsr     WaitFrames
 

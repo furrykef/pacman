@@ -82,6 +82,7 @@ NEXT        = CMD_BASE+0
 END         = CMD_BASE+1
 DUTYVOL     = CMD_BASE+2
 REST        = CMD_BASE+3
+REPEAT      = CMD_BASE+4
 
 .define LEN(length)     LEN_BASE + (length)
 .define DUR(duration)   DUR_BASE + (duration)
@@ -335,10 +336,17 @@ CmdRest:
 .export CmdRest
 
 
+CmdRepeat:
+        lda     #0
+        sta     PatternListIdx,x
+        sta     PatternIdx,x
+        rts
+
+
 CmdLTbl:
-        .byte   <CmdNext, <CmdEnd, <CmdDutyVol, <CmdRest
+        .byte   <CmdNext, <CmdEnd, <CmdDutyVol, <CmdRest, <CmdRepeat
 CmdHTbl:
-        .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest
+        .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest, >CmdRepeat
 
 
 BGM_NONE    = 0
@@ -348,7 +356,7 @@ BGM_ALARM1  = 4
 SongTbl:
         .addr   BgmNone
         .addr   BgmIntro
-        ;.addr   BgmAlarm1
+        .addr   BgmAlarm1
 
 
 BgmNone:
@@ -433,6 +441,21 @@ BgmIntroTriPattern3:
         .byte   LEN(12), DUR(16)
         .byte   G2, A2, B2, C3
         .byte   END
+
+
+BgmAlarm1:
+        .addr   NullPatternList
+        .addr   NullPatternList
+        .addr   BgmAlarm1PatternList
+
+BgmAlarm1PatternList:
+        .addr   BgmAlarm1Pattern
+
+BgmAlarm1Pattern:
+        .byte   DUR(1), LEN(2)
+        .byte   As5, A5, Gs5, G5, Fs5, F5, Ds5, D5, Cs5, C5, B4, As4
+        .byte   B4, C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5
+        .byte   REPEAT
 
 
 ; From http://wiki.nesdev.com/w/index.php/APU_period_table
