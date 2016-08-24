@@ -110,7 +110,6 @@ Wait:               .res 3
 LengthCounter:      .res 3
 NoteDuration:       .res 3
 NoteLength:         .res 3
-DutyVol:            .res 3
 pPatternL:          .res 3
 pPatternH:          .res 3
 
@@ -168,7 +167,6 @@ SetBGM:
         stx     PatternIdx,y
         stx     Wait,y
         stx     LengthCounter,y
-        stx     DutyVol,y
         dey
         bpl     @init_loop
 
@@ -278,14 +276,10 @@ NextPatternCmd:
         sta     Wait,x
         lda     NoteLength,x
         sta     LengthCounter,x
-        lda     DutyVol,x
-        pha
         txa
         asl
         asl
         tax
-        pla                                 ; get DutyVol back
-        sta     $4000,x
         lda     PeriodLTbl,y
         sta     $4002,x
         lda     PeriodHTbl,y
@@ -321,8 +315,13 @@ CmdDutyVol:
         ldy     PatternIdx,x
         inc     PatternIdx,x
         lda     (pCurPatternL),y
-        sta     DutyVol,x
-        ldx     CurChannel
+        pha
+        txa
+        asl
+        asl
+        tax
+        pla
+        sta     $4000,x
         rts
 
 
