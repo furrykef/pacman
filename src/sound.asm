@@ -417,6 +417,7 @@ BgmIntroSqPattern3:
         .byte   END
 
 BgmIntroTriPattern1:
+        .byte   DUTYVOL, $81
         .byte   LEN(20), DUR(24), C2
         .byte   LEN(7), DUR(8), G2
         .byte   NEXT
@@ -427,6 +428,8 @@ BgmIntroTriPattern2:
         .byte   NEXT
 
 BgmIntroTriPattern3:
+        .byte   LEN(12), DUR(16)
+        .byte   G2, A2, B2, C3
         .byte   END
 
 

@@ -15,19 +15,3 @@ This can be used for both the maze and music patterns.
 
 <furrykef> I just realized I don't need local OAM or the display list while decompressing LZSS, so one of them can double as the LZSS sliding window buffer.
 <furrykef> So that saves 256 bytes of RAM.
-
-
-Sound
------
-(preliminary and speculative)
-
-00-7F   wait this number of frames plus one before proceeding
-80-CF   notes
-D0-EF   unused
-F0-F2   set duty cycle (low nybble = which)
-F3      set volume envelope (next word = address)
-F4      set sweep (next byte = value to write to $4001/$4005)
-F5-FC   unused
-FD      note cut
-FE      end of pattern
-FF      end of song
