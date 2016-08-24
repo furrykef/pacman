@@ -101,6 +101,7 @@ REPEAT      = CMD_BASE+4
 
 BGM:                .res 1
 PrevBGM:            .res 1
+MunchDotTrigger:    .res 1                  ; 0 = none; 1 = SfxMunchDot1; 2 = SfxMunchDot2
 
 ; One byte per channel
 pPatternListL:      .res 3
@@ -111,8 +112,6 @@ Wait:               .res 3
 LengthCounter:      .res 3
 NoteDuration:       .res 3
 NoteLength:         .res 3
-pPatternL:          .res 3
-pPatternH:          .res 3
 
 CurChannel:         .res 1
 pCurPatternL:       .res 1
@@ -129,6 +128,7 @@ InitSound:
         stx     PrevBGM
         inx
         stx     BGM
+        stx     MunchDotTrigger
         jsr     SoundTick
 
         rts
@@ -141,6 +141,25 @@ SoundTick:
         cmp     PrevBGM
         beq     :+
         jsr     SetBGM
+:
+
+        ldx     MunchDotTrigger
+        beq     :+
+        ; Munching a dot
+        dex
+        lda     SfxMunchDotLTbl,x
+        sta     pPatternListL
+        lda     SfxMunchDotHTbl,x
+        sta     pPatternListH
+        ; @TODO@ -- move this to general "init channel" routine
+        lda     #0
+        sta     PatternListIdx
+        sta     PatternIdx
+        sta     Wait
+        sta     LengthCounter
+        sta     NoteDuration
+        sta     NoteLength
+        sta     MunchDotTrigger
 :
 
         ldx     #2
@@ -456,6 +475,28 @@ BgmAlarm1Pattern:
         .byte   As4, B4, C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5
         .byte   As5, A5, Gs5, G5, Fs5, F5, E5, Ds5, D5, Cs5, C5, B4
         .byte   REPEAT
+
+
+SfxMunchDotLTbl:
+        .byte   <SfxMunchDot1PatternList, <SfxMunchDot2PatternList
+SfxMunchDotHTbl:
+        .byte   >SfxMunchDot1PatternList, >SfxMunchDot2PatternList
+
+SfxMunchDot1PatternList:
+        .addr   SfxMunchDot1Pattern
+
+SfxMunchDot2PatternList:
+        .addr   SfxMunchDot2Pattern
+
+SfxMunchDot1Pattern:
+        .byte   DUTYVOL, $1f, DUR(1), LEN(1)
+        .byte   Ds3, E3, F3, Fs3, G3, Gs3, A3
+        .byte   END
+
+SfxMunchDot2Pattern:
+        .byte   DUTYVOL, $1f, DUR(1), LEN(1)
+        .byte   G3, Fs3, F3, E3, Ds3, D3, Cs3
+        .byte   END
 
 
 ; From http://wiki.nesdev.com/w/index.php/APU_period_table

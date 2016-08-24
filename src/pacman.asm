@@ -259,6 +259,11 @@ EatStuff:
         rts
 
 @eat_dot:
+        lda     NumDots
+        and     #$01
+        add     #1
+        sta     MunchDotTrigger
+
         lda     #1
         sta     PacDelay
         lda     #<Points10
