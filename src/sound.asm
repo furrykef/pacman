@@ -202,8 +202,10 @@ SetBGM:
         sta     $4001                       ; pulse 1 sweep
         sta     $4004                       ; pulse 2 volume
         sta     $4005                       ; pulse 2 sweep
-        sta     $4008                       ; tri linear counter setup
-        sta     $400b                       ; tri length counter
+        ldx     #$81
+        stx     $4008                       ; tri linear counter setup
+        sta     $400a                       ; tri period low
+        sta     $400b                       ; tri period high
 
         rts
 
@@ -393,7 +395,7 @@ BgmIntroSq1Init:
         .byte   DUTYVOL, $ba, NEXT
 
 BgmIntroSq2Init:
-        .byte   DUTYVOL, $b3, DUR(4), REST, NEXT
+        .byte   DUR(4), REST, DUTYVOL, $b3, NEXT
 
 BgmIntroSqPattern1:
         .byte   LEN(4)
@@ -418,7 +420,6 @@ BgmIntroSqPattern3:
         .byte   END
 
 BgmIntroTriPattern1:
-        .byte   DUTYVOL, $81
         .byte   LEN(20), DUR(24), C2
         .byte   LEN(7), DUR(8), G2
         .byte   NEXT
