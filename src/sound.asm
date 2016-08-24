@@ -453,8 +453,8 @@ BgmAlarm1PatternList:
 
 BgmAlarm1Pattern:
         .byte   DUR(1), LEN(2)
-        .byte   As5, A5, Gs5, G5, Fs5, F5, E5, Ds5, D5, Cs5, C5, B4, As4
-        .byte   B4, C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5
+        .byte   As4, B4, C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5
+        .byte   As5, A5, Gs5, G5, Fs5, F5, E5, Ds5, D5, Cs5, C5, B4
         .byte   REPEAT
 
 
