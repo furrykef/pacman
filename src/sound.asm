@@ -229,8 +229,9 @@ ChannelTick:
         asl
         asl
         tay
-        lda     #$10
+        lda     #$10                        ; @TODO@ -- wrong for triangle
         sta     $4000,y
+        rts
 @end:
         dec     LengthCounter,x
         rts
@@ -317,10 +318,10 @@ CmdEnd:
 
 CmdDutyVol:
         ldy     PatternIdx,x
+        inc     PatternIdx,x
         lda     (pCurPatternL),y
         sta     DutyVol,x
         ldx     CurChannel
-        inc     PatternIdx,x
         rts
 
 
