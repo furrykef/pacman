@@ -385,11 +385,11 @@ WonRound:
 
         ; Hide ghosts
         ; @XXX@ better way to do this
-        lda     #1
-        sta     fGhostsBeingEaten+BLINKY
-        sta     fGhostsBeingEaten+PINKY
-        sta     fGhostsBeingEaten+INKY
-        sta     fGhostsBeingEaten+CLYDE
+        lda     #GhostState::being_eaten
+        sta     GhostsState+BLINKY
+        sta     GhostsState+PINKY
+        sta     GhostsState+INKY
+        sta     GhostsState+CLYDE
         jsr     DrawGhosts
 
         ; Make the maze flash

@@ -8,6 +8,7 @@
 
 .enum GhostState
         active
+        being_eaten
         eaten
         waiting
         exiting
@@ -39,7 +40,6 @@ GhostsMoveCounter:  .res 4
 GhostsState:        .res 4
 fGhostsScared:      .res 4
 fGhostsReverse:     .res 4
-fGhostsBeingEaten:  .res 4
 GhostsDotCounter:   .res 4
 GhostsPriority:     .res 4
 
@@ -213,7 +213,6 @@ InitAI:
         sta     GhostsDotCounter,x
         sta     fGhostsScared,x
         sta     fGhostsReverse,x
-        sta     fGhostsBeingEaten,x
         lda     #GhostState::waiting
         sta     GhostsState,x
         txa
@@ -476,8 +475,9 @@ EnergizerClockTick:
 ; X = ghost ID (also in GhostId var) on entry and exit
 HandleOneGhost:
         ; Ghost doesn't move while being eaten
-        lda     fGhostsBeingEaten,x
-        bne     @being_eaten
+        lda     GhostsState,x
+        cmp     #GhostState::being_eaten
+        beq     @being_eaten
 
         ; Only eaten ghosts move if another ghost is being eaten
         lda     EatingGhostClock
@@ -529,8 +529,6 @@ HandleOneGhost:
 @being_eaten:
         dec     EatingGhostClock
         bne     @end
-        lda     #0
-        sta     fGhostsBeingEaten,x
         lda     #GhostState::eaten
         sta     GhostsState,x
 @end:
@@ -599,9 +597,9 @@ CheckCollisions:
         bne     @no_collision
         ; Collided
         ; Ignore collision if this ghost is being or has been eaten
-        lda     fGhostsBeingEaten,x
-        bne     @no_collision
         lda     GhostsState,x
+        cmp     #GhostState::being_eaten
+        beq     @no_collision
         cmp     #GhostState::eaten
         beq     @no_collision
         cmp     #GhostState::entering
@@ -617,8 +615,8 @@ CheckCollisions:
         ; Get eaten
         lda     #0
         sta     fGhostsScared,x
-        lda     #1
-        sta     fGhostsBeingEaten,x
+        lda     #GhostState::being_eaten
+        sta     GhostsState,x
         sta     fSfxTEatingGhost
         lda     #48
         sta     EatingGhostClock
@@ -1258,8 +1256,9 @@ DrawOneGhost:
         sta     GhostOamH
 
         ; Don't draw ghost if it's being eaten
-        lda     fGhostsBeingEaten,x
-        beq     @not_being_eaten
+        lda     GhostsState,x
+        cmp     #GhostState::being_eaten
+        bne     @not_being_eaten
         lda     #$ff
         ldy     #0
         sta     (GhostOamL),y
