@@ -370,11 +370,13 @@ CmdHTbl:
 BGM_NONE    = 0
 BGM_INTRO   = 2
 BGM_ALARM1  = 4
+BGM_ENERGIZER = 6
 
 SongTbl:
         .addr   BgmNone
         .addr   BgmIntro
         .addr   BgmAlarm1
+        .addr   BgmEnergizer
 
 
 BgmNone:
@@ -473,6 +475,20 @@ BgmAlarm1Pattern:
         .byte   DUR(1), LEN(2)
         .byte   As4, B4, C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5
         .byte   As5, A5, Gs5, G5, Fs5, F5, E5, Ds5, D5, Cs5, C5, B4
+        .byte   REPEAT
+
+
+BgmEnergizer:
+        .addr   NullPatternList
+        .addr   BgmEnergizerPatternList
+        .addr   NullPatternList
+
+BgmEnergizerPatternList:
+        .addr   BgmEnergizerPattern
+
+BgmEnergizerPattern:
+        .byte   DUTYVOL, $b8, DUR(1), LEN(2)
+        .byte   Cs4, Gs4, Cs5, DUR(2), F5, Gs5, B5, C6
         .byte   REPEAT
 
 

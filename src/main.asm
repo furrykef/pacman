@@ -297,8 +297,6 @@ PlayRound:
 @not_start_of_game:
         ldy     #60
         jsr     WaitFrames
-        lda     #BGM_ALARM1
-        sta     BGM
 @game_loop:
         jsr     WaitForVblank
         jsr     ReadJoys
@@ -311,6 +309,7 @@ PlayRound:
         jsr     MovePacMan
         jsr     HandleFruit
         jsr     Render
+        jsr     DecideBGM
         lda     fPacDead
         bne     @pac_dead
         lda     NumDots
@@ -350,6 +349,17 @@ InitLife:
         jsr     InitAI
         jsr     InitPacMan
         jsr     InitFruit
+        rts
+
+
+DecideBGM:
+        ; @TODO@ -- which alarm depends on how many dots are left
+        lda     #BGM_ALARM1
+        ldx     fEnergizerActive
+        beq     :+
+        lda     #BGM_ENERGIZER
+:
+        sta     BGM
         rts
 
 
