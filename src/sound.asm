@@ -129,8 +129,17 @@ InitSound:
         inx
         stx     BGM
         stx     MunchDotTrigger
-        jsr     SoundTick
+        jmp     SoundTick
 
+
+SoundOff:
+        lda     #0
+        sta     $4015
+        rts
+
+SoundOn:
+        lda     #$07
+        sta     $4015
         rts
 
 

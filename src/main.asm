@@ -480,6 +480,7 @@ AddPoints:
 Pause:
         lda     #1
         sta     fPaused
+        jsr     SoundOff
 @loop:
         jsr     WaitForVblank
         jsr     ReadJoys
@@ -488,7 +489,7 @@ Pause:
         beq     @loop
         lda     #0
         sta     fPaused
-        rts
+        jmp     SoundOn
 
 
 Render:
