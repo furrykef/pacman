@@ -520,7 +520,7 @@ BgmEnergizerPatternList:
 
 BgmEnergizerPattern:
         .byte   DUTYVOL, $b8, DUR(1), LEN(2)
-        .byte   Cs4, Gs4, Cs5, DUR(2), F5, Gs5, B5, C6
+        .byte   Cs4, Gs4, Cs5, F5, Gs5, As5, B5, C6
         .byte   REPEAT
 
 
