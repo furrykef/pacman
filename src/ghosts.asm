@@ -310,7 +310,6 @@ MoveGhosts:
         jsr     EnergizerClockTick
         inc     GhostAnim
 @eating_ghost:
-        jsr     EatingGhostClockTick
 
         ; Blinky never waits
         ; (can get in this state if global dot counter is active)
@@ -474,25 +473,11 @@ EnergizerClockTick:
         rts
 
 
-EatingGhostClockTick:
-        lda     EatingGhostClock
-        beq     @no_ghost_being_eaten
-        dec     EatingGhostClock
-        rts
-@no_ghost_being_eaten:
-        lda     #0
-        sta     fGhostsBeingEaten+BLINKY
-        sta     fGhostsBeingEaten+PINKY
-        sta     fGhostsBeingEaten+INKY
-        sta     fGhostsBeingEaten+CLYDE
-        rts
-
-
 ; X = ghost ID (also in GhostId var) on entry and exit
 HandleOneGhost:
         ; Ghost doesn't move while being eaten
         lda     fGhostsBeingEaten,x
-        bne     @end
+        bne     @being_eaten
 
         ; Only eaten ghosts move if another ghost is being eaten
         lda     EatingGhostClock
@@ -541,6 +526,13 @@ HandleOneGhost:
 
         jmp     CheckCollisions
 
+@being_eaten:
+        dec     EatingGhostClock
+        bne     @end
+        lda     #0
+        sta     fGhostsBeingEaten,x
+        lda     #GhostState::eaten
+        sta     GhostsState,x
 @end:
         rts
 
@@ -606,7 +598,9 @@ CheckCollisions:
         cmp     PacTileY
         bne     @no_collision
         ; Collided
-        ; Ignore collision if ghost has been eaten
+        ; Ignore collision if this ghost is being or has been eaten
+        lda     fGhostsBeingEaten,x
+        bne     @no_collision
         lda     GhostsState,x
         cmp     #GhostState::eaten
         beq     @no_collision
@@ -626,8 +620,6 @@ CheckCollisions:
         lda     #1
         sta     fGhostsBeingEaten,x
         sta     fSfxTEatingGhost
-        lda     #GhostState::eaten
-        sta     GhostsState,x
         lda     #48
         sta     EatingGhostClock
         lda     EnergizerPoints
