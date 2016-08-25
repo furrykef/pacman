@@ -214,20 +214,25 @@ SetBGM:
         lda     SongTbl,x
         sta     SoundTmpH
 
-        ; Load pointers to pattern lists from song data table
+        ; Load pointers to pattern lists from song data table.
+        ; We load the high byte first so we can skip the load if the
+        ; high byte is zero.
         ldy     #0
         ldx     #0
 @load_pattern_list:
+        iny
+        lda     (SoundTmpL),y
+        beq     @skip
+        sta     pPatternListH,x
+        dey
         lda     (SoundTmpL),y
         sta     pPatternListL,x
         iny
-        lda     (SoundTmpL),y
-        sta     pPatternListH,x
+@skip:
         iny
         inx
         cpx     #3
         blt     @load_pattern_list
-
         rts
 
 
@@ -479,7 +484,7 @@ BgmIntroTriPattern3:
 
 
 BgmAlarm1:
-        .addr   NullPatternList
+        .addr   0
         .addr   NullPatternList
         .addr   BgmAlarm1PatternList
 
@@ -494,7 +499,7 @@ BgmAlarm1Pattern:
 
 
 BgmEnergizer:
-        .addr   NullPatternList
+        .addr   0
         .addr   BgmEnergizerPatternList
         .addr   NullPatternList
 
