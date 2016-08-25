@@ -210,15 +210,6 @@ SoundTick:
 ; (called by SoundTick)
 SetBGM:
         sta     PrevBGM
-        pha
-
-        ldx     #2
-@init_loop:
-        jsr     InitChannel
-        dex
-        bpl     @init_loop
-
-        pla
         tax
 
         ; Get pointer to song data from song table
@@ -242,6 +233,7 @@ SetBGM:
         lda     (SoundTmpL),y
         sta     pPatternListL,x
         iny
+        jsr     InitChannel
 @skip:
         iny
         inx
@@ -250,8 +242,10 @@ SetBGM:
         rts
 
 
-; Input:
+; Input/Output:
 ;   X = number of channel to init
+;
+; Won't clobber Y
 InitChannel:
         lda     #0
         sta     PatternListIdx,x
