@@ -352,7 +352,6 @@ CmdRest:
         lda     NoteDuration,x
         sta     Wait,x
         rts
-.export CmdRest
 
 
 CmdRepeat:
@@ -490,12 +489,12 @@ SfxMunchDot2PatternList:
 
 SfxMunchDot1Pattern:
         .byte   DUTYVOL, $1f, DUR(1), LEN(1)
-        .byte   Ds3, E3, F3, Fs3, G3, Gs3, A3
+        .byte   E2, As2, Ds3, Fs3, A3
         .byte   END
 
 SfxMunchDot2Pattern:
         .byte   DUTYVOL, $1f, DUR(1), LEN(1)
-        .byte   G3, Fs3, F3, E3, Ds3, D3, Cs3
+        .byte   B3, Gs3, F3, Cs3, Gs2
         .byte   END
 
 
