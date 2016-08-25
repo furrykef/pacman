@@ -452,7 +452,7 @@ BgmIntroTri:
         .addr   BgmIntroTriPattern3
 
 BgmIntroSq1Init:
-        .byte   DUTYVOL, $9a, NEXT
+        .byte   DUTYVOL, $ba, NEXT
 
 BgmIntroSq2Init:
         .byte   DUR(4), REST, DUTYVOL, $b3, NEXT
@@ -519,7 +519,7 @@ BgmEnergizerPatternList:
         .addr   BgmEnergizerPattern
 
 BgmEnergizerPattern:
-        .byte   DUTYVOL, $98, DUR(1), LEN(2)
+        .byte   DUTYVOL, $b8, DUR(1), LEN(2)
         .byte   Cs4, Gs4, Cs5, DUR(2), F5, Gs5, B5, C6
         .byte   REPEAT
 
@@ -545,7 +545,7 @@ SfxEatingGhostPatternList:
         .addr   SfxEatingGhostPattern
 
 SfxEatingGhostPattern:
-        .byte   DUTYVOL, $9f, LEN(2)
+        .byte   DUTYVOL, $bf, LEN(2)
         .byte   DUR(1), Cs2
         .byte   DUR(2), E3
         .byte   DUR(1), Gs3
@@ -581,12 +581,12 @@ SfxMunchDot2PatternList:
         .addr   SfxMunchDot2Pattern
 
 SfxMunchDot1Pattern:
-        .byte   DUTYVOL, $1f, DUR(1), LEN(1)
+        .byte   DUTYVOL, $3f, DUR(1), LEN(1)
         .byte   E2, As2, Ds3, Fs3, A3
         .byte   END
 
 SfxMunchDot2Pattern:
-        .byte   DUTYVOL, $1f, DUR(1), LEN(1)
+        .byte   DUTYVOL, $3f, DUR(1), LEN(1)
         .byte   B3, Gs3, F3, Cs3, Gs2
         .byte   END
 
