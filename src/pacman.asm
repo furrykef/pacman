@@ -259,11 +259,6 @@ EatStuff:
         rts
 
 @eat_dot:
-        lda     NumDots
-        and     #$01
-        add     #1
-        sta     MunchDotTrigger
-
         lda     #1
         sta     PacDelay
         lda     #<Points10
@@ -292,9 +287,14 @@ EatStuff:
         jsr     EatDot
         pla
         tay
-        jmp     @eat_object
+        ; FALL THROUGH to @eat_object
 
 @eat_object:
+        lda     NumDots
+        and     #$01
+        add     #1
+        sta     MunchDotTrigger
+
         ; Remove object from maze
         lda     #SPACE
         sta     (RowAddrL),y
