@@ -129,7 +129,20 @@ InitSound:
         inx
         stx     BGM
         stx     MunchDotTrigger
-        jmp     SoundTick
+        jsr     SoundOn
+
+        ; Init sound regs
+        lda     #0
+        sta     $4011                       ; DMC counter
+        sta     $4000                       ; pulse 1 volume
+        sta     $4001                       ; pulse 1 sweep
+        sta     $4004                       ; pulse 2 volume
+        sta     $4005                       ; pulse 2 sweep
+        ldx     #$81
+        stx     $4008                       ; tri linear counter setup
+        sta     $400a                       ; tri period low
+        sta     $400b                       ; tri period high
+        rts
 
 
 SoundOff:
@@ -160,15 +173,9 @@ SoundTick:
         sta     pPatternListL
         lda     SfxMunchDotHTbl,x
         sta     pPatternListH
-        ; @TODO@ -- move this to general "init channel" routine
-        lda     #0
-        sta     PatternListIdx
-        sta     PatternIdx
-        sta     Wait
-        sta     LengthCounter
-        sta     NoteDuration
-        sta     NoteLength
-        sta     MunchDotTrigger
+        ldx     #0                          ; channel #0
+        stx     MunchDotTrigger             ; also handy for clearing this
+        jsr     InitChannel
 :
 
         ldx     #2
@@ -189,16 +196,15 @@ SoundTick:
 ; (called by SoundTick)
 SetBGM:
         sta     PrevBGM
+        pha
 
-        ldy     #2
+        ldx     #2
 @init_loop:
-        stx     PatternListIdx,y
-        stx     PatternIdx,y
-        stx     Wait,y
-        stx     LengthCounter,y
-        dey
+        jsr     InitChannel
+        dex
         bpl     @init_loop
 
+        pla
         tax
 
         ; Get pointer to song data from song table
@@ -222,20 +228,17 @@ SetBGM:
         cpx     #3
         blt     @load_pattern_list
 
-        ; Init sound regs
-        lda     #$07                        ; squares and tri only
-        sta     $4015                       ; channel enable
-        lda     #0
-        sta     $4011                       ; DMC counter
-        sta     $4000                       ; pulse 1 volume
-        sta     $4001                       ; pulse 1 sweep
-        sta     $4004                       ; pulse 2 volume
-        sta     $4005                       ; pulse 2 sweep
-        ldx     #$81
-        stx     $4008                       ; tri linear counter setup
-        sta     $400a                       ; tri period low
-        sta     $400b                       ; tri period high
+        rts
 
+
+; Input:
+;   X = number of channel to init
+InitChannel:
+        lda     #0
+        sta     PatternListIdx,x
+        sta     PatternIdx,x
+        sta     Wait,x
+        sta     LengthCounter,x
         rts
 
 
@@ -356,10 +359,11 @@ CmdDutyVol:
         rts
 
 
-; @TODO@ -- set LengthCounter to 0?
 CmdRest:
         lda     NoteDuration,x
         sta     Wait,x
+        lda     #0
+        sta     LengthCounter,x
         rts
 
 
