@@ -625,6 +625,7 @@ CheckCollisions:
         sta     fGhostsScared,x
         lda     #1
         sta     fGhostsBeingEaten,x
+        sta     fSfxTEatingGhost
         lda     #GhostState::eaten
         sta     GhostsState,x
         lda     #48

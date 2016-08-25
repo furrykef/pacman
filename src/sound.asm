@@ -101,7 +101,10 @@ REPEAT      = CMD_BASE+4
 
 BGM:                .res 1
 PrevBGM:            .res 1
-MunchDotTrigger:    .res 1                  ; 0 = none; 1 = SfxMunchDot1; 2 = SfxMunchDot2
+
+; SfxT = Sound effect trigger
+SfxTMunchDot:       .res 1                  ; 0 = none; 1 = SfxMunchDot1; 2 = SfxMunchDot2
+fSfxTEatingGhost:   .res 1
 
 ; One byte per channel
 pPatternListL:      .res 3
@@ -128,7 +131,8 @@ InitSound:
         stx     PrevBGM
         inx
         stx     BGM
-        stx     MunchDotTrigger
+        stx     SfxTMunchDot
+        stx     fSfxTEatingGhost
         jsr     SoundOn
 
         ; Init sound regs
@@ -165,7 +169,7 @@ SoundTick:
         jsr     SetBGM
 :
 
-        ldx     MunchDotTrigger
+        ldx     SfxTMunchDot
         beq     :+
         ; Munching a dot
         dex
@@ -174,7 +178,17 @@ SoundTick:
         lda     SfxMunchDotHTbl,x
         sta     pPatternListH
         ldx     #0                          ; channel #0
-        stx     MunchDotTrigger             ; also handy for clearing this
+        stx     SfxTMunchDot                ; also handy for clearing this
+        jsr     InitChannel
+:
+        ldx     fSfxTEatingGhost
+        beq     :+
+        lda     #<SfxEatingGhostPatternList
+        sta     pPatternListL
+        lda     #>SfxEatingGhostPatternList
+        sta     pPatternListH
+        ldx     #0                          ; channel #0
+        stx     fSfxTEatingGhost            ; also handy for clearing this
         jsr     InitChannel
 :
 
@@ -389,14 +403,12 @@ BGM_NONE    = 0
 BGM_INTRO   = 2
 BGM_ALARM1  = 4
 BGM_ENERGIZER = 6
-BGM_EATING_GHOST = 8
 
 SongTbl:
         .addr   BgmNone
         .addr   BgmIntro
         .addr   BgmAlarm1
         .addr   BgmEnergizer
-        .addr   BgmEatingGhost
 
 
 BgmNone:
@@ -512,15 +524,10 @@ BgmEnergizerPattern:
         .byte   REPEAT
 
 
-BgmEatingGhost:
-        .addr   BgmEatingGhostPatternList
-        .addr   NullPatternList
-        .addr   NullPatternList
+SfxEatingGhostPatternList:
+        .addr   SfxEatingGhostPattern
 
-BgmEatingGhostPatternList:
-        .addr   BgmEatingGhostPattern
-
-BgmEatingGhostPattern:
+SfxEatingGhostPattern:
         .byte   DUTYVOL, $9f, LEN(2)
         .byte   DUR(1), Cs2
         .byte   DUR(2), E3

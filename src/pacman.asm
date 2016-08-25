@@ -293,7 +293,7 @@ EatStuff:
         lda     NumDots
         and     #$01
         add     #1
-        sta     MunchDotTrigger
+        sta     SfxTMunchDot
 
         ; Remove object from maze
         lda     #SPACE
