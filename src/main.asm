@@ -359,6 +359,10 @@ DecideBGM:
         beq     :+
         lda     #BGM_ENERGIZER
 :
+        ldx     EatingGhostClock
+        beq     :+
+        lda     #BGM_EATING_GHOST
+:
         sta     BGM
         rts
 

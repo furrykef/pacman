@@ -380,12 +380,14 @@ BGM_NONE    = 0
 BGM_INTRO   = 2
 BGM_ALARM1  = 4
 BGM_ENERGIZER = 6
+BGM_EATING_GHOST = 8
 
 SongTbl:
         .addr   BgmNone
         .addr   BgmIntro
         .addr   BgmAlarm1
         .addr   BgmEnergizer
+        .addr   BgmEatingGhost
 
 
 BgmNone:
@@ -429,7 +431,7 @@ BgmIntroTri:
         .addr   BgmIntroTriPattern3
 
 BgmIntroSq1Init:
-        .byte   DUTYVOL, $ba, NEXT
+        .byte   DUTYVOL, $9a, NEXT
 
 BgmIntroSq2Init:
         .byte   DUR(4), REST, DUTYVOL, $b3, NEXT
@@ -496,9 +498,42 @@ BgmEnergizerPatternList:
         .addr   BgmEnergizerPattern
 
 BgmEnergizerPattern:
-        .byte   DUTYVOL, $b8, DUR(1), LEN(2)
+        .byte   DUTYVOL, $98, DUR(1), LEN(2)
         .byte   Cs4, Gs4, Cs5, DUR(2), F5, Gs5, B5, C6
         .byte   REPEAT
+
+
+BgmEatingGhost:
+        .addr   BgmEatingGhostPatternList
+        .addr   NullPatternList
+        .addr   NullPatternList
+
+BgmEatingGhostPatternList:
+        .addr   BgmEatingGhostPattern
+
+BgmEatingGhostPattern:
+        .byte   DUTYVOL, $9f, LEN(2)
+        .byte   DUR(1), Cs2
+        .byte   DUR(2), E3
+        .byte   DUR(1), Gs3
+        .byte   DUR(2), C4
+        .byte   DUR(1), Ds4
+        .byte   DUR(2), E4
+        .byte   DUR(1), Fs4
+        .byte   DUR(2), G4
+        .byte   DUR(1), Gs4
+        .byte   DUR(2), A4
+        .byte   DUR(1), As4
+        .byte   DUR(2), B4
+        .byte   DUR(1), C5
+        .byte   DUR(2), Cs5
+        .byte   DUR(1), D5
+        .byte   DUR(2), Ds5
+        .byte   DUR(1), E5
+        .byte   DUR(2), F5
+        .byte   DUR(1), Fs5
+        .byte   LEN(1), G5
+        .byte   END
 
 
 SfxMunchDotLTbl:

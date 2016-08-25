@@ -627,7 +627,7 @@ CheckCollisions:
         sta     fGhostsBeingEaten,x
         lda     #GhostState::eaten
         sta     GhostsState,x
-        lda     #60
+        lda     #48
         sta     EatingGhostClock
         lda     EnergizerPoints
         asl                                 ; 16-bit entries

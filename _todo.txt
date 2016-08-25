@@ -24,6 +24,8 @@ This bug might or might not exist in the current build.
 
 To be implemented
 -----------------
+Reimplement "ghost eaten" sound as a sound effect. (Sometimes two or more ghosts are eaten in one frame. Need to play the sound again each time. Also, the sound should not interrupt BGM.)
+
 Do eaten ghosts ever reverse direction with mode changes?
 
 If we add two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
