@@ -73,6 +73,10 @@ Gs6     = $47
 A6      = $48
 As6     = $49
 B6      = $4a
+C7      = $4b
+Cs7     = $4c
+D7      = $4d
+Ds7     = $4e
 
 LEN_BASE    = $60
 DUR_BASE    = $80
@@ -397,12 +401,14 @@ BGM_NONE    = 0
 BGM_INTRO   = 2
 BGM_ALARM1  = 4
 BGM_ENERGIZER = 6
+BGM_EATEN_GHOST = 8
 
 SongTbl:
         .addr   BgmNone
         .addr   BgmIntro
         .addr   BgmAlarm1
         .addr   BgmEnergizer
+        .addr   BgmEatenGhost
 
 
 BgmNone:
@@ -515,6 +521,23 @@ BgmEnergizerPatternList:
 BgmEnergizerPattern:
         .byte   DUTYVOL, $98, DUR(1), LEN(2)
         .byte   Cs4, Gs4, Cs5, DUR(2), F5, Gs5, B5, C6
+        .byte   REPEAT
+
+
+BgmEatenGhost:
+        .addr   0
+        .addr   NullPatternList
+        .addr   BgmEatenGhostPatternList
+
+BgmEatenGhostPatternList:
+        .addr   BgmEatenGhostPattern
+
+BgmEatenGhostPattern:
+        .byte   DUR(1), LEN(2)
+        .byte   Ds7, Cs7, B6, A6
+        .byte   Fs6, E6, D6, C6
+        .byte   A5, G5, F5, Ds5
+        .byte   C5, As4, Gs4, Fs4
         .byte   REPEAT
 
 

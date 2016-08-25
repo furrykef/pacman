@@ -353,12 +353,26 @@ InitLife:
 
 
 DecideBGM:
+        ; If any ghosts have been eaten, use that
+        ldx     #3
+@check_eaten_ghosts:
+        lda     GhostsState,x
+        cmp     #GhostState::eaten
+        beq     @ghost_eaten
+        dex
+        bpl     @check_eaten_ghosts
+
         ; @TODO@ -- which alarm depends on how many dots are left
         lda     #BGM_ALARM1
         ldx     fEnergizerActive
         beq     :+
         lda     #BGM_ENERGIZER
 :
+        sta     BGM
+        rts
+
+@ghost_eaten:
+        lda     #BGM_EATEN_GHOST
         sta     BGM
         rts
 
