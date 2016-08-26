@@ -109,6 +109,7 @@ PrevBGM:            .res 1
 ; SfxT = Sound effect trigger
 SfxTMunchDot:       .res 1                  ; 0 = none; 1 = SfxMunchDot1; 2 = SfxMunchDot2
 fSfxTEatingGhost:   .res 1
+fSfxTExtraLife:     .res 1
 
 ; One byte per channel
 pPatternListL:      .res 3
@@ -124,6 +125,9 @@ CurChannel:         .res 1
 pCurPatternL:       .res 1
 pCurPatternH:       .res 1
 
+SfxExtraLifeCount:  .res 1                  ; times to go "ding!"
+SfxExtraLifeVolume: .res 1
+
 SoundTmpL:          .res 1
 SoundTmpH:          .res 1
 
@@ -137,6 +141,9 @@ InitSound:
         stx     BGM
         stx     SfxTMunchDot
         stx     fSfxTEatingGhost
+        stx     fSfxTExtraLife
+        stx     SfxExtraLifeCount
+        stx     SfxExtraLifeVolume
         jsr     SoundOn
 
         ; Init sound regs
@@ -150,6 +157,9 @@ InitSound:
         stx     $4008                       ; tri linear counter setup
         sta     $400a                       ; tri period low
         sta     $400b                       ; tri period high
+        sta     $400c                       ; noise volume
+        sta     $400e                       ; noise period
+        sta     $400f                       ; noise length counter
         rts
 
 
@@ -159,7 +169,7 @@ SoundOff:
         rts
 
 SoundOn:
-        lda     #$07
+        lda     #$0f
         sta     $4015
         rts
 
@@ -185,8 +195,9 @@ SoundTick:
         stx     SfxTMunchDot                ; also handy for clearing this
         jsr     InitChannel
 :
-        ldx     fSfxTEatingGhost
+        lda     fSfxTEatingGhost
         beq     :+
+        ; Eating a ghost
         lda     #<SfxEatingGhostPatternList
         sta     pPatternListL
         lda     #>SfxEatingGhostPatternList
@@ -194,6 +205,20 @@ SoundTick:
         ldx     #0                          ; channel #0
         stx     fSfxTEatingGhost            ; also handy for clearing this
         jsr     InitChannel
+:
+        lda     fSfxTExtraLife
+        beq     :+
+        ; Extra life
+        lda     #0
+        sta     fSfxTExtraLife
+        lda     #10
+        sta     SfxExtraLifeCount
+        lda     #$3f
+        sta     SfxExtraLifeVolume
+        lda     #$81
+        sta     $400e
+        lda     #$f8
+        sta     $400f
 :
 
         ldx     #2
@@ -204,6 +229,24 @@ SoundTick:
         dex
         bpl     @loop
 
+        ldx     SfxExtraLifeVolume
+        beq     @end
+        stx     $400c
+        dex
+        stx     SfxExtraLifeVolume
+        cpx     #$34
+        bne     @end
+        lda     #$3f
+        sta     SfxExtraLifeVolume
+        dec     SfxExtraLifeCount
+        bpl     @end
+        lda     #0
+        sta     SfxExtraLifeVolume
+        sta     $400c
+        lda     #$0
+        sta     $400e
+
+@end:
         rts
 
 

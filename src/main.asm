@@ -486,6 +486,7 @@ AddPoints:
         inc     NumLives
         lda     #1
         sta     fBonusLifeAwarded
+        sta     fSfxTExtraLife
 @no_bonus_life:
 
         rts
