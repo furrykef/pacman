@@ -159,7 +159,6 @@ InitSound:
         sta     $400b                       ; tri period high
         sta     $400c                       ; noise volume
         sta     $400e                       ; noise period
-        sta     $400f                       ; noise length counter
         rts
 
 
