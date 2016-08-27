@@ -764,7 +764,20 @@ MoveOneGhostEntering:
 @ready:
         lda     #GhostState::waiting
         sta     GhostsState,x
-@end:
+        ; Clear energizer status if no scared ghosts are left
+        ; (stops energizer BGM)
+        ldy     #3
+@loop:
+        lda     fGhostsScared,y
+        bne     @at_least_one_scared_ghost
+        dey
+        bpl     @loop
+        ; No scared ghosts left
+        lda     #0
+        sta     EnergizerClockL
+        sta     EnergizerClockH
+        sta     fEnergizerActive
+@at_least_one_scared_ghost:
         rts
 
 
