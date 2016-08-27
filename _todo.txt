@@ -19,21 +19,17 @@ Killer scared ghosts
 (5:24:26 AM) furrykef: The ghost turned blue and I died anyway
 
 
-This bug might or might not exist in the current build.
+This bug might or might not exist in the current build. (Seems doubtful that it does, but haven't formally tested it.)
 
 
 To be implemented
 -----------------
-Higher/faster alarm BGMs as the dot count decreases
-
-Extra life sfx
-
 Do eaten ghosts ever reverse direction with mode changes?
 
 If we add two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
 
 Initialize random seed better.
 
-Should fEnergizerActive go false as soon as no ghosts are scared?
+fEnergizerActive should go false as soon as no ghosts are scared
 
 Can Pac-Man's rendering logic be merged with the ghosts'?

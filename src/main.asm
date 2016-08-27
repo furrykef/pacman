@@ -362,13 +362,23 @@ DecideBGM:
         dex
         bpl     @check_eaten_ghosts
 
-        ; @TODO@ -- which alarm depends on how many dots are left
-        lda     #BGM_ALARM1
-        ldx     fEnergizerActive
+        ; Alarm 2 triggers when 128 dots remain, alarm 3 when 64 remain, etc.
+        ldx     #BGM_ALARM1
+        lda     #128
+@loop:
+        cmp     NumDots
+        blt     @check_energizer
+        lsr
+        inx
+        cpx     #BGM_ALARM5
+        blt     @loop
+
+@check_energizer:
+        lda     fEnergizerActive
         beq     :+
-        lda     #BGM_ENERGIZER
+        ldx     #BGM_ENERGIZER
 :
-        sta     BGM
+        stx     BGM
         rts
 
 @ghost_eaten:

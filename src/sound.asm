@@ -256,6 +256,7 @@ SoundTick:
 ; (called by SoundTick)
 SetBGM:
         sta     PrevBGM
+        asl                                 ; 16-bit entries
         tax
 
         ; Get pointer to song data from song table
@@ -439,16 +440,27 @@ CmdHTbl:
         .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest, >CmdRepeat
 
 
-BGM_NONE    = 0
-BGM_INTRO   = 2
-BGM_ALARM1  = 4
-BGM_ENERGIZER = 6
-BGM_EATEN_GHOST = 8
+; order of alarms is significant
+.enum
+    BGM_NONE
+    BGM_INTRO
+    BGM_ALARM1
+    BGM_ALARM2
+    BGM_ALARM3
+    BGM_ALARM4
+    BGM_ALARM5
+    BGM_ENERGIZER
+    BGM_EATEN_GHOST
+.endenum
 
 SongTbl:
         .addr   BgmNone
         .addr   BgmIntro
         .addr   BgmAlarm1
+        .addr   BgmAlarm2
+        .addr   BgmAlarm3
+        .addr   BgmAlarm4
+        .addr   BgmAlarm5
         .addr   BgmEnergizer
         .addr   BgmEatenGhost
 
@@ -545,10 +557,76 @@ BgmAlarm1:
 BgmAlarm1PatternList:
         .addr   BgmAlarm1Pattern
 
+; F#4 to A5, 24 frames
+; Thanks to OpenMPT's interpolator for helping me with these
 BgmAlarm1Pattern:
         .byte   DUR(1), LEN(2)
-        .byte   As4, B4, C5, Cs5, D5, Ds5, E5, F5, Fs5, G5, Gs5, A5
-        .byte   As5, A5, Gs5, G5, Fs5, F5, E5, Ds5, D5, Cs5, C5, B4
+        .byte   Fs4, Gs4, A4, As4, B4, Cs5, D5, Ds5, E5, Fs5, G5, Gs5
+        .byte   A5, G5, Fs5, F5, E5, D5, Cs5, C5, B4, A4, Gs4, G4
+        .byte   REPEAT
+
+
+BgmAlarm2:
+        .addr   0
+        .addr   NullPatternList
+        .addr   BgmAlarm2PatternList
+
+BgmAlarm2PatternList:
+        .addr   BgmAlarm2Pattern
+
+; A#4 to C6, 22 frames
+BgmAlarm2Pattern:
+        .byte   DUR(1), LEN(2)
+        .byte   As4, C5, Cs5, D5, E5, F5, Fs5, G5, A5, As5, B5
+        .byte   C6, As5, A5, Gs5, Fs5, F5, E5, Ds5, Cs5, C5, B4
+        .byte   REPEAT
+
+
+BgmAlarm3:
+        .addr   0
+        .addr   NullPatternList
+        .addr   BgmAlarm3PatternList
+
+BgmAlarm3PatternList:
+        .addr   BgmAlarm3Pattern
+
+; C#5 to D#6, 20 frames (I measured 19, but 20 fits the pattern)
+BgmAlarm3Pattern:
+        .byte   DUR(1), LEN(2)
+        .byte   Cs5, Ds5, E5, Fs5, G5, Gs5, As5, B5, Cs6, D6
+        .byte   Ds6, Cs6, C6, As5, A5, Gs5, Fs5, F5, Ds5, D5
+        .byte   REPEAT
+
+
+BgmAlarm4:
+        .addr   0
+        .addr   NullPatternList
+        .addr   BgmAlarm4PatternList
+
+BgmAlarm4PatternList:
+        .addr   BgmAlarm4Pattern
+
+; Alarm4: F5 to F#6, 18 frames
+BgmAlarm4Pattern:
+        .byte   DUR(1), LEN(2)
+        .byte   F5, G5, Gs5, As5, B5, Cs6, D6, E6, F6
+        .byte   Fs6, E6, Ds6, Cs6, C6, As5, A5, G5, Fs5
+        .byte   REPEAT
+
+
+BgmAlarm5:
+        .addr   0
+        .addr   NullPatternList
+        .addr   BgmAlarm5PatternList
+
+BgmAlarm5PatternList:
+        .addr   BgmAlarm5Pattern
+
+; Alarm5: G#5 to G6, 16 frames
+BgmAlarm5Pattern:
+        .byte   DUR(1), LEN(2)
+        .byte   Gs5, As5, B5, Cs6, D6, Ds6, F6, Fs6
+        .byte   G6, F6, E6, D6, Cs6, C6, As5, A5
         .byte   REPEAT
 
 
