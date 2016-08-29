@@ -1302,11 +1302,19 @@ DrawOneGhost:
         ; Hide it so it won't peek up from the bottom
         lda     #$ff
 @scroll_ok:
+        cmp     #22
+        bge     :+
+        lda     #$ff                        ; hide upper half
+:
         ldy     #0
         sta     (GhostOamL),y
         ldy     #8
         sta     (GhostOamL),y
         add     #8
+        cmp     #22
+        bge     :+
+        lda     #$ff                        ; hide lower half
+:
         ldy     #4
         sta     (GhostOamL),y
         ldy     #12

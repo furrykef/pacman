@@ -720,7 +720,7 @@ HandleVblank:
         bvc     @wait_for_sprite_zero
 
         ; Burn some cycles until we're nearly at hblank
-        ldx     #29                         ; 2 cycles
+        ldx     #30                         ; 2 cycles
 @delay:
         dex                                 ; 2 cycles
         bne     @delay                      ; 3 cycles (2 on last iteration)
