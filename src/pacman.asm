@@ -443,45 +443,56 @@ DoPacManDeathAnimation:
         add     #24                         ; -8 to convert center to edge, +32 for status area
         sub     VScroll
         sta     PacManOAM
+        sta     PacManOAM+8
+        add     #8
         sta     PacManOAM+4
+        sta     PacManOAM+12
 
         ; Pattern
-        lda     #$c1
-        sta     PacManOAM+1
-        lda     #$c3
-        sta     PacManOAM+5
+        ldx     #$c0
+        jsr     NextPacManDeathFrame
 
         ; Attributes
         lda     #$03
         sta     PacManOAM+2
         sta     PacManOAM+6
+        sta     PacManOAM+10
+        sta     PacManOAM+14
 
         ; X position
         lda     PacX
         sub     #7
         sta     PacManOAM+3
-        add     #8
         sta     PacManOAM+7
+        add     #8
+        sta     PacManOAM+11
+        sta     PacManOAM+15
 
         ldy     #30
         jsr     WaitFrames
 
-        ldx     #$c5
+        ldx     #$c4
 @loop:
-        stx     PacManOAM+1
-        inx
-        inx
-        stx     PacManOAM+5
-        inx
-        inx
+        jsr     NextPacManDeathFrame
         txa
         pha
         ldy     #8
         jsr     WaitFrames
         pla
         tax
-        cpx     #$f5
+        cpx     #$f4
         bne     @loop
 
         ldy     #60
         jmp     WaitFrames
+
+NextPacManDeathFrame:
+        stx     PacManOAM+1
+        inx
+        stx     PacManOAM+5
+        inx
+        stx     PacManOAM+9
+        inx
+        stx     PacManOAM+13
+        inx
+        rts

@@ -58,7 +58,6 @@ TmpH:               .res 1
 Tmp2L:              .res 1
 Tmp2H:              .res 1
 FrameCounter:       .res 1
-fSpriteOverflow:    .res 1                  ; true values won't necessarily be $01
 fRenderOn:          .res 1                  ; tells vblank handler not to mess with PPU memory if zero
 fPaused:            .res 1
 DisplayListIndex:   .res 1
@@ -652,11 +651,6 @@ HandleVblank:
         sta     OAMADDR
         lda     #>MyOAM
         sta     OAMDMA
-
-        ; Check if sprites overflowed on previous frame
-        lda     PPUSTATUS
-        and     #$20
-        sta     fSpriteOverflow
 
         ; Render display list if ready
         lda     fDisplayListReady

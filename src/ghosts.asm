@@ -1234,8 +1234,9 @@ CalcGhostCoords:
 
 
 DrawGhosts:
-        lda     fSpriteOverflow
+        jsr     CheckSpriteOverflow
         beq     @no_overflow
+
         ; More than 8 hardware sprites/scanline on previous frame; cycle priorities
         ldx     #NUM_GHOSTS - 1
 @priority_loop:
@@ -1263,7 +1264,7 @@ DrawOneGhost:
         asl
         asl
         asl
-        add     #12
+        add     #20
         sta     GhostOamL
         lda     #>MyOAM
         sta     GhostOamH
@@ -1379,4 +1380,10 @@ DrawOneGhost:
         add     #8
         ldy     #7
         sta     (GhostOamL),y
+        rts
+
+
+CheckSpriteOverflow:
+        ; @TODO@ -- to be done
+        lda     #0
         rts
