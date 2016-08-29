@@ -15,3 +15,13 @@ This can be used for both the maze and music patterns.
 
 <furrykef> I just realized I don't need local OAM or the display list while decompressing LZSS, so one of them can double as the LZSS sliding window buffer.
 <furrykef> So that saves 256 bytes of RAM.
+
+
+Sprite zero hit
+---------------
+Sprite zero hits can't be detected while sprite rendering is disabled. To hide the ghosts in the status bar, we do the following:
+  * Use foreground black for the bottom row of the status area.
+  * Flip sprite priority on ghosts that overlap this area.
+  * Use 8x8 sprites so at most 7 pixels of the ghost will be drawn behind dots.
+
+However, using 8x8 sprites will probably break the sprite overflow flag at least some of the time.

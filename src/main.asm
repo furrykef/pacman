@@ -207,7 +207,7 @@ Main:
 
         ; Set up sprite zero
         ; This will appear in the 0 at the end of player 1's score
-        lda     #15                         ; Y position
+        lda     #23                         ; Y position
         sta     MyOAM
         lda     #$ff                        ; Tile ID
         sta     MyOAM+1
@@ -290,9 +290,6 @@ PlayRound:
         jsr     LoadStatusBar
         lda     #1
         sta     fRenderOn
-        lda     #$80
-        bit     PPUSTATUS                   ; clear vblank flag in case it's set
-        sta     PPUCTRL                     ; (prevents premature NMI)
 
         lda     #244
         sta     NumDots
@@ -703,7 +700,7 @@ HandleVblank:
         sta     PPUDATA
 
         ; Set scroll
-        lda     #$a2                        ; NMI on, 8x16 sprites, second nametable (where status bar is)
+        lda     #$8a                        ; NMI on, 8x8 sprites, 2nd spr pattern table, 2nd nametable (where status bar is)
         sta     PPUCTRL
         lda     #0
         sta     PPUSCROLL
