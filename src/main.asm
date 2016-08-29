@@ -45,6 +45,12 @@ MyOAM = $200
 .endmacro
 
 
+; Thanks to rainwarrior for this macro
+.macro assert_branch_page label
+    .assert >label = >*, error, "PAGE CROSSING DETECTED"
+.endmacro
+
+
 .segment "ZEROPAGE"
 
 TmpL:               .res 1
@@ -758,17 +764,16 @@ HandleIrq:
         lda     fRenderOn
         beq     @end
 
-        ; Wait until we're nearly at hblank
-        ; Doing this correctly with a loop is trickier, because the loop's
-        ; branch instruction takes longer if it crosses a page boundary.
-        ; We can't easily tell if that would be the case or not.
-        ; This way, we don't need to worry about it.
-.repeat 30
-        nop
-.endrepeat
+        ; Burn 61 cycles until we're nearly at hblank
+        ldx     #12                         ; 2 cycles
+@loop:
+        dex                                 ; 2 cycles
+        bne     @loop                       ; 3 cycles (2 on last iteration)
+        assert_branch_page @loop
 
         ; See: http://wiki.nesdev.com/w/index.php/PPU_scrolling#Split_X.2FY_scroll
         ; NES hardware is weird, man
+        ; These writes can occur outside hblank
         ldx     #0
         stx     PPUADDR
         lda     IrqVScroll
@@ -778,6 +783,7 @@ HandleIrq:
         and     #$f8
         asl
         asl
+        ; These writes must occur inside hblank
         sta     PPUADDR
         lda     #$18                        ; BG and sprites on
         ldx     fPaused
