@@ -70,7 +70,6 @@ Joy2PrevState:      .res 1                  ; must immediately follow Joy1PrevSt
 Joy1Down:           .res 1
 Joy2Down:           .res 1                  ; must immediately follow Joy1Down
 VScroll:            .res 1
-IrqVScroll:         .res 1
 RngSeedL:           .res 1
 RngSeedH:           .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
@@ -658,8 +657,6 @@ HandleVblank:
         sta     OAMDMA
 
         ; Check if sprites overflowed on previous frame
-        ; NB: If you remove this, remember that you still need to read
-        ;     PPUSTATUS during vblank to clear the vblank flag.
         lda     PPUSTATUS
         and     #$20
         sta     fSpriteOverflow
@@ -713,27 +710,50 @@ HandleVblank:
         lda     #208
         sta     PPUSCROLL
 
-        lda     #$08                        ; BG on, sprites off
+        lda     #$18                        ; BG on, sprites off
+        ldx     fPaused
+        beq     @not_paused2
+        ora     #$e0                        ; color emphasis bits on
+@not_paused2:
+        sta     PPUMASK
+
+        jsr     SoundTick
+
+        ; Split the screen with a sprite zero hit
+@wait_for_rendering_to_begin:
+        bit     PPUSTATUS
+        bvs     @wait_for_rendering_to_begin
+
+@wait_for_sprite_zero:
+        bit     PPUSTATUS
+        bvc     @wait_for_sprite_zero
+
+        ; Burn some cycles until we're nearly at hblank
+        ldx     #29                         ; 2 cycles
+@delay:
+        dex                                 ; 2 cycles
+        bne     @delay                      ; 3 cycles (2 on last iteration)
+        assert_branch_page @delay
+
+        ; See: http://wiki.nesdev.com/w/index.php/PPU_scrolling#Split_X.2FY_scroll
+        ; NES hardware is weird, man
+        ; These writes can occur outside hblank
+        stx     PPUADDR                     ; X is already 0
+        lda     VScroll
+        sta     PPUSCROLL
+        stx     PPUSCROLL
+        lda     VScroll
+        and     #$f8
+        asl
+        asl
+        ; These writes must occur inside hblank
+        sta     PPUADDR
+        lda     #$18                        ; BG and sprites on
         ldx     fPaused
         beq     @not_paused
         ora     #$e0                        ; color emphasis bits on
 @not_paused:
         sta     PPUMASK
-
-        ; Save VScroll for IRQ handler
-        ; (IRQ using VScroll directly causes a race condition where IRQ might
-        ;  use the value for the next frame)
-        lda     VScroll
-        sta     IrqVScroll
-
-        ; Enable IRQ for split screen
-        ; This has to be done after we're done messing with PPU memory
-        lda     #31                         ; number of scanlines before IRQ
-        sta     $c000
-        sta     $c001                       ; reload IRQ counter (value irrelevant)
-        sta     $e001                       ; enable IRQ (value irrelevant)
-
-        jsr     SoundTick
 
 @end:
         inc     FrameCounter
@@ -767,46 +787,8 @@ WaitFrames:
 
 
 HandleIrq:
-        pha
-        txa
-        pha
-        sta     $e000                       ; acknowledge and disable IRQ (value irrelevant)
-
-        lda     fRenderOn
-        beq     @end
-
-        ; Burn 61 cycles until we're nearly at hblank
-        ldx     #12                         ; 2 cycles
-@loop:
-        dex                                 ; 2 cycles
-        bne     @loop                       ; 3 cycles (2 on last iteration)
-        assert_branch_page @loop
-
-        ; See: http://wiki.nesdev.com/w/index.php/PPU_scrolling#Split_X.2FY_scroll
-        ; NES hardware is weird, man
-        ; These writes can occur outside hblank
-        stx     PPUADDR                     ; X is already 0
-        lda     IrqVScroll
-        sta     PPUSCROLL
-        stx     PPUSCROLL
-        lda     IrqVScroll
-        and     #$f8
-        asl
-        asl
-        ; These writes must occur inside hblank
-        sta     PPUADDR
-        lda     #$18                        ; BG and sprites on
-        ldx     fPaused
-        beq     @not_paused
-        ora     #$e0                        ; color emphasis bits on
-@not_paused:
-        sta     PPUMASK
-
-@end:
-        pla
-        tax
-        pla
-        rti
+        ; Loop infinitely since we should never get here
+        brk
 
 
 ; Won't clear sprite zero
