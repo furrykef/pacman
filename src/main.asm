@@ -206,6 +206,17 @@ Main:
         sta     RngSeedL
         sta     RngSeedH
 
+        ; Set up sprite zero
+        ; This will appear in the 0 at the end of player 1's score
+        lda     #15                         ; Y position
+        sta     MyOAM
+        lda     #$ff                        ; Tile ID
+        sta     MyOAM+1
+        lda     #0                          ; palette, priority, flip
+        sta     MyOAM+2
+        lda     #56
+        sta     MyOAM+3
+
         ; Unlock PRG RAM
         lda     #$80
         sta     $a001
@@ -774,8 +785,7 @@ HandleIrq:
         ; See: http://wiki.nesdev.com/w/index.php/PPU_scrolling#Split_X.2FY_scroll
         ; NES hardware is weird, man
         ; These writes can occur outside hblank
-        ldx     #0
-        stx     PPUADDR
+        stx     PPUADDR                     ; X is already 0
         lda     IrqVScroll
         sta     PPUSCROLL
         stx     PPUSCROLL
@@ -799,9 +809,10 @@ HandleIrq:
         rti
 
 
+; Won't clear sprite zero
 ClearMyOAM:
         lda     #$ff
-        ldx     #0
+        ldx     #4
 @loop:
         sta     MyOAM,x
         inx

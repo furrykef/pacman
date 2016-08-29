@@ -1263,7 +1263,7 @@ DrawOneGhost:
         asl
         asl
         asl
-        add     #8
+        add     #12
         sta     GhostOamL
         lda     #>MyOAM
         sta     GhostOamH
