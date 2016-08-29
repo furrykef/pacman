@@ -367,7 +367,10 @@ DrawPacMan:
         add     #24                         ; -8 to convert center to edge, +32 for status area
         sub     VScroll
         sta     PacManOAM
+        sta     PacManOAM+8
+        add     #8
         sta     PacManOAM+4
+        sta     PacManOAM+12
 
         ; Pattern index
         ; If Pac-Man is eating a ghost, draw number of points
@@ -376,10 +379,9 @@ DrawPacMan:
         lda     EnergizerPoints
         asl
         asl
-        add     #$5d
-        sta     PacManOAM+1
-        add     #$02
-        sta     PacManOAM+5
+        add     #$5c
+        tax
+        jsr     SetPacManTiles
         jmp     @attributes
 @not_eating_ghost:
         lda     PacDirection
@@ -401,10 +403,9 @@ DrawPacMan:
         asl
         asl
         ora     TmpL
-        add     #$81
-        sta     PacManOAM+1
-        add     #2
-        sta     PacManOAM+5
+        add     #$80
+        tax
+        jsr     SetPacManTiles
 
         ; Attributes
 @attributes:
@@ -427,13 +428,17 @@ DrawPacMan:
 
         sta     PacManOAM+2
         sta     PacManOAM+6
+        sta     PacManOAM+10
+        sta     PacManOAM+14
 
         ; X position
         lda     PacX
         sub     #7
         sta     PacManOAM+3
-        add     #8
         sta     PacManOAM+7
+        add     #8
+        sta     PacManOAM+11
+        sta     PacManOAM+15
         rts
 
 
@@ -450,7 +455,7 @@ DoPacManDeathAnimation:
 
         ; Pattern
         ldx     #$c0
-        jsr     NextPacManDeathFrame
+        jsr     SetPacManTiles
 
         ; Attributes
         lda     #$03
@@ -473,7 +478,7 @@ DoPacManDeathAnimation:
 
         ldx     #$c4
 @loop:
-        jsr     NextPacManDeathFrame
+        jsr     SetPacManTiles
         txa
         pha
         ldy     #8
@@ -486,7 +491,8 @@ DoPacManDeathAnimation:
         ldy     #60
         jmp     WaitFrames
 
-NextPacManDeathFrame:
+
+SetPacManTiles:
         stx     PacManOAM+1
         inx
         stx     PacManOAM+5
