@@ -703,9 +703,9 @@ HandleVblank:
 
         lda     #$18                        ; BG on, sprites off
         ldx     fPaused
-        beq     @not_paused2
+        beq     @not_paused
         ora     #$e0                        ; color emphasis bits on
-@not_paused2:
+@not_paused:
         sta     PPUMASK
 
         jsr     SoundTick
@@ -737,14 +737,8 @@ HandleVblank:
         and     #$f8
         asl
         asl
-        ; These writes must occur inside hblank
+        ; This write must occur inside hblank
         sta     PPUADDR
-        lda     #$18                        ; BG and sprites on
-        ldx     fPaused
-        beq     @not_paused
-        ora     #$e0                        ; color emphasis bits on
-@not_paused:
-        sta     PPUMASK
 
 @end:
         inc     FrameCounter
