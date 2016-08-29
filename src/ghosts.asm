@@ -1259,8 +1259,9 @@ DrawGhosts:
 
 ; X is ghost ID (also in GhostId var) on entry and exit
 DrawOneGhost:
-        ; Update ghost in OAM
+        ; Calculate OAM address for this ghost
         lda     GhostsPriority,x
+        asl
         asl
         asl
         asl
@@ -1277,6 +1278,10 @@ DrawOneGhost:
         ldy     #0
         sta     (GhostOamL),y
         ldy     #4
+        sta     (GhostOamL),y
+        ldy     #8
+        sta     (GhostOamL),y
+        ldy     #12
         sta     (GhostOamL),y
         rts
 @not_being_eaten:
@@ -1299,7 +1304,12 @@ DrawOneGhost:
 @scroll_ok:
         ldy     #0
         sta     (GhostOamL),y
+        ldy     #8
+        sta     (GhostOamL),y
+        add     #8
         ldy     #4
+        sta     (GhostOamL),y
+        ldy     #12
         sta     (GhostOamL),y
 
         ; Pattern index
@@ -1341,12 +1351,17 @@ DrawOneGhost:
 @scared_blue:
         lda     #$20
 @store_pattern:
-        ora     #$01                        ; Use $1000 bank of PPU memory
         add     TmpL
         ldy     #1
         sta     (GhostOamL),y
-        add     #2
+        add     #1
         ldy     #5
+        sta     (GhostOamL),y
+        adc     #1
+        ldy     #9
+        sta     (GhostOamL),y
+        adc     #1
+        ldy     #13
         sta     (GhostOamL),y
 
         ; Attributes
@@ -1371,14 +1386,22 @@ DrawOneGhost:
         sta     (GhostOamL),y
         ldy     #6
         sta     (GhostOamL),y
+        ldy     #10
+        sta     (GhostOamL),y
+        ldy     #14
+        sta     (GhostOamL),y
 
         ; X position
         lda     GhostsPosX,x
         sub     #7
         ldy     #3
         sta     (GhostOamL),y
-        add     #8
         ldy     #7
+        sta     (GhostOamL),y
+        add     #8
+        ldy     #11
+        sta     (GhostOamL),y
+        ldy     #15
         sta     (GhostOamL),y
         rts
 
