@@ -280,9 +280,6 @@ PlayRound:
         jsr     LoadStatusBar
         lda     #1
         sta     fRenderOn
-        lda     #$80
-        bit     PPUSTATUS                   ; clear vblank flag in case it's set
-        sta     PPUCTRL                     ; (prevents premature NMI)
 
         lda     #244
         sta     NumDots
