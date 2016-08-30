@@ -739,7 +739,7 @@ WaitFrames:
 
 HandleIrq:
         ; Loop infinitely since we should never get here
-        brk
+        jmp     HandleIrq
 
 
 ; Won't clear first nine sprites
