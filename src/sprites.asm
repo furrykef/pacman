@@ -22,7 +22,7 @@ DrawSprite16x16:
         sta     (OamPtrL),y
         ldy     #8
         sta     (OamPtrL),y
-        lda     SprY                        ; in case it got replaced with #$ff above
+        lda     SprY                        ; in case it got replaced with $ff above
         add     #8
         cmp     #24
         bge     :+
