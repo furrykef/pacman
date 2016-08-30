@@ -24,7 +24,7 @@ This bug might or might not exist in the current build. (Seems doubtful that it 
 
 To be implemented
 -----------------
-Sprite overflow check
+Smarter sprite overflow check
 
 Go back to 8x16 sprites
 

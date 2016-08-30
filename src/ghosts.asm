@@ -1232,7 +1232,7 @@ CalcGhostCoords:
 
 DrawGhosts:
         jsr     CheckSpriteOverflow
-        beq     @no_overflow
+        bcc     @no_overflow
 
         ; More than 8 hardware sprites/scanline on previous frame; cycle priorities
         ldx     #NUM_GHOSTS - 1
@@ -1355,7 +1355,24 @@ DrawOneGhost:
         jmp     DrawSprite16x16
 
 
+; Check if Pac-Man and all four ghosts are on a line
+;
+; Output:
+;   carry = set on overflow
 CheckSpriteOverflow:
-        ; @TODO@ -- to be done
-        lda     #0
+        ldx     #3
+@loop:
+        lda     GhostsTileY,x
+        cmp     PacTileY
+        bne     @nope
+        dex
+        bpl     @loop
+
+        ; All four ghosts in line with Pac-Man
+        ; Sprite overflow
+        sec
+        rts
+
+@nope:
+        clc
         rts
