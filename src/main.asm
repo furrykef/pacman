@@ -186,9 +186,20 @@ Main:
         lda     #56
         sta     MyOAM+3
 
-        ; Unlock PRG RAM
-        lda     #$80
-        sta     $a001
+        ; Set up dummy sprites for status area sprite overflow
+        ; (This will hide ghosts that appear in the status area)
+        ldx     #4
+@dummy_sprite_loop:
+        lda     #23
+        sta     MyOAM,x                     ; Y position
+        inx
+        lda     #$fe
+        sta     MyOAM,x                     ; pattern
+        inx
+        inx                                 ; skip attributes (value irrelevant)
+        inx                                 ; skip Y coordinate (ditto)
+        cpx     #40
+        bne     @dummy_sprite_loop
 
         ; Check if save data is initialized, and initialize it if not
         ldx     #0
@@ -217,10 +228,6 @@ Main:
 .endrepeat
 @cookie_ok:
 
-        ; Lock PRG RAM
-        lda     #$00
-        sta     $a001
-
         ; Init sound
         jsr     InitSound
 
@@ -229,8 +236,7 @@ Main:
         bit     PPUSTATUS
         bpl     @vblank2
 
-        ; Enable interrupts and NMIs
-        cli
+        ; Enable NMIs
 @wait_vblank_end:
         bit     PPUSTATUS
         bmi     @wait_vblank_end
@@ -448,9 +454,6 @@ AddPoints:
         AddDigit I
 .endrepeat
         ; Update high score if necessary
-        ; Unlock PRG RAM first
-        lda     #$80
-        sta     $a001
 .repeat NUM_SCORE_DIGITS, I
         lda     Score+I
         cmp     HiScore+I
@@ -466,9 +469,6 @@ AddPoints:
         sta     HiScore+I
 .endrepeat
 @hiscore_done:
-        ; Lock PRG RAM
-        lda     #$00
-        sta     $a001
 
         ; Award life at 10,000 points
         lda     fBonusLifeAwarded
@@ -533,16 +533,10 @@ DrawStatus:
 .endrepeat
 
         ; Draw high score
-        ; Unlock PRG RAM, read-only
-        lda     #$c0
-        sta     $a001
         DlAdd   #NUM_SCORE_DIGITS, #$2b, #$ac
 .repeat NUM_SCORE_DIGITS, I
         DlAdd   HiScore+I
 .endrepeat
-        ; Lock PRG RAM
-        lda     #$00
-        sta     $a001
 
         ; Draw level number
         DlAdd   #2, #$2b, #$99
@@ -748,7 +742,8 @@ HandleIrq:
         brk
 
 
-; Won't clear sprite zero
+; Won't clear first nine sprites
+; (sprite zero plus dummy sprites for status area sprite overflow)
 ClearMyOAM:
         lda     #$ff
         ldx     #4
