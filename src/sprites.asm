@@ -47,7 +47,20 @@ DrawSprite16x16:
         sta     (OamPtrL),y
 
         ; Attributes
+        ; Flip priority if sprite is at edges of tunnel
+        lda     SprX
+        lsr
+        lsr
+        lsr
+        tay
         lda     SprAttrib
+        cpy     #3
+        blt     @flip
+        cpy     #29
+        blt     @no_flip
+@flip:
+        ora     #$20
+@no_flip:
         ldy     #2
         sta     (OamPtrL),y
         ldy     #6

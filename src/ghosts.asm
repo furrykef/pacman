@@ -1347,15 +1347,6 @@ DrawOneGhost:
 @scared2:
         lda     #0
 @got_palette:
-        ; Flip priority if ghost is at edges of tunnel
-        ldy     GhostsTileX,x
-        cpy     #3
-        blt     @flip
-        cpy     #29
-        blt     @no_flip
-@flip:
-        ora     #$20
-@no_flip:
         sta     SprAttrib
 
         ; X position
