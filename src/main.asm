@@ -119,7 +119,6 @@ Main:
         stx     PPUCTRL                     ; no NMI
         stx     PPUMASK                     ; rendering off
         stx     DMCFREQ                     ; no DMC IRQs
-        stx     $e000                       ; no MMC3 IRQs
 
         ; First wait for vblank
         bit     PPUSTATUS
@@ -156,38 +155,6 @@ Main:
         bne     @clear_vram
         dey
         bpl     @clear_vram
-
-        ; Init mapper
-        ; Set CHR banks
-        ldx     #$c0
-        stx     $8000
-        inx
-        ldy     #4
-        sty     $8001
-        iny
-        iny
-        stx     $8000
-        sty     $8001
-        inx
-        stx     $8000
-        inx
-        ldy     #0
-        sty     $8001
-        iny
-        stx     $8000
-        inx
-        sty     $8001
-        iny
-        stx     $8000
-        inx
-        sty     $8001
-        iny
-        stx     $8000
-        sty     $8001
-
-        ; Vertical mirroring
-        lda     #$01
-        sta     $a000
 
         ; Init variables
         lda     #0
@@ -640,6 +607,7 @@ LoadStatusBar:
 
 
 HandleVblank:
+        bit     PPUSTATUS                   ; make sure vblank flag gets cleared
         pha
         txa
         pha
@@ -751,7 +719,6 @@ HandleVblank:
         pla
         tax
         pla
-        bit     PPUSTATUS                   ; make sure vblank flag gets cleared
         rti
 
 ; Won't touch Y
