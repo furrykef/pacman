@@ -77,3 +77,12 @@ DrawSprite16x16:
         sta     (OamPtrL),y
 
         rts
+
+
+HideSprite16x16:
+        lda     #$ff
+        ldy     #0
+        sta     (OamPtrL),y
+        ldy     #4
+        sta     (OamPtrL),y
+        rts

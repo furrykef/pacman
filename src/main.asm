@@ -375,13 +375,8 @@ WonRound:
         jsr     WaitFrames
 
         ; Hide ghosts
-        ; @XXX@ better way to do this
-        lda     #GhostState::being_eaten
-        sta     GhostsState+BLINKY
-        sta     GhostsState+PINKY
-        sta     GhostsState+INKY
-        sta     GhostsState+CLYDE
-        jsr     DrawGhosts
+        jsr     ClearMyOAM
+        jsr     DrawPacMan
 
         ; Make the maze flash
         lda     #4

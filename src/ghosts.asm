@@ -1271,9 +1271,7 @@ DrawOneGhost:
         lda     GhostsState,x
         cmp     #GhostState::being_eaten
         bne     @not_being_eaten
-        lda     #$ff                        ; hide sprite
-        sta     SprY
-        bne     @end                        ; always taken
+        jmp     HideSprite16x16
 @not_being_eaten:
 
         ; Y position
@@ -1337,7 +1335,6 @@ DrawOneGhost:
         lda     GhostsPosX,x
         sta     SprX
 
-@end:
         jmp     DrawSprite16x16
 
 
