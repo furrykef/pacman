@@ -175,31 +175,23 @@ Main:
         lda     #>MyOAM
         sta     OamPtrH
 
-        ; Set up sprite zero
+        ; Set up sprite zero and dummy sprites for status area clipping
         ; This will appear in the 0 at the end of player 1's score
-        lda     #23                         ; Y position
-        sta     MyOAM
-        lda     #$ff                        ; Tile ID
-        sta     MyOAM+1
-        lda     #0                          ; palette, priority, flip
-        sta     MyOAM+2
+        ldx     #31
+@init_dummy_sprites:
         lda     #56
-        sta     MyOAM+3
-
-        ; Set up dummy sprites for status area sprite overflow
-        ; (This will hide ghosts that appear in the status area)
-        ldx     #4
-@dummy_sprite_loop:
-        lda     #23
-        sta     MyOAM,x                     ; Y position
-        inx
-        lda     #$fe
-        sta     MyOAM,x                     ; pattern
-        inx
-        inx                                 ; skip attributes (value irrelevant)
-        inx                                 ; skip Y coordinate (ditto)
-        cpx     #32
-        bne     @dummy_sprite_loop
+        sta     MyOAM,x                     ; X position
+        dex
+        lda     #0                          ; palette, priority, flip
+        sta     MyOAM,x
+        dex
+        lda     #$ff                        ; Tile ID
+        sta     MyOAM,x
+        dex
+        lda     #23                         ; Y position
+        sta     MyOAM,x
+        dex
+        bpl     @init_dummy_sprites
 
         ; Check if save data is initialized, and initialize it if not
         ldx     #0
@@ -743,7 +735,7 @@ HandleIrq:
 
 
 ; Won't clear first eight sprites
-; (sprite zero plus dummy sprites for status area sprite overflow)
+; (sprite zero plus dummy sprites for status area clpping)
 ClearMyOAM:
         lda     #$ff
         ldx     #32

@@ -17,11 +17,6 @@ This can be used for both the maze and music patterns.
 <furrykef> So that saves 256 bytes of RAM.
 
 
-Sprite zero hit
----------------
-Sprite zero hits can't be detected while sprite rendering is disabled. To hide the ghosts in the status bar, we do the following:
-  * Use foreground black for the bottom row of the status area.
-  * Flip sprite priority on ghosts that overlap this area.
-  * Use 8x8 sprites so at most 7 pixels of the ghost will be drawn behind dots.
-
-However, using 8x8 sprites will probably break the sprite overflow flag at least some of the time.
+Intermissions
+-------------
+First intermission is after level 2, second after level 5, third after level 9 and every four levels thereafter.
