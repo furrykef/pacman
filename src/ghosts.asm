@@ -1264,7 +1264,7 @@ DrawOneGhost:
         asl
         asl
         asl
-        add     #48
+        add     #40
         sta     OamPtrL
 
         ; Don't draw ghost if it's being eaten

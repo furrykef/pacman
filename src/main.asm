@@ -188,7 +188,7 @@ Main:
         lda     #$ff                        ; Tile ID
         sta     MyOAM,x
         dex
-        lda     #23                         ; Y position
+        lda     #15                         ; Y position
         sta     MyOAM,x
         dex
         bpl     @init_dummy_sprites
@@ -652,7 +652,7 @@ HandleVblank:
         sta     PPUDATA
 
         ; Set scroll
-        lda     #$8a                        ; NMI on, 8x8 sprites, 2nd spr pattern table, 2nd nametable (where status bar is)
+        lda     #$a2                        ; NMI on, 8x16 sprites, 2nd nametable (where status bar is)
         sta     PPUCTRL
         lda     #0
         sta     PPUSCROLL

@@ -14,37 +14,22 @@ DrawSprite16x16:
         ; Y position
         ; But hide sprite if it's too far behind status area
         lda     SprY
-        cmp     #24
+        cmp     #16
         bge     :+
         lda     #$ff                        ; hide upper half
 :
         ldy     #0
         sta     (OamPtrL),y
-        ldy     #8
-        sta     (OamPtrL),y
-        lda     SprY                        ; in case it got replaced with $ff above
-        add     #8
-        cmp     #24
-        bge     :+
-        lda     #$ff                        ; hide lower half
-:
         ldy     #4
-        sta     (OamPtrL),y
-        ldy     #12
         sta     (OamPtrL),y
 
         ; Tile
         lda     SprStartTile
+        add     #1
         ldy     #1
         sta     (OamPtrL),y
-        add     #1
+        add     #2
         ldy     #5
-        sta     (OamPtrL),y
-        adc     #1
-        ldy     #9
-        sta     (OamPtrL),y
-        adc     #1
-        ldy     #13
         sta     (OamPtrL),y
 
         ; Attributes
@@ -66,22 +51,14 @@ DrawSprite16x16:
         sta     (OamPtrL),y
         ldy     #6
         sta     (OamPtrL),y
-        ldy     #10
-        sta     (OamPtrL),y
-        ldy     #14
-        sta     (OamPtrL),y
 
         ; X position
         lda     SprX
         sub     #7
         ldy     #3
         sta     (OamPtrL),y
-        ldy     #7
-        sta     (OamPtrL),y
         add     #8
-        ldy     #11
-        sta     (OamPtrL),y
-        ldy     #15
+        ldy     #7
         sta     (OamPtrL),y
 
         rts
