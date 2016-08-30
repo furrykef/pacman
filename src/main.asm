@@ -83,6 +83,7 @@ fBonusLifeAwarded:  .res 1
 fStartOfGame:       .res 1
 
 
+.include "sprites.asm"
 .include "sound.asm"
 .include "speed.asm"
 .include "pacman.asm"

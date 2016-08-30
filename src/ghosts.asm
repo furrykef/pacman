@@ -64,9 +64,6 @@ ScoreEast:      .res 1
 ScoreSouth:     .res 1
 ScoreWest:      .res 1
 
-GhostOamL:      .res 1
-GhostOamH:      .res 1
-
 fScatter:       .res 1
 ModeClockL:     .res 1
 ModeClockH:     .res 1
@@ -1252,12 +1249,14 @@ DrawGhosts:
 @draw_loop:
         stx     GhostId
         jsr     DrawOneGhost
+        ldx     GhostId                     ; DrawOneGhost can clobber this
         dex
         bpl     @draw_loop
 
         rts
 
-; X is ghost ID (also in GhostId var) on entry and exit
+; Input:
+;   X = GhostId
 DrawOneGhost:
         ; Calculate OAM address for this ghost
         lda     GhostsPriority,x
@@ -1266,24 +1265,17 @@ DrawOneGhost:
         asl
         asl
         add     #20
-        sta     GhostOamL
+        sta     OamPtrL
         lda     #>MyOAM
-        sta     GhostOamH
+        sta     OamPtrH
 
         ; Don't draw ghost if it's being eaten
         lda     GhostsState,x
         cmp     #GhostState::being_eaten
         bne     @not_being_eaten
-        lda     #$ff
-        ldy     #0
-        sta     (GhostOamL),y
-        ldy     #4
-        sta     (GhostOamL),y
-        ldy     #8
-        sta     (GhostOamL),y
-        ldy     #12
-        sta     (GhostOamL),y
-        rts
+        lda     #$ff                        ; hide sprite
+        sta     SprY
+        bne     @end                        ; always taken
 @not_being_eaten:
 
         ; Y position
@@ -1302,23 +1294,7 @@ DrawOneGhost:
         ; Hide it so it won't peek up from the bottom
         lda     #$ff
 @scroll_ok:
-        cmp     #22
-        bge     :+
-        lda     #$ff                        ; hide upper half
-:
-        ldy     #0
-        sta     (GhostOamL),y
-        ldy     #8
-        sta     (GhostOamL),y
-        add     #8
-        cmp     #22
-        bge     :+
-        lda     #$ff                        ; hide lower half
-:
-        ldy     #4
-        sta     (GhostOamL),y
-        ldy     #12
-        sta     (GhostOamL),y
+        sta     SprY
 
         ; Pattern index
         lda     GhostsState,x
@@ -1360,17 +1336,7 @@ DrawOneGhost:
         lda     #$20
 @store_pattern:
         add     TmpL
-        ldy     #1
-        sta     (GhostOamL),y
-        add     #1
-        ldy     #5
-        sta     (GhostOamL),y
-        adc     #1
-        ldy     #9
-        sta     (GhostOamL),y
-        adc     #1
-        ldy     #13
-        sta     (GhostOamL),y
+        sta     SprStartTile
 
         ; Attributes
         ; Scared ghosts use palette 0
@@ -1390,28 +1356,14 @@ DrawOneGhost:
 @flip:
         ora     #$20
 @no_flip:
-        ldy     #2
-        sta     (GhostOamL),y
-        ldy     #6
-        sta     (GhostOamL),y
-        ldy     #10
-        sta     (GhostOamL),y
-        ldy     #14
-        sta     (GhostOamL),y
+        sta     SprAttrib
 
         ; X position
         lda     GhostsPosX,x
-        sub     #7
-        ldy     #3
-        sta     (GhostOamL),y
-        ldy     #7
-        sta     (GhostOamL),y
-        add     #8
-        ldy     #11
-        sta     (GhostOamL),y
-        ldy     #15
-        sta     (GhostOamL),y
-        rts
+        sta     SprX
+
+@end:
+        jmp     DrawSprite16x16
 
 
 CheckSpriteOverflow:
