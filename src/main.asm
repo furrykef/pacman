@@ -198,7 +198,7 @@ Main:
         inx
         inx                                 ; skip attributes (value irrelevant)
         inx                                 ; skip Y coordinate (ditto)
-        cpx     #40
+        cpx     #32
         bne     @dummy_sprite_loop
 
         ; Check if save data is initialized, and initialize it if not
@@ -742,11 +742,11 @@ HandleIrq:
         jmp     HandleIrq
 
 
-; Won't clear first nine sprites
+; Won't clear first eight sprites
 ; (sprite zero plus dummy sprites for status area sprite overflow)
 ClearMyOAM:
         lda     #$ff
-        ldx     #4
+        ldx     #32
 @loop:
         sta     MyOAM,x
         inx

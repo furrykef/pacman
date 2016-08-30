@@ -1,4 +1,4 @@
-PacManOAM = MyOAM + 36
+PacManOAM = MyOAM + 32
 
 
 .segment "ZEROPAGE"
