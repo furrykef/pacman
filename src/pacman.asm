@@ -362,15 +362,14 @@ CalcPacCoords:
 
 
 DrawPacMan:
+        lda     #PacManOAM
+        sta     OamPtrL
+
         ; Y position
         lda     PacY
         add     #24                         ; -8 to convert center to edge, +32 for status area
         sub     VScroll
-        sta     PacManOAM
-        sta     PacManOAM+8
-        add     #8
-        sta     PacManOAM+4
-        sta     PacManOAM+12
+        sta     SprY
 
         ; Pattern index
         ; If Pac-Man is eating a ghost, draw number of points
@@ -380,8 +379,7 @@ DrawPacMan:
         asl
         asl
         add     #$5c
-        tax
-        jsr     SetPacManTiles
+        sta     SprStartTile
         jmp     @attributes
 @not_eating_ghost:
         lda     PacDirection
@@ -404,8 +402,7 @@ DrawPacMan:
         asl
         ora     TmpL
         add     #$80
-        tax
-        jsr     SetPacManTiles
+        sta     SprStartTile
 
         ; Attributes
 @attributes:
@@ -415,90 +412,52 @@ DrawPacMan:
         beq     :+
         lda     #$02
 :
+        sta     SprAttrib
 
-        ; Flip priority if Pac-Man is at edges of tunnel
-        ldx     PacTileX
-        cpx     #3
-        blt     @flip
-        cpx     #29
-        blt     @no_flip
-@flip:
-        ora     #$20
-@no_flip:
-
-        sta     PacManOAM+2
-        sta     PacManOAM+6
-        sta     PacManOAM+10
-        sta     PacManOAM+14
-
-        ; X position
         lda     PacX
-        sub     #7
-        sta     PacManOAM+3
-        sta     PacManOAM+7
-        add     #8
-        sta     PacManOAM+11
-        sta     PacManOAM+15
-        rts
+        sta     SprX
+
+        jmp     DrawSprite16x16
 
 
 DoPacManDeathAnimation:
+        lda     #PacManOAM
+        sta     OamPtrL
+
         ; Y position
         lda     PacY
         add     #24                         ; -8 to convert center to edge, +32 for status area
         sub     VScroll
-        sta     PacManOAM
-        sta     PacManOAM+8
-        add     #8
-        sta     PacManOAM+4
-        sta     PacManOAM+12
+        sta     SprY
 
         ; Pattern
-        ldx     #$c0
-        jsr     SetPacManTiles
+        lda     #$c0
+        sta     SprStartTile
 
         ; Attributes
         lda     #$03
-        sta     PacManOAM+2
-        sta     PacManOAM+6
-        sta     PacManOAM+10
-        sta     PacManOAM+14
+        sta     SprAttrib
 
         ; X position
         lda     PacX
-        sub     #7
-        sta     PacManOAM+3
-        sta     PacManOAM+7
-        add     #8
-        sta     PacManOAM+11
-        sta     PacManOAM+15
+        sta     SprX
+
+        jsr     DrawSprite16x16
 
         ldy     #30
         jsr     WaitFrames
 
-        ldx     #$c4
+        lda     #$c4
 @loop:
-        jsr     SetPacManTiles
-        txa
+        sta     SprStartTile
         pha
+        jsr     DrawSprite16x16
         ldy     #8
         jsr     WaitFrames
         pla
-        tax
-        cpx     #$f4
+        add     #4
+        cmp     #$f4
         bne     @loop
 
         ldy     #60
         jmp     WaitFrames
-
-
-SetPacManTiles:
-        stx     PacManOAM+1
-        inx
-        stx     PacManOAM+5
-        inx
-        stx     PacManOAM+9
-        inx
-        stx     PacManOAM+13
-        inx
-        rts

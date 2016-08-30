@@ -205,6 +205,9 @@ Main:
         sta     RngSeedL
         sta     RngSeedH
 
+        lda     #>MyOAM
+        sta     OamPtrH
+
         ; Set up sprite zero
         ; This will appear in the 0 at the end of player 1's score
         lda     #23                         ; Y position
@@ -748,6 +751,7 @@ HandleVblank:
         pla
         tax
         pla
+        bit     PPUSTATUS                   ; make sure vblank flag gets cleared
         rti
 
 ; Won't touch Y

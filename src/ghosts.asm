@@ -1266,8 +1266,6 @@ DrawOneGhost:
         asl
         add     #20
         sta     OamPtrL
-        lda     #>MyOAM
-        sta     OamPtrH
 
         ; Don't draw ghost if it's being eaten
         lda     GhostsState,x
