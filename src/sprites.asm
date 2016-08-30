@@ -1,19 +1,34 @@
 .segment "ZEROPAGE"
 
-OamPtrL:        .res 1
-OamPtrH:        .res 1
-SprX:           .res 1
-SprY:           .res 1
-SprStartTile:   .res 1
-SprAttrib:      .res 1
+OamPtrL:            .res 1
+OamPtrH:            .res 1
+SprX:               .res 1
+SprY:               .res 1
+SprStartPattern:    .res 1
+SprAttrib:          .res 1
 
 
 .segment "CODE"
 
 DrawSprite16x16:
         ; Y position
-        ; But hide sprite if it's too far behind status area
         lda     SprY
+        add     #24                         ; -8 to get top edge, +32 to compensate for status
+        bcc     @not_too_low
+        ; Carry here means sprite is at very bottom of the maze and its
+        ; Y coordinate is >= 256. This means it has not wrapped around
+        ; and will not need to be hidden
+        sub     VScroll
+        jmp     @scroll_ok
+@not_too_low:
+        sub     VScroll
+        bcs     @scroll_ok
+        ; Sprite has gone off the top of the screen and wrapped around
+        ; Hide it so it won't peek up from the bottom
+        lda     #$ff
+@scroll_ok:
+
+        ; Hide sprite if it's in status area
         cmp     #16
         bge     :+
         lda     #$ff                        ; hide upper half
@@ -23,8 +38,8 @@ DrawSprite16x16:
         ldy     #4
         sta     (OamPtrL),y
 
-        ; Tile
-        lda     SprStartTile
+        ; PatternID
+        lda     SprStartPattern
         add     #1
         ldy     #1
         sta     (OamPtrL),y

@@ -367,8 +367,6 @@ DrawPacMan:
 
         ; Y position
         lda     PacY
-        add     #24                         ; -8 to convert center to edge, +32 for status area
-        sub     VScroll
         sta     SprY
 
         ; Pattern index
@@ -379,7 +377,7 @@ DrawPacMan:
         asl
         asl
         add     #$5c
-        sta     SprStartTile
+        sta     SprStartPattern
         jmp     @attributes
 @not_eating_ghost:
         lda     PacDirection
@@ -402,7 +400,7 @@ DrawPacMan:
         asl
         ora     TmpL
         add     #$80
-        sta     SprStartTile
+        sta     SprStartPattern
 
         ; Attributes
 @attributes:
@@ -426,13 +424,11 @@ DoPacManDeathAnimation:
 
         ; Y position
         lda     PacY
-        add     #24                         ; -8 to convert center to edge, +32 for status area
-        sub     VScroll
         sta     SprY
 
         ; Pattern
         lda     #$c0
-        sta     SprStartTile
+        sta     SprStartPattern
 
         ; Attributes
         lda     #$03
@@ -449,7 +445,7 @@ DoPacManDeathAnimation:
 
         lda     #$c4
 @loop:
-        sta     SprStartTile
+        sta     SprStartPattern
         pha
         jsr     DrawSprite16x16
         ldy     #8

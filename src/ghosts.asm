@@ -1278,20 +1278,6 @@ DrawOneGhost:
 
         ; Y position
         lda     GhostsPosY,x
-        add     #24                         ; -8 to get top edge, +32 to compensate for status
-        bcc     @not_too_low
-        ; Carry here means ghost is at very bottom of the maze and its
-        ; Y coordinate is >= 256. This means it has not wrapped around
-        ; and will not need to be hidden
-        sub     VScroll
-        jmp     @scroll_ok
-@not_too_low:
-        sub     VScroll
-        bcs     @scroll_ok
-        ; Sprite has gone off the top of the screen and wrapped around
-        ; Hide it so it won't peek up from the bottom
-        lda     #$ff
-@scroll_ok:
         sta     SprY
 
         ; Pattern index
@@ -1334,7 +1320,7 @@ DrawOneGhost:
         lda     #$20
 @store_pattern:
         add     TmpL
-        sta     SprStartTile
+        sta     SprStartPattern
 
         ; Attributes
         ; Scared ghosts use palette 0
