@@ -1348,9 +1348,23 @@ DrawOneGhost:
 CheckSpriteOverflow:
         ldx     #3
 @loop:
-        lda     GhostsTileY,x
-        cmp     PacTileY
-        bne     @nope
+        lda     GhostsPosY,x
+        add     #16
+        bcc     :+
+        lda     #$ff                        ; clamp to range
+:
+        cmp     PacY
+        blt     @nope                       ; branch if ghost entirely above Pac-Man
+
+        lda     GhostsPosY,x                ; in case A got clamped
+        sub     #15
+        bcs     :+
+        lda     #0                          ; clamp to range
+:
+        cmp     PacY
+        bge     @nope                       ;  branch if ghost entirely below Pac-Man
+
+        ; Ghost is in line with Pac-Man
         dex
         bpl     @loop
 

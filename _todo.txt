@@ -24,15 +24,11 @@ This bug might or might not exist in the current build. (Seems doubtful that it 
 
 To be implemented
 -----------------
-Smarter sprite overflow check
-
 Do eaten ghosts ever reverse direction with mode changes?
 
 If we add two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
 
 Initialize random seed better.
-
-Can Pac-Man's rendering logic be merged with the ghosts'?
 
 
 Sound effects can be done with math: http://www.brettapitz.com/?p=538
