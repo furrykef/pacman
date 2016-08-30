@@ -14,7 +14,7 @@ DrawSprite16x16:
         ; Y position
         ; But hide sprite if it's too far behind status area
         lda     SprY
-        cmp     #22
+        cmp     #24
         bge     :+
         lda     #$ff                        ; hide upper half
 :
@@ -22,8 +22,9 @@ DrawSprite16x16:
         sta     (OamPtrL),y
         ldy     #8
         sta     (OamPtrL),y
+        lda     SprY                        ; in case it got replaced with #$ff above
         add     #8
-        cmp     #22
+        cmp     #24
         bge     :+
         lda     #$ff                        ; hide lower half
 :
