@@ -302,26 +302,25 @@ EatStuff:
         ; Draw space where Pac-Man is
         DlBegin
         DlAdd   #1
-        lda     #0
-        sta     TmpL
+
+        ; Compute PPU address MSB
         lda     PacTileY
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        asl
-        rol     TmpL
-        ora     PacTileX
-        tay                                 ; this will be the LSB; keep for later
-        lda     TmpL
+        lsr
+        lsr
+        lsr
         add     #$20                        ; first nametable
         DlAddA
-        tya
-        DlAddA                              ; PPU address LSB
+
+        ; Compute PPU address LSB
+        lda     PacTileY
+        asl
+        asl
+        asl
+        asl
+        asl
+        ora     PacTileX
+        DlAddA
+
         DlAdd   #SPACE
         DlEnd
         rts
