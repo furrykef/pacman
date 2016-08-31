@@ -249,6 +249,9 @@ SoundTick:
         rts
 
 
+; Called by SoundTick. To set BGM in main program, just change the BGM
+; variable.
+;
 ; Input:
 ;   A = number of tune
 ;
