@@ -262,9 +262,9 @@ EatStuff:
         lda     #1
         sta     PacDelay
         lda     #<Points10
-        sta     TmpL
+        sta     AL
         lda     #>Points10
-        sta     TmpH
+        sta     AH
         tya
         pha
         jsr     AddPoints
@@ -277,9 +277,9 @@ EatStuff:
         lda     #3
         sta     PacDelay
         lda     #<Points50
-        sta     TmpL
+        sta     AL
         lda     #>Points50
-        sta     TmpH
+        sta     AH
         tya
         pha
         jsr     AddPoints
@@ -393,11 +393,11 @@ DrawPacMan:
         asl
         asl
         asl
-        sta     TmpL
+        sta     AL
         lda     PacDirection
         asl
         asl
-        ora     TmpL
+        ora     AL
         add     #$60
         sta     SprStartPattern
 

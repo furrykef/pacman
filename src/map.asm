@@ -44,14 +44,14 @@ LoadBoard:
 
 ; Must preserve X and Y
 LoadBoardByte:
-        sty     TmpL
+        sty     AL
         ldy     #0
         sta     (pCurrentBoardL),y
         inc     pCurrentBoardL
         bne     :+
         inc     pCurrentBoardH
 :
-        ldy     TmpL
+        ldy     AL
         rts
 
 
@@ -62,25 +62,25 @@ CopyBoardIntoVram:
         lda     #$00
         sta     PPUADDR
         lda     #<CurrentBoard
-        sta     TmpL
+        sta     AL
         lda     #>CurrentBoard
-        sta     TmpH
+        sta     AH
         ldx     #30
 @copy_row:
         ldy     #0
 @copy_cell:
-        lda     (TmpL),y
+        lda     (AX),y
         sta     PPUDATA
         iny
         cpy     #32
         bne     @copy_cell
         ; Finished this row; bump pointer by a row
-        lda     TmpL
+        lda     AL
         add     #32
-        sta     TmpL
-        lda     TmpH
+        sta     AL
+        lda     AH
         adc     #0
-        sta     TmpH
+        sta     AH
         dex
         bne     @copy_row
 

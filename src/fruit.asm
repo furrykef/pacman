@@ -107,10 +107,10 @@ AddFruitPoints:
         pha
         tax
         lda     FruitPointsTbl,x
-        sta     TmpL
+        sta     AL
         inx
         lda     FruitPointsTbl,x
-        sta     TmpH
+        sta     AH
         inx
         txa
         jsr     AddPoints

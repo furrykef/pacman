@@ -53,10 +53,12 @@ MyOAM = $200
 
 .segment "ZEROPAGE"
 
-TmpL:               .res 1
-TmpH:               .res 1
-Tmp2L:              .res 1
-Tmp2H:              .res 1
+; Temp variables, named like registers
+; AL and AH can be seen as the low and high bytes of a 16-bit register AX
+AX:
+AL:                 .res 1
+AH:                 .res 1
+
 FrameCounter:       .res 1
 fRenderOn:          .res 1                  ; tells vblank handler not to mess with PPU memory if zero
 fPaused:            .res 1
@@ -404,17 +406,17 @@ WonRound:
 
 
 SetMazeColor:
-        sta     TmpL
+        sta     AL
         DlBegin
-        DlAdd   #1, #$3f, #$01, TmpL
-        DlAdd   #1, #$3f, #$05, TmpL
-        DlAdd   #1, #$3f, #$0d, TmpL
+        DlAdd   #1, #$3f, #$01, AL
+        DlAdd   #1, #$3f, #$05, AL
+        DlAdd   #1, #$3f, #$0d, AL
         DlEnd
         rts
 
 
 ; Input:
-;   TmpL,H = address of number of points to add
+;   AX = address of number of points to add
 ;   Y = number of digit (0 = most significant)
 ;   carry flag
 ;
@@ -424,7 +426,7 @@ SetMazeColor:
 .macro AddDigit num
 .local @end
         lda     Score+(NUM_SCORE_DIGITS-num-1)
-        adc     (TmpL),y
+        adc     (AX),y
         dey
         cmp     #10
         blt     @end                        ; carry flag will be clear

@@ -621,9 +621,9 @@ CheckCollisions:
         asl                                 ; 16-bit entries
         tay
         lda     EnergizerPtsTbl,y
-        sta     TmpL
+        sta     AL
         lda     EnergizerPtsTbl+1,y
-        sta     TmpH
+        sta     AH
         jsr     AddPoints
         ldx     GhostId                     ; AddPoints can clobber X
         inc     EnergizerPoints
@@ -741,9 +741,9 @@ MoveOneGhostEntering:
         blt     @move_south
         ; In vertical position
         lda     GhostsStartX,x
-        sta     TmpL
+        sta     AL
         lda     GhostsPosX,x
-        cmp     TmpL
+        cmp     AL
         beq     @ready
         blt     @move_east
         ; Move west
@@ -1292,10 +1292,10 @@ DrawOneGhost:
         ; Toggle between two frames
         lda     GhostAnim
         and     #$08
-        beq     @first_frame                ; This will store $00 to TmpL
+        beq     @first_frame                ; This will store $00 to AL
         lda     #$10                        ; Second frame is $10 tiles after first frame
 @first_frame:
-        sta     TmpL
+        sta     AL
         lda     fGhostsScared,x
         bne     @scared
         ; Ghost is not scared
@@ -1317,7 +1317,7 @@ DrawOneGhost:
 @scared_blue:
         lda     #$20
 @store_pattern:
-        add     TmpL
+        add     AL
         sta     SprStartPattern
 
         ; Attributes
