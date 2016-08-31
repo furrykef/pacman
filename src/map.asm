@@ -48,9 +48,7 @@ LoadBoardByte:
         ldy     #0
         sta     (pCurrentBoardL),y
         inc     pCurrentBoardL
-        bne     :+
-        inc     pCurrentBoardH
-:
+        inc_z   pCurrentBoardH
         ldy     AL
         rts
 
@@ -78,9 +76,7 @@ CopyBoardIntoVram:
         lda     AL
         add     #32
         sta     AL
-        bcc     :+
-        inc     AH
-:
+        inc_cs  AH
         dex
         bne     @copy_row
 

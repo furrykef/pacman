@@ -6,6 +6,9 @@
 NUM_SCORE_DIGITS = 6
 
 
+MyOAM = $200
+
+
 ; Signature that appears at the start of save file
 ; If not present, save file is uninitialized
 .define MAGIC_COOKIE "Cheaters never prosper."
@@ -18,8 +21,29 @@ NUM_SCORE_DIGITS = 6
         EAST
 .endenum
 
+; INC if carry set
+.macro inc_cs foo
+.local @skip
+        bcc     @skip
+        inc     foo
+@skip:
+.endmacro
 
-MyOAM = $200
+; DEC if carry clear
+.macro dec_cc foo
+.local @skip
+        bcs     @skip
+        dec     foo
+@skip:
+.endmacro
+
+; INC if zero set
+.macro inc_z foo
+.local @skip
+        bne     @skip
+        inc     foo
+@skip:
+.endmacro
 
 
 .macro DlBegin
@@ -399,7 +423,7 @@ WonRound:
 
         lda     NumLevel
         cmp     #99 - 1
-        beq     :+
+        beq     :+                          ; don't inc past level 99
         inc     NumLevel
 :
         rts

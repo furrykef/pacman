@@ -76,7 +76,5 @@ LzssDecode:
 
 BumpPtr:
         iny
-        bne     :+
-        inc     pCompressedDataH
-:
+        inc_z   pCompressedDataH
         rts

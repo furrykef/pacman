@@ -66,9 +66,7 @@ HandleFruit:
 @nonzero:
         sub     #1
         sta     FruitClockL
-        lda     FruitClockH
-        sbc     #0
-        sta     FruitClockH
+        dec_cc  FruitClockH
 
         ; Check if Pac-Man is eating fruit
         ldx     PacTileY

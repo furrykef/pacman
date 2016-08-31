@@ -370,9 +370,7 @@ ModeClockTick:
         sub     #1
         sta     ModeClockL
         beq     @clock_lsb_zero
-        lda     ModeClockH
-        sbc     #0
-        sta     ModeClockH
+        dec_cc  ModeClockH
         rts
 @clock_lsb_zero:
         lda     ModeClockH
@@ -453,9 +451,7 @@ EnergizerClockTick:
 @nonzero:
         sub     #1
         sta     EnergizerClockL
-        lda     EnergizerClockH
-        sbc     #0
-        sta     EnergizerClockH
+        dec_cc  EnergizerClockH
         lda     #1
         sta     fEnergizerActive
         rts
