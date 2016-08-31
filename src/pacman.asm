@@ -376,7 +376,7 @@ DrawPacMan:
         lda     EnergizerPoints
         asl
         asl
-        add     #$5c
+        add     #$4c
         sta     SprStartPattern
         jmp     @attributes
 @not_eating_ghost:
@@ -399,7 +399,7 @@ DrawPacMan:
         asl
         asl
         ora     TmpL
-        add     #$80
+        add     #$60
         sta     SprStartPattern
 
         ; Attributes
@@ -427,7 +427,7 @@ DoPacManDeathAnimation:
         sta     SprY
 
         ; Pattern
-        lda     #$c0
+        lda     #$a0
         sta     SprStartPattern
 
         ; Attributes
@@ -443,7 +443,7 @@ DoPacManDeathAnimation:
         ldy     #30
         jsr     WaitFrames
 
-        lda     #$c4
+        lda     #$a4
 @loop:
         sta     SprStartPattern
         pha
@@ -452,7 +452,7 @@ DoPacManDeathAnimation:
         jsr     WaitFrames
         pla
         add     #4
-        cmp     #$f4
+        cmp     #$d4
         bne     @loop
 
         ldy     #60
