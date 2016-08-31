@@ -174,7 +174,7 @@ SoundOn:
 
 
 ; NB: This routine (or anything it calls) must NOT clobber temp
-; variables like TmpL that can be used by other modules
+; variables like AL that can be used by other modules
 SoundTick:
         lda     BGM
         cmp     PrevBGM
