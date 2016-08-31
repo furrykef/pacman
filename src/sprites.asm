@@ -40,7 +40,7 @@ DrawSprite16x16:
 
         ; PatternID
         lda     SprStartPattern
-        add     #1
+        add     #1                          ; use $1000-1fff for sprites
         ldy     #1
         sta     (OamPtrL),y
         add     #2
