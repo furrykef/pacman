@@ -78,9 +78,9 @@ CopyBoardIntoVram:
         lda     AL
         add     #32
         sta     AL
-        lda     AH
-        adc     #0
-        sta     AH
+        bcc     :+
+        inc     AH
+:
         dex
         bne     @copy_row
 
