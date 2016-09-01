@@ -176,6 +176,8 @@ ClearAttr:
 ;   A = the tile
 ;   Y = unchanged (column of tile)
 ;   RowAddr = address of row of tile
+;
+; Won't touch AL
 GetTile:
         ; Set RowAddr to the appropriate row of CurrentBoard
         lda     CurrentBoardRowAddrL,x
@@ -192,6 +194,8 @@ GetTile:
 ;
 ; Output:
 ;   EQ if so, NE if not
+;
+; Won't touch AL
 IsTileEnterable:
         jsr     GetTile
         cmp     #$20                        ; space

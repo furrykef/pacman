@@ -1000,39 +1000,6 @@ SquareTbl:
 .endrepeat
 
 
-.macro EvalDirection dir, score
-.local @end
-        lda     GhostsDirection,x           ; Disallow if going the opposite direction
-        cmp     #dir ^ $03
-        beq     @end
-        ldy     NextTileX
-.if dir = WEST
-        dey
-.elseif dir = EAST
-        iny
-.endif
-        ldx     NextTileY                   ; clobber X; it'll be restored later
-.if dir = NORTH
-        dex
-.elseif dir = SOUTH
-        inx
-.endif
-        jsr     GetTile
-        jsr     IsTileEnterable
-        php
-        ldx     GhostId                     ; restore X
-        plp
-        bne     @end                        ; skip to end if tile not enterable
-        lda     score
-        cmp     MaxScore
-        blt     @end
-        beq     @end
-        sta     MaxScore
-        lda     #dir
-        sta     GhostsTurnDir,x
-@end:
-.endmacro
-
 ComputeTurn:
         ; First check if we're at the edges of the tunnels, and reject turn if so
         lda     TileX
@@ -1045,10 +1012,56 @@ ComputeTurn:
 @not_at_edge:
 
         jsr     ComputeScores
-        EvalDirection NORTH, ScoreNorth
-        EvalDirection WEST, ScoreWest
-        EvalDirection SOUTH, ScoreSouth
-        EvalDirection EAST, ScoreEast
+        ; Order is significant for replicating behavior of arcade Pac-Man
+        lda     #NORTH
+        jsr     EvalDirection
+        lda     #WEST
+        jsr     EvalDirection
+        lda     #SOUTH
+        jsr     EvalDirection
+        lda     #EAST
+        jmp     EvalDirection
+
+; Input:
+;   A = direction to evaluate
+EvalDirection:
+        sta     AL                          ; keep direction for later
+        eor     #$03                        ; get opposite direction
+        cmp     GhostsDirection,x           ; is this ghost trying to reverse direction?
+        beq     @end                        ; disallow if so
+        eor     #$03                        ; put original direction back in A
+        ldy     NextTileX
+        cmp     #WEST
+        bne     :+
+        dey
+:
+        cmp     #EAST
+        bne     :+
+        iny
+:
+        ldx     NextTileY                   ; clobber X; it'll be restored later
+        cmp     #NORTH
+        bne     :+
+        dex
+:
+        cmp     #SOUTH
+        bne     :+
+        inx
+:
+        jsr     GetTile
+        jsr     IsTileEnterable
+        php
+        ldx     GhostId                     ; restore X
+        plp
+        bne     @end                        ; skip to end if tile not enterable
+        ldy     AL                          ; put direction in Y
+        lda     Scores,y
+        cmp     MaxScore
+        blt     @end
+        beq     @end
+        sta     MaxScore
+        sty     GhostsTurnDir,x
+@end:
         rts
 
 
