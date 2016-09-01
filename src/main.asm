@@ -575,14 +575,14 @@ DrawStatus:
 
         ; Draw level number
         DlAdd   #2, #$2b, #$99
-        ldy     NumLevel
-        iny                                 ; level number is 0-based, but displayed as 1-based
-        jsr     DrawSmallNumber
+        lda     NumLevel
+        add     #1                          ; level number is 0-based, but displayed as 1-based
+        jsr     DrawTwoDigitNumber
 
         ; Draw number of lives
         DlAdd   #2, #$2b, #$b9
-        ldy     NumLives
-        jsr     DrawSmallNumber
+        lda     NumLives
+        jsr     DrawTwoDigitNumber
 
         DlEnd
         rts
@@ -592,15 +592,32 @@ DrawStatus:
 ; If the number is less than 10, the second digit is a space.
 ;
 ; Input:
-;   Y = the number (0-99)
+;   A = the number (0-99)
 ;
 ; Call this between DlBegin and DlEnd
-DrawSmallNumber:
-        lda     FirstDigitTbl,y
+DrawTwoDigitNumber:
+        cmp     #10
+        blt     @less_than_ten
+        ldy     #0
+@divmod:
+        sub     #10
+        iny
+        cmp     #10
+        bge     @divmod
+
+        ; Y holds tens digit, A holds ones digit
+        pha
+        tya
         DlAddA
-        lda     SecondDigitTbl,y
+        pla
         DlAddA
         rts
+
+@less_than_ten:
+        DlAddA
+        DlAdd   #' '
+        rts
+
 
 
 LoadPalette:
@@ -886,26 +903,6 @@ Points1600: .byte   0,0,1,6,0,0
 Points2000: .byte   0,0,2,0,0,0
 Points3000: .byte   0,0,3,0,0,0
 Points5000: .byte   0,0,5,0,0,0
-
-
-; Tables for displaying two-digit numbers
-FirstDigitTbl:
-.repeat 10, I
-        .byte I
-.endrepeat
-.repeat 9, I
-    .repeat 10
-        .byte I+1
-    .endrepeat
-.endrepeat
-
-SecondDigitTbl:
-.repeat 10
-        .byte ' '
-.endrepeat
-.repeat 90, I
-        .byte I .mod 10
-.endrepeat
 
 
 Palette:
