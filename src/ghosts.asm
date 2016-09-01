@@ -340,7 +340,7 @@ MoveGhosts:
 @elroy1:
         lda     #1
         sta     ElroyState
-        jmp     @elroy_done
+        bne     @elroy_done                 ; always taken
 @elroy2:
         lda     #2
         sta     ElroyState
@@ -445,7 +445,7 @@ DotClockTick:
 EnergizerClockTick:
         lda     EnergizerClockL
         beq     @maybe_zero
-        jmp     @nonzero
+        bne     @nonzero
 @maybe_zero:
         ldy     EnergizerClockH
         beq     @zero
@@ -794,7 +794,7 @@ MoveOneGhostNormal:
         sta     TargetTileX
         lda     #11
         sta     TargetTileY
-        jmp     @got_target
+        bne     @got_target                 ; always taken
 @not_eaten:
         ; JSR to Get[Ghost]TargetTile
         lda     GetTargetTileLTbl,x
@@ -819,7 +819,7 @@ MoveOneGhostNormal:
         sta     fGhostsReverse,x
         lda     GhostsDirection,x
         eor     #$03
-        jmp     @changed_direction
+        bpl     @changed_direction          ; always taken
 @no_reverse:
         lda     GhostsTurnDir,x
 @changed_direction:
@@ -1020,7 +1020,7 @@ ComputeTurn:
         lda     #SOUTH
         jsr     EvalDirection
         lda     #EAST
-        jmp     EvalDirection
+        ; FALL THROUGH to EvalDirection
 
 ; Input:
 ;   A = direction to evaluate
@@ -1102,7 +1102,7 @@ ComputeScores:
         beq     @maybe_restricted
         cmp     #23
         beq     @maybe_restricted
-        jmp     @north_ok
+        bne     @north_ok
 @maybe_restricted:
         lda     GhostsTileX,x
         cmp     #13
@@ -1295,7 +1295,7 @@ DrawOneGhost:
 @eaten:
         ; Ghost has been eaten
         lda     #$40
-        jmp     @first_frame
+        bne     @first_frame                ; always taken
 @not_eaten:
         ; Toggle between two frames
         lda     GhostAnim
@@ -1310,7 +1310,7 @@ DrawOneGhost:
         lda     GhostsTurnDir,x
         asl
         asl
-        jmp     @store_pattern
+        bcc     @store_pattern              ; always taken
 @scared:
         lda     EnergizerClockH
         bne     @scared_blue
@@ -1321,7 +1321,7 @@ DrawOneGhost:
         beq     @scared_blue
         ; Ghost is flashing white
         lda     #$24
-        jmp     @store_pattern
+        bne     @store_pattern              ; always taken
 @scared_blue:
         lda     #$20
 @store_pattern:

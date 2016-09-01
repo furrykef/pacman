@@ -98,7 +98,7 @@ MovePacMan:
         pla                                 ; get speed back
         AddSpeed PacMoveCounter
         bcc     @end
-        jmp     MovePacManOneTick
+        bcs     MovePacManOneTick
 @end:
         rts
 

@@ -314,7 +314,7 @@ ChannelTick:
         bne     @waiting
         jsr     NextPatternCmd
         ldx     CurChannel                  ; might have gotten clobbered
-        jmp     ChannelTick
+        bpl     ChannelTick                 ; always taken
 @waiting:
         dec     Wait,x
         lda     LengthCounter,x

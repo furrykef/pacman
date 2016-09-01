@@ -14,6 +14,19 @@ To fix the issue, we need to apply at least one of the following changes:
 I've applied the second fix for now, but need to verify that it is correct.
 
 
+Ghost reversal bug
+------------------
+This is a tricky one. First, clear the dots to the safe spot, and get killed. Now go to the safe spot, facing north as usual, without eating any dots, and watch Clyde carefully. During the second chase mode, Clyde will begin circling the horizontal bar to the left of the T clockwise. As Clyde completes his sixth orbit, the mode changes to scatter, but Clyde reverses in a strange way, pulling off some kind of strange double reverse.
+
+The exact sequence is:
+  * Clyde's eyes look to the west in preparation for a turn to the west, as expected.
+  * Clyde centers himself on the tile. His eyes still point west.
+  * Clyde begins moving in reverse. His eyes still point west, which is clearly wrong.
+  * Clyde centers himself on the first tile north of where he was. Clyde's eyes point south and he begins moving west, even though Clyde is not allowed to move west there.
+  * After moving one tile to the west, Clyde's eyes point west and he begins moving south.
+  * After moving one tile south, Clyde resumes normal movement.
+
+
 Blue ghost bug
 --------------
 Ghosts turn blue for one frame in later levels instead of only reversing direction.

@@ -229,7 +229,7 @@ Main:
         inx
         cpx     #.strlen(MAGIC_COOKIE)
         bne     @check_cookie
-        jmp     @cookie_ok
+        beq     @cookie_ok
 @bad_cookie:
         ; Initialize magic cookie
         ldx     #0
@@ -343,7 +343,7 @@ PlayRound:
         beq     @game_over
         lda     #1
         sta     fDiedThisRound
-        jmp     @start_life
+        bne     @start_life                 ; always taken
 @game_over:
         jsr     DrawStatus                  ; to show 0 lives
         DlBegin
@@ -486,7 +486,7 @@ AddPoints:
         cpy     #NUM_SCORE_DIGITS
         blt     @compare_high_score
         ; Scores are the same!
-        jmp     @hiscore_done
+        bge     @hiscore_done
 
 @scores_differ:
         blt     @hiscore_done               ; branch if Score < HiScore
@@ -541,7 +541,7 @@ Render:
         cmp     #56 + 1
         blt     @scroll_ok                  ; OK if scroll is 0-56
         lda     #56                         ; scroll is >56; snap to 56
-        jmp     @scroll_ok
+        bne     @scroll_ok                  ; always taken
 @too_high:
         lda     #0
 @scroll_ok:
@@ -661,7 +661,7 @@ HandleVblank:
         pha
         lda     fRenderOn
         bne     :+
-        jmp     @end
+        jmp     @end                        ; too far to use BEQ
 :
 
         ; OAM DMA
@@ -690,7 +690,7 @@ HandleVblank:
         inx
         dey
         bne     @copy_block
-        jmp     @display_list_loop
+        beq     @display_list_loop
 @display_list_end:
         lda     #0
         sta     DisplayListIndex
@@ -810,7 +810,7 @@ ReadJoys:
         ldy     #0                          ; controller 1
         jsr     ReadOneJoy
         iny                                 ; controller 2
-        jmp     ReadOneJoy
+        ; FALL THROUGH to ReadOneJoy
 
 ; Inputs:
 ;   Y = number of controller to read (0 = controller 1)

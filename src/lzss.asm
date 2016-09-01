@@ -68,7 +68,7 @@ LzssDecode:
         lda     LzssFlags
         dec     LzssFlagCount
         bne     @process_8_chunks
-        jmp     @outer
+        beq     @outer
 
 @end:
         rts

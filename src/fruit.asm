@@ -59,7 +59,7 @@ HandleFruit:
 
         lda     FruitClockL
         beq     @maybe_zero
-        jmp     @nonzero
+        bne     @nonzero
 @maybe_zero:
         ldx     FruitClockH
         beq     @zero
@@ -169,6 +169,10 @@ DrawFruitGraphic:
         rts
 
 
+ClearFruitGraphic:
+        ldy     #0
+        ; FALL THROUGH to DrawPointsGraphic
+
 ; Input:
 ;   Y = byte index into FruitPointsGfxTbl
 DrawPointsGraphic:
@@ -195,11 +199,6 @@ DrawPointsGraphic:
 
         DlEnd
         rts
-
-
-ClearFruitGraphic:
-        ldy     #0
-        jmp     DrawPointsGraphic
 
 
 LevelToFruit:
