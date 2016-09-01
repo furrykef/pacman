@@ -922,29 +922,29 @@ GetClydeTargetTile:
 
         lda     TileX
         sub     PacTileX
-        bpl     @positive_x
+        bpl     @positive_x                 ; we want the absolute value
         eor     #$ff
         add     #1
 @positive_x:
         cmp     #8
-        bge     @chase
+        bge     @chase                      ; chase if too far away
         tax
         lda     SquareTbl,x
         tay                                 ; save square of horizontal distance
         lda     TileY
         sub     PacTileY
-        bpl     @positive_y
+        bpl     @positive_y                 ; absolute value again
         eor     #$ff
         add     #1
 @positive_y:
         cmp     #8
-        bge     @chase
+        bge     @chase                      ; chase if too far away
         tax
         tya                                 ; get square of horizontal distance back
         add     SquareTbl,x
         ; A is now the square of the distance between Clyde and Pac-Man
         ; Retreat to corner if too close
-        cmp     #49+1                       ; 7**2 = 49
+        cmp     #64                         ; 8**2
         blt     @scatter
 @chase:
         lda     PacTileX

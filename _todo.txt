@@ -2,6 +2,17 @@ Clyde inaccuracy
 ----------------
 At the start of the level, park Pac-Man in the safe zone (the right side of the T, facing up). Clyde should wind up circling an I-shaped segment to the left of the ghost house, but instead he turns to the right and eventually gets Pac-Man.
 
+At the distance Clyde turns, Clyde is 45 tiles^2 away (6.7 tiles), well within his "shy away" distance.
+
+However, *at the moment the choice is made*, Clyde is a tile higher, so he's really 52 tiles^2 away (7.21 tiles), which means in our version he won't shy away.
+
+To fix the issue, we need to apply at least one of the following changes:
+  1. Broaden Clyde's range from 7.0 tiles to 8.0 tiles
+  2. Broaden Clyde's range from 7.0 tiles to 7.99 tiles
+  3. Use the tile Clyde is moving into, not the tile Clyde is at, as the basis of the decision
+
+I've applied the second fix for now, but need to verify that it is correct.
+
 
 Blue ghost bug
 --------------
