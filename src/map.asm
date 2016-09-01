@@ -148,9 +148,11 @@ CopyBoardIntoVram:
         lda     #$f8
         sta     PPUADDR
         lda     #%10101010
-.repeat 8
+        ldx     #8
+@loop2:
         sta     PPUDATA
-.endrepeat
+        dex
+        bne     @loop2
 
         rts
 

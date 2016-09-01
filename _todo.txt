@@ -1,3 +1,8 @@
+Clyde inaccuracy
+----------------
+At the start of the level, park Pac-Man in the safe zone (the right side of the T, facing up). Clyde should wind up circling an I-shaped segment to the left of the ghost house, but instead he turns to the right and eventually gets Pac-Man.
+
+
 Blue ghost bug
 --------------
 Ghosts turn blue for one frame in later levels instead of only reversing direction.

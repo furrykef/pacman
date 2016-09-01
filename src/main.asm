@@ -46,6 +46,7 @@ MyOAM = $200
 .endmacro
 
 
+; None of these macros touch the Y register
 .macro DlBegin
         ldx     DisplayListIndex
 .endmacro
@@ -240,10 +241,11 @@ Main:
         bne     @save_cookie
         ; Clear high score
         lda     #0
+        ldx     #NUM_SCORE_DIGITS-1
 @clear_high_score:
-.repeat NUM_SCORE_DIGITS, I
-        sta     HiScore+I
-.endrepeat
+        sta     HiScore,x
+        dex
+        bpl     @clear_high_score
 @cookie_ok:
 
         ; Init sound
@@ -268,9 +270,13 @@ NewGame:
         lda     #0
         sta     NumLevel
         sta     fBonusLifeAwarded
-.repeat NUM_SCORE_DIGITS, I
-        sta     Score+I
-.endrepeat
+
+        ldx     #NUM_SCORE_DIGITS-1
+@clear_score:
+        sta     Score,x
+        dex
+        bpl     @clear_score
+
         lda     #1
         sta     fStartOfGame
         ; FALL THROUGH to PlayRound
@@ -445,42 +451,52 @@ SetMazeColor:
 ;   carry flag
 ;
 ; Output:
-;   Y = Y-1
+;   AX = unchanged
+;   Y = unchanged
 ;   carry flag
-.macro AddDigit num
+.macro AddDigit
 .local @end
-        lda     Score+(NUM_SCORE_DIGITS-num-1)
+        lda     Score,y
         adc     (AX),y
-        dey
         cmp     #10
         blt     @end                        ; carry flag will be clear
         sub     #10
         ; carry flag will be set
 @end:
-        sta     Score+(NUM_SCORE_DIGITS-num-1)
+        sta     Score,y
 .endmacro
 
 AddPoints:
         ldy     #NUM_SCORE_DIGITS-1
         clc
-.repeat NUM_SCORE_DIGITS, I
-        AddDigit I
-.endrepeat
+@add_digit:
+        AddDigit
+        dey
+        bpl     @add_digit
+
         ; Update high score if necessary
-.repeat NUM_SCORE_DIGITS, I
-        lda     Score+I
-        cmp     HiScore+I
+        ; We count up instead of down 'cause we must start with the
+        ; most significant digit
+        ldy     #0
+@compare_high_score:
+        lda     Score,y
+        cmp     HiScore,y
         bne     @scores_differ
-.endrepeat
+        iny
+        cpy     #NUM_SCORE_DIGITS
+        blt     @compare_high_score
         ; Scores are the same!
         jmp     @hiscore_done
+
 @scores_differ:
         blt     @hiscore_done               ; branch if Score < HiScore
         ; Update high score
-.repeat NUM_SCORE_DIGITS, I
-        lda     Score+I
-        sta     HiScore+I
-.endrepeat
+        ldy     #NUM_SCORE_DIGITS-1
+@update_high_score:
+        lda     Score,y
+        sta     HiScore,y
+        dey
+        bpl     @update_high_score
 @hiscore_done:
 
         ; Award life at 10,000 points
@@ -541,15 +557,21 @@ DrawStatus:
 
         ; Draw score
         DlAdd   #NUM_SCORE_DIGITS, #$2b, #$a2
-.repeat NUM_SCORE_DIGITS, I
-        DlAdd   Score+I
-.endrepeat
+        ldy     #0
+@draw_score:
+        DlAdd   {Score,y}
+        iny
+        cpy     #NUM_SCORE_DIGITS
+        blt     @draw_score
 
         ; Draw high score
         DlAdd   #NUM_SCORE_DIGITS, #$2b, #$ac
-.repeat NUM_SCORE_DIGITS, I
-        DlAdd   HiScore+I
-.endrepeat
+        ldy     #0
+@draw_high_score:
+        DlAdd   {HiScore,y}
+        iny
+        cpy     #NUM_SCORE_DIGITS
+        blt     @draw_high_score
 
         ; Draw level number
         DlAdd   #2, #$2b, #$99
