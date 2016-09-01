@@ -852,6 +852,7 @@ ReadJoyImpl:
 
 
 ; http://wiki.nesdev.com/w/index.php/Random_number_generator
+; Won't touch Y
 Rand:
         ldx     #8                          ; iteration count: controls entropy quality (max 8,7,4,2,1 min)
         lda     RngSeedL

@@ -59,10 +59,11 @@ TargetTileX:    .res 1
 TargetTileY:    .res 1
 
 MaxScore:       .res 1
+Scores:
+ScoreWest:      .res 1                      ; equiv. Scores+WEST
 ScoreNorth:     .res 1
-ScoreEast:      .res 1
 ScoreSouth:     .res 1
-ScoreWest:      .res 1
+ScoreEast:      .res 1
 
 fScatter:       .res 1
 ModeClockL:     .res 1
@@ -1051,17 +1052,6 @@ ComputeTurn:
         rts
 
 
-.macro GenRandomScore score
-        jsr     Rand
-        ldx     GhostId                     ; Rand can clobber X
-        ; Don't allow a score of 0 (reserved for invalid directions)
-        cmp     #0
-        bne     :+
-        lda     #1
-:
-        sta     score
-.endmacro
-
 ComputeScores:
         lda     #0
         sta     MaxScore
@@ -1114,10 +1104,19 @@ ComputeScores:
 
 @random:
         ; Scared ghosts move randomly
-        GenRandomScore ScoreNorth
-        GenRandomScore ScoreWest
-        GenRandomScore ScoreSouth
-        GenRandomScore ScoreEast
+        ldy     #3
+@gen_random_scores:
+        jsr     Rand
+        ldx     GhostId                     ; Rand can clobber X
+        ; Don't allow a score of 0 (reserved for invalid directions)
+        cmp     #0
+        bne     :+
+        lda     #1
+:
+        sta     Scores,y
+        dey
+        bpl     @gen_random_scores
+
         rts
 
 
