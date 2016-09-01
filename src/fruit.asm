@@ -218,9 +218,6 @@ LevelToFruit:
         .byte   KEY                         ; 12
 
 
-; First two bytes of each entry are address of points BCD number
-; Next four bytes are the graphic
-; Last two bytes are padding to make each entry 8 bytes
 FruitPointsTbl:
         .addr   Points100                   ; cherry
         .addr   Points300                   ; strawberry
