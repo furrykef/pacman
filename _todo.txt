@@ -26,6 +26,12 @@ The exact sequence is:
   * After moving one tile to the west, Clyde's eyes point west and he begins moving south.
   * After moving one tile south, Clyde resumes normal movement.
 
+Found the cause. ScoreNorth is zero because northward turns are banned in the tile he's in. Since all other directions are banned too, Clyde's direction doesn't get updated.
+
+Attempted solution, probably wrong: instead of computing next turn, always set TurnDir to the reversed direction. This has a quirk of its own: with the same starting conditions as before (Pac-Man dies, then waits in safe zone without eating dots), at one point Pinky reverses while turning north and then heads south and into Pac-Man. Moreover, I think an older version of the code worked this way and there were corner cases where it produced very wrong behavior.
+
+For now I'm working around it by relaxing the ban on northward turns: they get a score of 1, not 0. This *may* cause a ghost to sometimes turn north, but only in the case where all other turns have scores of 0 or 1 -- a situation that's probably either impossible or extremely rare.
+
 
 Blue ghost bug
 --------------

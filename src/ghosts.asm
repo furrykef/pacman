@@ -1110,7 +1110,9 @@ ComputeScores:
         cmp     #18 + 1
         bge     @north_ok
         ; Ghost is in restricted zone
-        lda     #0
+        ; Use 1 instead of 0 here because sometimes the ghost *has* to go north
+        ; (Happens when ghost enters restricted zone from north, then reverses)
+        lda     #1
         sta     ScoreNorth
 @north_ok:
         rts
