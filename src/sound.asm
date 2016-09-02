@@ -445,15 +445,16 @@ CmdHTbl:
 
 ; order of alarms is significant
 .enum
-    BGM_NONE
-    BGM_INTRO
-    BGM_ALARM1
-    BGM_ALARM2
-    BGM_ALARM3
-    BGM_ALARM4
-    BGM_ALARM5
-    BGM_ENERGIZER
-    BGM_EATEN_GHOST
+        BGM_NONE
+        BGM_INTRO
+        BGM_ALARM1
+        BGM_ALARM2
+        BGM_ALARM3
+        BGM_ALARM4
+        BGM_ALARM5
+        BGM_ENERGIZER
+        BGM_EATEN_GHOST
+        BGM_INTERMISSION
 .endenum
 
 SongTbl:
@@ -466,6 +467,7 @@ SongTbl:
         .addr   BgmAlarm5
         .addr   BgmEnergizer
         .addr   BgmEatenGhost
+        .addr   BgmNone                     ; intermission
 
 
 BgmNone:

@@ -117,6 +117,7 @@ fStartOfGame:       .res 1
 .include "map.asm"
 .include "fruit.asm"
 .include "lzss.asm"
+.include "intermissions.asm"
 
 
 .segment "BSS"
@@ -171,8 +172,9 @@ Main:
         ; Clear VRAM ($2000-2fff)
         lda     #$20
         sta     PPUADDR
-        lda     #' '
+        lda     #0
         sta     PPUADDR
+        lda     #' '
         ldx     #0
         ldy     #$10
 @clear_vram:
@@ -180,7 +182,7 @@ Main:
         inx
         bne     @clear_vram
         dey
-        bpl     @clear_vram
+        bne     @clear_vram
 
         ; Init variables
         lda     #0
@@ -414,13 +416,34 @@ WonRound:
         sub     #1
         bne     @loop
 
-
         lda     NumLevel
         cmp     #99 - 1
         beq     :+                          ; don't inc past level 99
         inc     NumLevel
 :
+
+        ; Check for intermissions
+        ; A still has the old level number
+        cmp     #1                          ; intermission 1 after level 2
+        blt     @no_intermission
+        beq     @intermission1
+        cmp     #4                          ; intermission 2 after level 5
+        blt     @no_intermission
+        beq     @intermission2
+        ; Intermission 3 appears at level 9 and every four levels thereafter
+        sub     #8
+        blt     @no_intermission
+        and     #$03
+        bne     @no_intermission
+        jsr     Intermission3
+@no_intermission:
         rts
+
+@intermission1:
+        jmp     Intermission1
+
+@intermission2:
+        jmp     Intermission2
 
 
 SetMazeColor:
@@ -798,6 +821,37 @@ ClearMyOAM:
         sta     MyOAM,x
         inx
         bne     @loop
+        rts
+
+
+ClearNametable1:
+        ; Fill $2000-23ff with spaces
+        lda     #$20
+        sta     PPUADDR
+        lda     #$00
+        sta     PPUADDR
+        lda     #' '
+        ldx     #0
+        ldy     #4
+@fill_spaces:
+        sta     PPUDATA
+        inx
+        bne     @fill_spaces
+        dey
+        bne     @fill_spaces
+
+        ; Fill $23c0-23ff (attribute table) with zero
+        lda     #$23
+        sta     PPUADDR
+        lda     #$c0
+        sta     PPUADDR
+        lda     #0
+        ldx     #32
+@fill_zero:
+        sta     PPUDATA
+        dex
+        bne     @fill_zero
+
         rts
 
 
