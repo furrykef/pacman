@@ -85,7 +85,6 @@ AL:                 .res 1
 AH:                 .res 1
 
 FrameCounter:       .res 1
-fRenderOn:          .res 1                  ; tells vblank handler not to mess with PPU memory if zero
 fPaused:            .res 1
 DisplayListIndex:   .res 1
 fDisplayListReady:  .res 1
@@ -189,7 +188,6 @@ Main:
         sta     VScroll
         sta     DisplayListIndex
         sta     fDisplayListReady
-        sta     fRenderOn
         sta     fPaused
         sta     Joy1State
         sta     Joy2State
@@ -255,13 +253,6 @@ Main:
 @vblank2:
         bit     PPUSTATUS
         bpl     @vblank2
-
-        ; Enable NMIs
-@wait_vblank_end:
-        bit     PPUSTATUS
-        bmi     @wait_vblank_end
-        lda     #$80                        ; NMI on
-        sta     PPUCTRL
         ; FALL THROUGH to NewGame
 
 NewGame:
@@ -282,14 +273,11 @@ NewGame:
         ; FALL THROUGH to PlayRound
 
 PlayRound:
-        lda     #0
-        sta     fRenderOn
-        sta     PPUMASK
+        jsr     RenderOff
         jsr     LoadPalette
         jsr     LoadBoard
         jsr     LoadStatusBar
-        lda     #1
-        sta     fRenderOn
+        jsr     RenderOn
 
         lda     #244
         sta     NumDots
@@ -652,6 +640,18 @@ LoadStatusBar:
         rts
 
 
+RenderOff:
+        lda     #0
+        sta     PPUCTRL
+        sta     PPUMASK
+        rts
+
+RenderOn:
+        lda     #$80
+        sta     PPUCTRL
+        rts
+
+
 HandleVblank:
         bit     PPUSTATUS                   ; make sure vblank flag gets cleared
         pha
@@ -659,10 +659,6 @@ HandleVblank:
         pha
         tya
         pha
-        lda     fRenderOn
-        bne     :+
-        jmp     @end                        ; too far to use BEQ
-:
 
         ; OAM DMA
         lda     #$00
@@ -758,7 +754,6 @@ HandleVblank:
         ; This write must occur inside hblank
         sta     PPUADDR
 
-@end:
         inc     FrameCounter
         pla
         tay
