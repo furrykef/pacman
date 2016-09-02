@@ -1030,24 +1030,13 @@ EvalDirection:
         cmp     GhostsDirection,x           ; is this ghost trying to reverse direction?
         beq     @end                        ; disallow if so
         eor     #$03                        ; put original direction back in A
-        ldy     NextTileX
-        cmp     #WEST
-        bne     :+
-        dey
-:
-        cmp     #EAST
-        bne     :+
-        iny
-:
-        ldx     NextTileY                   ; clobber X; it'll be restored later
-        cmp     #NORTH
-        bne     :+
-        dex
-:
-        cmp     #SOUTH
-        bne     :+
-        inx
-:
+        tax                                 ; clobber X for now
+        lda     NextTileX
+        add     DeltaXTbl,x
+        tay
+        lda     NextTileY
+        add     DeltaYTbl,x
+        tax
         jsr     GetTile
         jsr     IsTileEnterable
         php
