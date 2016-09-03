@@ -1262,7 +1262,6 @@ DrawOneGhost:
         asl
         asl
         asl
-        asl
         add     #40
         sta     OamPtrL
 

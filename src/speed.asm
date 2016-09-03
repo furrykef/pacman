@@ -1,6 +1,7 @@
 ; Speed names are percentages in the Pac-Man Dossier
 ; e.g. Spd80 is the speed given as 80% in the Dossier
 ; The numbers (before shifting) are expressed in 32nds of a pixel per tick
+; There are two ticks per frame
 
 Speed40  = 8 << 3
 Speed45  = 9 << 3
