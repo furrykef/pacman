@@ -26,10 +26,10 @@ LzssDecode:
         lda     #8
         sta     LzssFlagCount
         lda     (pCompressedDataL),y
+        sta     LzssFlags
         jsr     BumpPtr
 @process_8_chunks:
-        lsr
-        sta     LzssFlags
+        lsr     LzssFlags
         bcs     @backref
         ; Not a backref; copy one byte
         lda     (pCompressedDataL),y
@@ -65,7 +65,6 @@ LzssDecode:
         ldy     LzssSrcIdx
 
 @chunk_processed:
-        lda     LzssFlags
         dec     LzssFlagCount
         bne     @process_8_chunks
         beq     @outer

@@ -35,7 +35,7 @@ Intermission1:
         lda     #Speed105
         sta     GhostBaseSpeed
 
-        ; Let 'em move until Pac-Man begins to scroll offscreen
+        ; Let 'em move until Pac-Man scrolls offscreen
 @loop2:
         jsr     DrawPacMan
         jsr     DrawBlinky
@@ -44,6 +44,20 @@ Intermission1:
         jsr     WaitForVblank
         lda     PacX
         bne     @loop2
+
+        ; Hide Pac-Man
+        jsr     ClearMyOAM
+
+        ; Let Blinky move until he scrolls offscreen
+@loop3:
+        jsr     DrawBlinky
+        jsr     MoveBlinkyIntermission
+        jsr     WaitForVblank
+        lda     GhostsPosX+BLINKY
+        bne     @loop3
+
+        ldy     #60
+        jsr     WaitFrames
 
         rts
 
@@ -63,8 +77,6 @@ BeginIntermission:
         sta     BGM
         lda     #0
         sta     VScroll
-        sta     Joy1State
-        sta     Joy2State
         sta     GhostsPriority+BLINKY
         sta     PacMoveCounter
         sta     GhostsMoveCounter+BLINKY
@@ -83,11 +95,6 @@ MovePacManIntermission:
         AddSpeed PacMoveCounter
         bcc     :+
         dec     PacX
-:
-        AddSpeed PacMoveCounter
-        bcc     :+
-        dec     PacX
-:
         jmp     CalcPacCoords
 
 
@@ -97,15 +104,11 @@ MoveBlinkyIntermission:
         bcc     :+
         dec     GhostsPosX+BLINKY
 :
-        AddSpeed PacMoveCounter
-        bcc     :+
-        dec     GhostsPosX+BLINKY
-:
-        inc     GhostAnim
         rts
 
 
 DrawBlinky:
+        inc     GhostAnim
         ldx     #BLINKY
         stx     GhostId
         jmp     DrawOneGhost

@@ -263,7 +263,6 @@ NewGame:
         lda     #0
         sta     NumLevel
         sta     fBonusLifeAwarded
-
         ldx     #NUM_SCORE_DIGITS-1
 @clear_score:
         sta     Score,x
@@ -275,6 +274,7 @@ NewGame:
         ; FALL THROUGH to PlayRound
 
 PlayRound:
+        jsr     ClearMyOAM
         jsr     RenderOff
         jsr     LoadPalette
         jsr     LoadBoard
