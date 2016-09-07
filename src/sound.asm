@@ -87,6 +87,7 @@ END         = CMD_BASE+1
 DUTYVOL     = CMD_BASE+2
 REST        = CMD_BASE+3
 REPEAT      = CMD_BASE+4
+TRANSPOSE   = CMD_BASE+5
 
 .define LEN(length)     LEN_BASE + (length)
 .define DUR(duration)   DUR_BASE + (duration)
@@ -120,6 +121,7 @@ Wait:               .res 3
 LengthCounter:      .res 3
 NoteDuration:       .res 3
 NoteLength:         .res 3
+Transposition:      .res 3
 
 CurChannel:         .res 1
 pCurPatternL:       .res 1
@@ -302,6 +304,7 @@ InitChannel:
         sta     PatternIdx,x
         sta     Wait,x
         sta     LengthCounter,x
+        sta     Transposition,x
         rts
 
 
@@ -368,6 +371,7 @@ NextPatternCmd:
         jmp     (SoundTmpL)
 
 @handle_note:
+        add     Transposition,x
         tay
         lda     NoteDuration,x
         sta     Wait,x
@@ -409,9 +413,7 @@ CmdEnd:
         rts
 
 CmdDutyVol:
-        ldy     PatternIdx,x
-        inc     PatternIdx,x
-        lda     (pCurPatternL),y
+        jsr     ReadArg
         pha
         txa
         asl
@@ -437,10 +439,23 @@ CmdRepeat:
         rts
 
 
+CmdTranspose:
+        jsr     ReadArg
+        sta     Transposition,x
+        rts
+
+
+ReadArg:
+        ldy     PatternIdx,x
+        inc     PatternIdx,x
+        lda     (pCurPatternL),y
+        rts
+
+
 CmdLTbl:
-        .byte   <CmdNext, <CmdEnd, <CmdDutyVol, <CmdRest, <CmdRepeat
+        .byte   <CmdNext, <CmdEnd, <CmdDutyVol, <CmdRest, <CmdRepeat, <CmdTranspose
 CmdHTbl:
-        .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest, >CmdRepeat
+        .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest, >CmdRepeat, >CmdTranspose
 
 
 ; order of alarms is significant
@@ -482,6 +497,13 @@ NullPattern:
         .byte   END
 
 
+Transpose0:
+        .byte   TRANSPOSE, 0, NEXT
+
+Transpose1:
+        .byte   TRANSPOSE, 1, NEXT
+
+
 BgmIntro:
         .addr   BgmIntroSq1
         .addr   BgmIntroSq2
@@ -490,25 +512,31 @@ BgmIntro:
 BgmIntroSq1:
         .addr   BgmIntroSq1Init
         .addr   BgmIntroSqPattern1
-        .addr   BgmIntroSqPattern2
+        .addr   Transpose1
         .addr   BgmIntroSqPattern1
-        .addr   BgmIntroSqPattern3
+        .addr   Transpose0
+        .addr   BgmIntroSqPattern1
+        .addr   BgmIntroSqPattern2
 
 BgmIntroSq2:
         .addr   BgmIntroSq2Init
         .addr   BgmIntroSqPattern1
-        .addr   BgmIntroSqPattern2
+        .addr   Transpose1
         .addr   BgmIntroSqPattern1
-        .addr   BgmIntroSqPattern3
+        .addr   Transpose0
+        .addr   BgmIntroSqPattern1
+        .addr   BgmIntroSqPattern2
 
 BgmIntroTri:
         .addr   BgmIntroTriPattern1
         .addr   BgmIntroTriPattern1
-        .addr   BgmIntroTriPattern2
-        .addr   BgmIntroTriPattern2
+        .addr   Transpose1
         .addr   BgmIntroTriPattern1
         .addr   BgmIntroTriPattern1
-        .addr   BgmIntroTriPattern3
+        .addr   Transpose0
+        .addr   BgmIntroTriPattern1
+        .addr   BgmIntroTriPattern1
+        .addr   BgmIntroTriPattern2
 
 BgmIntroSq1Init:
         .byte   DUTYVOL, $ba, NEXT
@@ -525,13 +553,6 @@ BgmIntroSqPattern1:
 
 BgmIntroSqPattern2:
         .byte   LEN(4)
-        .byte   DUR(8), Cs4, Cs5, Gs4, F4
-        .byte   DUR(4), Cs5, DUR(12), Gs4
-        .byte   DUR(16), LEN(12), F4
-        .byte   NEXT
-
-BgmIntroSqPattern3:
-        .byte   LEN(4)
         .byte   DUR(4), Ds4, E4, F4, REST
         .byte   F4, Fs4, G4, REST
         .byte   G4, Gs4, A4, REST
@@ -544,11 +565,6 @@ BgmIntroTriPattern1:
         .byte   NEXT
 
 BgmIntroTriPattern2:
-        .byte   LEN(20), DUR(24), Cs2
-        .byte   LEN(7), DUR(8), Gs2
-        .byte   NEXT
-
-BgmIntroTriPattern3:
         .byte   LEN(12), DUR(16)
         .byte   G2, A2, B2, C3
         .byte   END
@@ -667,11 +683,13 @@ BgmEatenGhostPattern:
 
 
 BgmIntermission:
-        .addr   BgmIntermissionSq
-        .addr   NullPatternList
+        .addr   BgmIntermissionSq1
+        .addr   BgmIntermissionSq2
         .addr   BgmIntermissionTri
 
-BgmIntermissionSq:
+BgmIntermissionSq2:
+        .addr   BgmIntermissionSq2Init
+BgmIntermissionSq1:
         .addr   BgmIntermissionSqInit
         .addr   BgmIntermissionSqPattern1
         .addr   BgmIntermissionSqPattern2
@@ -699,7 +717,10 @@ BgmIntermissionTri:
         .addr   NullPattern
 
 BgmIntermissionSqInit:
-        .byte   DUTYVOL, $ba, NEXT
+        .byte   DUTYVOL, $78, NEXT
+
+BgmIntermissionSq2Init:
+        .byte   TRANSPOSE, 12, NEXT
 
 BgmIntermissionSqPattern1:
         .byte   DUR(12), LEN(11)
