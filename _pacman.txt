@@ -20,3 +20,27 @@ This can be used for both the maze and music patterns.
 Intermissions
 -------------
 First intermission is after level 2, second after level 5, third after level 9 and every four levels thereafter.
+
+
+List of interested people
+-------------------------
+Definitely:
+  * Thornne
+  * MooglyGuy
+  * WhorkMan
+  * moffitt
+  * IST
+  * jero32
+  * krom
+
+Probably:
+  * alphamule
+
+Maybe:
+  * Asbrandt
+  * ikari_01
+  * ARM9
+  * FL4SHK
+  * geniusGZA
+  * xanix
+  * shawn

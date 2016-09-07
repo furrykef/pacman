@@ -1,5 +1,19 @@
-; Display list doubles as LZSS buffer.
-; Don't use LZSS while rendering!
+; Description of our LZSS format:
+;
+; The stream is divided into chunks that are in turn divided into (up to) eight
+; subchunks. Each chunk has a one-byte header called the flags byte.
+;
+; For each bit in the flags byte:
+;   If it's 0, the next subchunk is a literal byte.
+;   If it's 1, the next subchunk is a backref.
+;
+; Backrefs are two bytes, a length byte and an index byte.
+; A length of zero signifies the end of the stream.
+; Indexes are absolute (not relative) indexes into the LZSS sliding window,
+; implemented here as a 256-byte circular buffer.
+;
+; Implementation note:
+;   Display list doubles as LZSS buffer. Don't use LZSS while rendering!
 
 .segment "ZEROPAGE"
 
@@ -22,13 +36,13 @@ LzssBackrefLen:     .res 1
 LzssDecode:
         ldx     #0
         ldy     #0
-@outer:
+@process_chunk:
         lda     #8
         sta     LzssFlagCount
         lda     (pCompressedDataL),y
         sta     LzssFlags
         jsr     BumpPtr
-@process_8_chunks:
+@process_subchunks:
         lsr     LzssFlags
         bcs     @backref
         ; Not a backref; copy one byte
@@ -37,7 +51,7 @@ LzssDecode:
         sta     LzssBuf,x
         inx
         jsr     JsrInd
-        jmp     @chunk_processed
+        jmp     @subchunk_processed
 
 @backref:
         ; Get backref length
@@ -64,10 +78,10 @@ LzssDecode:
 
         ldy     LzssSrcIdx
 
-@chunk_processed:
+@subchunk_processed:
         dec     LzssFlagCount
-        bne     @process_8_chunks
-        beq     @outer
+        bne     @process_subchunks
+        beq     @process_chunk
 
 @end:
         rts
