@@ -112,6 +112,7 @@ fStartOfGame:       .res 1
 .include "nmi.asm"
 .include "sprites.asm"
 .include "sound.asm"
+.include "sounddata.asm"
 .include "speed.asm"
 .include "pacman.asm"
 .include "ghosts.asm"

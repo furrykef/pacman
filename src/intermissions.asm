@@ -84,6 +84,8 @@ BeginIntermission:
         sta     GhostAnim
         lda     #GhostState::active
         sta     GhostsState+BLINKY
+        lda     #WEST
+        sta     GhostsTurnDir+BLINKY
         jsr     RenderOff
         jsr     ClearNametable1
         jsr     ClearMyOAM
