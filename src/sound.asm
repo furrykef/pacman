@@ -467,7 +467,7 @@ SongTbl:
         .addr   BgmAlarm5
         .addr   BgmEnergizer
         .addr   BgmEatenGhost
-        .addr   BgmNone                     ; intermission
+        .addr   BgmIntermission
 
 
 BgmNone:
@@ -664,6 +664,89 @@ BgmEatenGhostPattern:
         .byte   A5, G5, F5, Ds5
         .byte   C5, As4, Gs4, Fs4
         .byte   REPEAT
+
+
+BgmIntermission:
+        .addr   BgmIntermissionSq
+        .addr   NullPatternList
+        .addr   BgmIntermissionTri
+
+BgmIntermissionSq:
+        .addr   BgmIntermissionSqInit
+        .addr   BgmIntermissionSqPattern1
+        .addr   BgmIntermissionSqPattern2
+        .addr   BgmIntermissionSqPattern1
+        .addr   BgmIntermissionSqPattern3
+        .addr   BgmIntermissionSqPattern1
+        .addr   BgmIntermissionSqPattern4
+        .addr   BgmIntermissionSqPattern1
+        .addr   BgmIntermissionSqPattern2
+        .addr   BgmIntermissionSqPattern1
+        .addr   BgmIntermissionSqPattern3
+        .addr   BgmIntermissionSqPattern1
+        .addr   BgmIntermissionSqPattern4
+        .addr   NullPattern
+
+BgmIntermissionTri:
+        .addr   BgmIntermissionTriPattern1
+        .addr   BgmIntermissionTriPattern1
+        .addr   BgmIntermissionTriPattern1
+        .addr   BgmIntermissionTriPattern2
+        .addr   BgmIntermissionTriPattern1
+        .addr   BgmIntermissionTriPattern1
+        .addr   BgmIntermissionTriPattern1
+        .addr   BgmIntermissionTriPattern2
+        .addr   NullPattern
+
+BgmIntermissionSqInit:
+        .byte   DUTYVOL, $ba, NEXT
+
+BgmIntermissionSqPattern1:
+        .byte   DUR(12), LEN(11)
+        .byte   F3, F3, F3
+        .byte   DUR(6), LEN(5)
+        .byte   D3, C3, F3, F3, REST
+        .byte   NEXT
+
+BgmIntermissionSqPattern2:
+        .byte   DUR(30), LEN(24)
+        .byte   A3
+        .byte   NEXT
+
+BgmIntermissionSqPattern3:
+        .byte   DUR(30), LEN(24)
+        .byte   D3
+        .byte   NEXT
+
+BgmIntermissionSqPattern4:
+        .byte   DUR(18), LEN(17)
+        .byte   Gs3
+        .byte   DUR(12), LEN(11)
+        .byte   As3, B3, As3, Gs3, F3
+        .byte   DUR(18), LEN(17)
+        .byte   Gs3
+        .byte   DUR(30), LEN(24)
+        .byte   F3
+        .byte   NEXT
+
+BgmIntermissionTriPattern1:
+.repeat 3
+        .byte   DUR(18), LEN(12)
+        .byte   F2
+        .byte   DUR(6), LEN(5)
+        .byte   F2
+.endrepeat
+        .byte   A2, As2, B2, C3
+        .byte   NEXT
+
+BgmIntermissionTriPattern2:
+        .byte   DUR(12), LEN(11)
+        .byte   F3
+        .byte   DUR(6), LEN(5)
+        .byte   C3, B2, As2, Gs2, F2, E2
+        .byte   DUR(12), LEN(11)
+        .byte   Ds2, E2, F2, REST
+        .byte   NEXT
 
 
 SfxEatingGhostPatternList:
