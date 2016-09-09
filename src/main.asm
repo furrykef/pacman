@@ -363,6 +363,8 @@ DrawReady:
         DlBegin
         DlAdd   #6, #$22, #$2d
         DlAdd   #'R', #'E', #'A', #'D', #'Y', #'!'
+        DlAdd   #1, #$3f, #$0e
+        DlAdd   #$28
         DlEnd
         rts
 
