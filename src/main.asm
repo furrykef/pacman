@@ -290,6 +290,7 @@ PlayRound:
 
 @start_life:
         jsr     InitLife
+        jsr     DrawReady
         jsr     Render
         lda     fStartOfGame
         beq     @not_start_of_game
@@ -302,6 +303,7 @@ PlayRound:
 @not_start_of_game:
         ldy     #60
         jsr     WaitFrames
+        jsr     ClearReady
 @game_loop:
         jsr     WaitForVblank
         jsr     ReadJoys
@@ -354,6 +356,27 @@ InitLife:
         jsr     InitAI
         jsr     InitPacMan
         jsr     InitFruit
+        rts
+
+
+DrawReady:
+        DlBegin
+        DlAdd   #6, #$22, #$2d
+        DlAdd   #'R', #'E', #'A', #'D', #'Y', #'!'
+        DlEnd
+        rts
+
+
+ClearReady:
+        DlBegin
+        DlAdd   #6, #$22, #$2d
+        lda     #' '
+        ldy     #6
+@loop:
+        DlAddA
+        dey
+        bne     @loop
+        DlEnd
         rts
 
 
