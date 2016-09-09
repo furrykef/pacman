@@ -242,7 +242,7 @@ FruitPointsGfxTbl:
 
 FruitPalettes:
         .byte   $16, $27                    ; cherry
-        .byte   $16, $30                    ; strawberry
+        .byte   $16, $2a                    ; strawberry
         .byte   $27, $2a                    ; orange
         .byte   $16, $27                    ; apple
         .byte   $2a, $30                    ; melon
