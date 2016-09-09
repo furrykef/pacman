@@ -108,6 +108,8 @@ fDiedThisRound:     .res 1
 fBonusLifeAwarded:  .res 1
 fStartOfGame:       .res 1
 
+StringLength:       .res 1
+
 
 .include "nmi.asm"
 .include "sprites.asm"
@@ -341,8 +343,15 @@ PlayRound:
 @game_over:
         jsr     DrawStatus                  ; to show 0 lives
         DlBegin
-        DlAdd   #10, #$22, #$2b
-        DlAdd   #'G', #'A', #'M', #'E', #' ', #' ', #'O', #'V', #'E', #'R'
+        lda     #StrGameOverLen
+        sta     StringLength
+        DlAddA
+        DlAdd   #$22, #$2b
+        lda     #<StrGameOver
+        sta     AL
+        lda     #>StrGameOver
+        sta     AH
+        jsr     DlAddString
         ; Change fruit palette so GAME OVER will be in red
         DlAdd   #1, #$3f, #$0e
         DlAdd   #$16
@@ -361,8 +370,15 @@ InitLife:
 
 DrawReady:
         DlBegin
-        DlAdd   #6, #$22, #$2d
-        DlAdd   #'R', #'E', #'A', #'D', #'Y', #'!'
+        lda     #StrReadyLen
+        sta     StringLength
+        DlAddA
+        DlAdd   #$22, #$2d
+        lda     #<StrReady
+        sta     AL
+        lda     #>StrReady
+        sta     AH
+        jsr     DlAddString
         DlAdd   #1, #$3f, #$0e
         DlAdd   #$28
         DlEnd
@@ -772,6 +788,20 @@ ClearNametable1:
         rts
 
 
+; Input:
+;   AX = address of string to copy to display list
+;   StringLength = length of string (clobbered)
+DlAddString:
+        ldy     #0
+@loop:
+        lda     (AX),y
+        DlAddA
+        iny
+        dec     StringLength
+        bne     @loop
+        rts
+
+
 ReadJoys:
         ldy     #0                          ; controller 1
         jsr     ReadOneJoy
@@ -870,6 +900,13 @@ Points1600: .byte   0,0,1,6,0,0
 Points2000: .byte   0,0,2,0,0,0
 Points3000: .byte   0,0,3,0,0,0
 Points5000: .byte   0,0,5,0,0,0
+
+
+StrReady:   .byte   "READY!"
+StrReadyLen = * - StrReady
+
+StrGameOver:    .byte   "GAME  OVER"
+StrGameOverLen = * - StrGameOver
 
 
 Palette:
