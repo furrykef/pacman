@@ -46,7 +46,7 @@ MyOAM = $200
 .endmacro
 
 
-; None of these macros touch the Y register
+; None of these macros touch the Y register except where otherwise specified
 .macro DlBegin
         ldx     DisplayListIndex
 .endmacro
@@ -63,6 +63,19 @@ MyOAM = $200
         lda     a1
         DlAddA
         DlAdd a2, a3, a4, a5, a6, a7, a8, a9, a10, a11, a12, a13, a14, a15, a16
+.endmacro
+
+; Assumes length has already been added to DlStringLen
+; Does clobber Y
+.macro DlAddString string
+.local @loop
+        ldy     #0
+@loop:
+        lda     string,y
+        DlAddA
+        iny
+        cpy     DlStringLen
+        bne     @loop
 .endmacro
 
 .macro DlEnd
@@ -108,7 +121,7 @@ fDiedThisRound:     .res 1
 fBonusLifeAwarded:  .res 1
 fStartOfGame:       .res 1
 
-StringLength:       .res 1
+DlStringLen:        .res 1
 
 
 .include "nmi.asm"
@@ -344,14 +357,10 @@ PlayRound:
         jsr     DrawStatus                  ; to show 0 lives
         DlBegin
         lda     #StrGameOverLen
-        sta     StringLength
+        sta     DlStringLen
         DlAddA
         DlAdd   #$22, #$2b
-        lda     #<StrGameOver
-        sta     AL
-        lda     #>StrGameOver
-        sta     AH
-        jsr     DlAddString
+        DlAddString StrGameOver
         ; Change fruit palette so GAME OVER will be in red
         DlAdd   #1, #$3f, #$0e
         DlAdd   #$16
@@ -371,14 +380,10 @@ InitLife:
 DrawReady:
         DlBegin
         lda     #StrReadyLen
-        sta     StringLength
+        sta     DlStringLen
         DlAddA
         DlAdd   #$22, #$2d
-        lda     #<StrReady
-        sta     AL
-        lda     #>StrReady
-        sta     AH
-        jsr     DlAddString
+        DlAddString StrReady
         DlAdd   #1, #$3f, #$0e
         DlAdd   #$28
         DlEnd
@@ -611,25 +616,15 @@ DrawStatus:
 
         ; Draw score
         lda     #NUM_SCORE_DIGITS
-        sta     StringLength
+        sta     DlStringLen
         DlAddA
         DlAdd   #$2b, #$a2
-        lda     #<Score
-        sta     AL
-        lda     #>Score
-        sta     AH
-        jsr     DlAddString
+        DlAddString Score
 
         ; Draw high score
-        lda     #NUM_SCORE_DIGITS
-        sta     StringLength
-        DlAddA
-        DlAdd   #$2b, #$ac
-        lda     #<HiScore
-        sta     AL
-        lda     #>HiScore
-        sta     AH
-        jsr     DlAddString
+        ; (size of string is still in DlStringLen)
+        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$ac
+        DlAddString HiScore
 
         ; Draw level number
         DlAdd   #2, #$2b, #$99
@@ -789,20 +784,6 @@ ClearNametable1:
         dex
         bne     @fill_zero
 
-        rts
-
-
-; Input:
-;   AX = address of string to copy to display list
-;   StringLength = length of string (clobbered)
-DlAddString:
-        ldy     #0
-@loop:
-        lda     (AX),y
-        DlAddA
-        iny
-        dec     StringLength
-        bne     @loop
         rts
 
 
