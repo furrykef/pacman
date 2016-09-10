@@ -44,6 +44,10 @@ Intermission1:
         lda     GhostsPosX+BLINKY
         bmi     :-
 
+        ; Make sure sprites won't wrap around when they go off the left edge
+        lda     #1
+        sta     fSprAtLeftEdge
+
         ; Let 'em move until Pac-Man scrolls offscreen
 :       jsr     DrawPacMan
         jsr     DrawBlinky
