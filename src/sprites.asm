@@ -7,6 +7,15 @@ SprY:               .res 1
 SprStartPattern:    .res 1
 SprAttrib:          .res 1
 
+; This requires a little explanation...
+; Sometimes during intermissions a sprite will have a position (such as X=255)
+; such that the left half of the sprite will be at the right side of the screen
+; and vice versa. If we do nothing about it, the sprite will be seen on both
+; sides at once. This flag tells us which half to hide. If it's zero, the
+; sprite will poke out of the left side of the screen; if it's nonzero, it will
+; poke out of the right.
+fSprAtLeftEdge:     .res 1
+
 
 .segment "CODE"
 
@@ -67,12 +76,34 @@ DrawSprite16x16:
         ldy     #6
         sta     (OamPtrL),y
 
-        ; X position
+        ; X position of left half
         lda     SprX
         sub     #7
+        ldy     fSprAtLeftEdge
+        beq     :+
+        cmp     #256 - 8
+        blt     :+
+        ; Hide left half of sprite
+        ldy     #0
+        pha                                 ; we'll need the X coordinate gaain
+        lda     #$ff
+        sta     (OamPtrL),y
+        pla                                 ; get back X coord of left half of sprite
+:
         ldy     #3
         sta     (OamPtrL),y
+
+        ; X position of right half
         add     #8
+        ldy     fSprAtLeftEdge
+        bne     :+
+        cmp     #8
+        bge     :+
+        ; Hide right half of sprite
+        ldy     #4
+        lda     #$ff
+        sta     (OamPtrL),y
+:
         ldy     #7
         sta     (OamPtrL),y
 

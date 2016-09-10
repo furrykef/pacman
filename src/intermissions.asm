@@ -19,42 +19,49 @@ Intermission1:
         sta     GhostsPosY+BLINKY
         lda     #WEST
         sta     PacDirection
-        lda     #Speed90
+        lda     #Speed75
         sta     PacBaseSpeed
 
-        lda     #25
+        lda     #27
         sta     IntermissionCounter
-@loop1:
-        jsr     DrawPacMan
+:       jsr     DrawPacMan
         jsr     MovePacManIntermission
         jsr     WaitForVblank
         dec     IntermissionCounter
-        bne     @loop1
+        bne     :-
 
         ; Enter Blinky
-        lda     #Speed105
+        lda     #Speed80
         sta     GhostBaseSpeed
 
+        ; Let 'em move until they're halfway across the screen
+        ; (so their sign bits clear)
+:       jsr     DrawPacMan
+        jsr     DrawBlinky
+        jsr     MovePacManIntermission
+        jsr     MoveBlinkyIntermission
+        jsr     WaitForVblank
+        lda     GhostsPosX+BLINKY
+        bmi     :-
+
         ; Let 'em move until Pac-Man scrolls offscreen
-@loop2:
-        jsr     DrawPacMan
+:       jsr     DrawPacMan
         jsr     DrawBlinky
         jsr     MovePacManIntermission
         jsr     MoveBlinkyIntermission
         jsr     WaitForVblank
         lda     PacX
-        bne     @loop2
+        bpl     :-
 
         ; Hide Pac-Man
         jsr     ClearMyOAM
 
         ; Let Blinky move until he scrolls offscreen
-@loop3:
-        jsr     DrawBlinky
+:       jsr     DrawBlinky
         jsr     MoveBlinkyIntermission
         jsr     WaitForVblank
         lda     GhostsPosX+BLINKY
-        bne     @loop3
+        bpl     :-
 
         ldy     #60
         jsr     WaitFrames
@@ -82,6 +89,7 @@ BeginIntermission:
         sta     GhostsMoveCounter+BLINKY
         sta     fEnergizerActive            ; ensure ghosts not blue
         sta     GhostAnim
+        sta     fSprAtLeftEdge
         lda     #GhostState::active
         sta     GhostsState+BLINKY
         lda     #WEST
@@ -93,19 +101,24 @@ BeginIntermission:
 
 
 MovePacManIntermission:
-        lda     #Speed90
+.repeat 2
+        lda     PacBaseSpeed
         AddSpeed PacMoveCounter
         bcc     :+
         dec     PacX
+:
+.endrepeat
         jmp     CalcPacCoords
 
 
 MoveBlinkyIntermission:
+.repeat 2
         lda     GhostBaseSpeed
         AddSpeed GhostsMoveCounter+BLINKY
         bcc     :+
         dec     GhostsPosX+BLINKY
 :
+.endrepeat
         rts
 
 
