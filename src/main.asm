@@ -610,22 +610,26 @@ DrawStatus:
         DlBegin
 
         ; Draw score
-        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$a2
-        ldy     #0
-@draw_score:
-        DlAdd   {Score,y}
-        iny
-        cpy     #NUM_SCORE_DIGITS
-        blt     @draw_score
+        lda     #NUM_SCORE_DIGITS
+        sta     StringLength
+        DlAddA
+        DlAdd   #$2b, #$a2
+        lda     #<Score
+        sta     AL
+        lda     #>Score
+        sta     AH
+        jsr     DlAddString
 
         ; Draw high score
-        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$ac
-        ldy     #0
-@draw_high_score:
-        DlAdd   {HiScore,y}
-        iny
-        cpy     #NUM_SCORE_DIGITS
-        blt     @draw_high_score
+        lda     #NUM_SCORE_DIGITS
+        sta     StringLength
+        DlAddA
+        DlAdd   #$2b, #$ac
+        lda     #<HiScore
+        sta     AL
+        lda     #>HiScore
+        sta     AH
+        jsr     DlAddString
 
         ; Draw level number
         DlAdd   #2, #$2b, #$99
