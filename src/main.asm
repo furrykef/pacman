@@ -124,7 +124,8 @@ fStartOfGame:       .res 1
 DlStringLen:        .res 1
 
 
-.include "nmi.asm"
+.include "nmi.asm"                          ; NMI should be first
+.include "threads.asm"
 .include "sprites.asm"
 .include "sound.asm"
 .include "sounddata.asm"
