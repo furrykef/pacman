@@ -1,6 +1,14 @@
+BigPacManOAM = MyOAM + 128
+
+
 .segment "ZEROPAGE"
 
 IntermissionCounter:    .res 1
+
+; Handy aliases
+BlinkyX = GhostsPosX+BLINKY
+BlinkyDirection = GhostsDirection+BLINKY
+BlinkyScared = fGhostsScared+BLINKY
 
 
 .segment "CODE"
@@ -9,11 +17,14 @@ Intermission1:
         ; Wherein Pac-Man becomes larger than life
         jsr     BeginIntermission
 
+        ldy     #20
+        jsr     WaitFrames
+
         ; Enter Pac-Man
         ; Also prep Blinky's initial position
-        lda     #255
+        lda     #0
         sta     PacX
-        sta     GhostsPosX+BLINKY
+        sta     BlinkyX
         lda     #120
         sta     PacY
         sta     GhostsPosY+BLINKY
@@ -41,7 +52,7 @@ Intermission1:
         jsr     MovePacManIntermission
         jsr     MoveBlinkyIntermission
         jsr     WaitForVblank
-        lda     GhostsPosX+BLINKY
+        lda     BlinkyX
         bmi     :-
 
         ; Make sure sprites won't wrap around when they go off the left edge
@@ -64,12 +75,32 @@ Intermission1:
 :       jsr     DrawBlinky
         jsr     MoveBlinkyIntermission
         jsr     WaitForVblank
-        lda     GhostsPosX+BLINKY
+        lda     BlinkyX
         bpl     :-
 
-        ldy     #60
+        ldy     #80
         jsr     WaitFrames
 
+        ; Blinky gets scared
+        ; Prepare giant Pac-Man too
+        lda     #Speed100
+        sta     GhostBaseSpeed
+        sta     BlinkyScared
+        lda     #EAST
+        sta     BlinkyDirection
+        sta     PacDirection
+
+        ; Let scared Blinky move in a bit
+        lda     #60
+        sta     IntermissionCounter
+:       jsr     DrawBlinky
+        jsr     MoveBlinkyIntermission
+        jsr     WaitForVblank
+        dec     IntermissionCounter
+        bne     :-
+
+        lda     #BGM_NONE
+        sta     BGM
         rts
 
 
@@ -91,13 +122,15 @@ BeginIntermission:
         sta     GhostsPriority+BLINKY
         sta     PacMoveCounter
         sta     GhostsMoveCounter+BLINKY
-        sta     fEnergizerActive            ; ensure ghosts not blue
+        sta     BlinkyScared
         sta     GhostAnim
         sta     fSprAtLeftEdge
         lda     #GhostState::active
         sta     GhostsState+BLINKY
         lda     #WEST
         sta     GhostsTurnDir+BLINKY
+        sta     BlinkyDirection
+        sta     PacDirection
         jsr     RenderOff
         jsr     ClearNametable1
         jsr     ClearMyOAM
@@ -105,22 +138,28 @@ BeginIntermission:
 
 
 MovePacManIntermission:
+        ldx     PacDirection
 .repeat 2
         lda     PacBaseSpeed
         AddSpeed PacMoveCounter
         bcc     :+
-        dec     PacX
+        lda     PacX
+        add     DeltaXTbl,x
+        sta     PacX
 :
 .endrepeat
         jmp     CalcPacCoords
 
 
 MoveBlinkyIntermission:
+        ldx     BlinkyDirection
 .repeat 2
         lda     GhostBaseSpeed
         AddSpeed GhostsMoveCounter+BLINKY
         bcc     :+
-        dec     GhostsPosX+BLINKY
+        lda     BlinkyX
+        add     DeltaXTbl,x
+        sta     BlinkyX
 :
 .endrepeat
         rts
