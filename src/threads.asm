@@ -70,6 +70,10 @@ InitThread:
         rts
 
 
+; Keep in mind an NMI or IRQ can occur in the middle of this routine if
+; they're not disabled. So while calling this routine normally uses 5
+; bytes of stack, you'll probably want at least 11 bytes free if there's
+; any danger of this happening!
 NextThread:
         ; Preserve old thread's regs
         pha
