@@ -1,4 +1,4 @@
-BigPacManOAM = MyOAM + 128
+GiantPacManOAM = MyOAM + 128
 
 
 .segment "ZEROPAGE"
@@ -99,6 +99,28 @@ Intermission1:
         dec     IntermissionCounter
         bne     :-
 
+        ; Enter right half of giant Pac-Man
+:       jsr     DrawBlinky
+        jsr     DrawRightHalfOfGiantPacMan
+        jsr     MoveBlinkyIntermission
+        jsr     MovePacManIntermission
+        jsr     WaitForVblank
+        lda     PacX
+        cmp     #8
+        blt     :-
+
+        ; Let 'em both move a bit
+        lda     #60
+        sta     IntermissionCounter
+:       jsr     DrawBlinky
+        jsr     DrawLeftHalfOfGiantPacMan
+        jsr     DrawRightHalfOfGiantPacMan
+        jsr     MoveBlinkyIntermission
+        jsr     MovePacManIntermission
+        jsr     WaitForVblank
+        dec     IntermissionCounter
+        bne     :-
+
         lda     #BGM_NONE
         sta     BGM
         rts
@@ -170,3 +192,58 @@ DrawBlinky:
         ldx     #BLINKY
         stx     GhostId
         jmp     DrawOneGhost
+
+
+DrawLeftHalfOfGiantPacMan:
+        lda     #GiantPacManOAM
+        sta     OamPtrL
+        lda     PacX
+        sub     #8
+        sta     SprX
+        lda     PacY
+        sub     #8
+        sta     SprY
+        jsr     GetGiantPacManAnimFrame
+        jmp     DrawHalfOfGiantPacMan
+
+DrawRightHalfOfGiantPacMan:
+        lda     #GiantPacManOAM+16
+        sta     OamPtrL
+        lda     PacX
+        add     #8
+        sta     SprX
+        lda     PacY
+        sub     #8
+        sta     SprY
+        jsr     GetGiantPacManAnimFrame
+        add     #4
+        sta     SprStartPattern
+        ; FALL THROUGH to DrawHalfOfGiantPacMan
+
+DrawHalfOfGiantPacMan:
+        lda     #$03                        ; palette 3
+        sta     SprAttrib
+        jsr     DrawSprite16x16
+        lda     OamPtrL
+        add     #8
+        sta     OamPtrL
+        lda     PacY
+        add     #7
+        sta     SprY
+        lda     #$83                        ; palette 3, v-flip
+        sta     SprAttrib
+        jmp     DrawSprite16x16
+
+
+GetGiantPacManAnimFrame:
+        lda     PacPixelX
+        and     #$06
+        asl
+        asl
+        add     #$e0
+        cmp     #$f8
+        bne     :+
+        lda     #$e8
+:
+        sta     SprStartPattern
+        rts
