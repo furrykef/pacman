@@ -72,12 +72,14 @@ HandleVblank:
 @not_paused:
         sta     PPUMASK
 
-        jsr     SoundTick
-
         ; Split the screen with a sprite zero hit
+        ; First wait for rendering
 @wait_for_rendering_to_begin:
         bit     PPUSTATUS
         bvs     @wait_for_rendering_to_begin
+
+        ; Run sound engine while we wait for sprite zero
+        jsr     SoundTick
 
 @wait_for_sprite_zero:
         bit     PPUSTATUS
