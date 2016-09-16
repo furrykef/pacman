@@ -17,12 +17,9 @@ Intermission1:
         ; Wherein Pac-Man becomes larger than life
         jsr     BeginIntermission
 
-        ldy     #20
-        jsr     WaitFrames
-
         ; Enter Pac-Man
         ; Also prep Blinky's initial position
-        lda     #0
+        lda     #6
         sta     PacX
         sta     BlinkyX
         lda     #120
@@ -52,7 +49,7 @@ Intermission1:
         jsr     MovePacManIntermission
         jsr     MoveBlinkyIntermission
         jsr     WaitForVblank
-        lda     BlinkyX
+        lda     PacX
         bmi     :-
 
         ; Make sure sprites won't wrap around when they go off the left edge
@@ -69,7 +66,7 @@ Intermission1:
         bpl     :-
 
         ; Hide Pac-Man
-        jsr     ClearMyOAM
+        ;jsr     ClearMyOAM
 
         ; Let Blinky move until he scrolls offscreen
 :       jsr     DrawBlinky
@@ -78,20 +75,22 @@ Intermission1:
         lda     BlinkyX
         bpl     :-
 
-        ldy     #80
+        ldy     #60
         jsr     WaitFrames
 
         ; Blinky gets scared
         ; Prepare giant Pac-Man too
-        lda     #Speed100
+        lda     #Speed60
         sta     GhostBaseSpeed
         sta     BlinkyScared
         lda     #EAST
         sta     BlinkyDirection
         sta     PacDirection
+        lda     #112
+        sta     PacY
 
         ; Let scared Blinky move in a bit
-        lda     #60
+        lda     #100
         sta     IntermissionCounter
 :       jsr     DrawBlinky
         jsr     MoveBlinkyIntermission
@@ -109,17 +108,65 @@ Intermission1:
         cmp     #8
         blt     :-
 
-        ; Let 'em both move a bit
-        lda     #60
-        sta     IntermissionCounter
+        ; Enter rest of giant Pac-Man
+        ; Move 'em till they're halfway across the screen
 :       jsr     DrawBlinky
         jsr     DrawLeftHalfOfGiantPacMan
         jsr     DrawRightHalfOfGiantPacMan
         jsr     MoveBlinkyIntermission
         jsr     MovePacManIntermission
         jsr     WaitForVblank
-        dec     IntermissionCounter
+        lda     BlinkyX
+        bpl     :-
+
+        lda     #0
+        sta     fSprAtLeftEdge
+
+        ; Wait until Blinky has scrolled offscreen
+:       jsr     DrawBlinky
+        jsr     DrawLeftHalfOfGiantPacMan
+        jsr     DrawRightHalfOfGiantPacMan
+        jsr     MoveBlinkyIntermission
+        jsr     MovePacManIntermission
+        jsr     WaitForVblank
+        lda     BlinkyX
+        cmp     #7
+        beq     :+
+        cmp     #8
         bne     :-
+:
+
+        jsr     ClearMyOAM
+
+        ; Proceed until giant Pac-Man is halfway offscreen
+:       jsr     DrawLeftHalfOfGiantPacMan
+        jsr     DrawRightHalfOfGiantPacMan
+        jsr     MovePacManIntermission
+        jsr     WaitForVblank
+        lda     PacX
+        cmp     #255
+        beq     :+
+        cmp     #0
+        bne     :-
+:
+
+        jsr     ClearMyOAM
+
+        ; Proceed until giant Pac-Man is fully offscreen
+:       jsr     DrawLeftHalfOfGiantPacMan
+        jsr     MovePacManIntermission
+        jsr     WaitForVblank
+        lda     PacX
+        cmp     #15
+        beq     :+
+        cmp     #16
+        bne     :-
+:
+
+        jsr     ClearMyOAM
+
+        ldy     #60
+        jsr     WaitFrames
 
         lda     #BGM_NONE
         sta     BGM
@@ -228,7 +275,7 @@ DrawHalfOfGiantPacMan:
         add     #8
         sta     OamPtrL
         lda     PacY
-        add     #7
+        add     #8
         sta     SprY
         lda     #$83                        ; palette 3, v-flip
         sta     SprAttrib
@@ -236,9 +283,8 @@ DrawHalfOfGiantPacMan:
 
 
 GetGiantPacManAnimFrame:
-        lda     PacPixelX
-        and     #$06
-        asl
+        lda     PacX
+        and     #$0c
         asl
         add     #$e0
         cmp     #$f8
