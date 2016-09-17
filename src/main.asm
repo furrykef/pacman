@@ -243,13 +243,12 @@ Main:
         bmi     @cookie_ok
 @bad_cookie:
         ; Initialize magic cookie
-        ldx     #0
+        ldx     #.strlen(MAGIC_COOKIE) - 1
 @save_cookie:
         lda     MagicCookie,x
         sta     SaveMagicCookie,x
-        inx
-        cpx     #.strlen(MAGIC_COOKIE)
-        bne     @save_cookie
+        dex
+        bpl     @save_cookie
         ; Clear high score
         lda     #0
         ldx     #NUM_SCORE_DIGITS-1
