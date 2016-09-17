@@ -108,8 +108,6 @@ Joy2PrevState:      .res 1                  ; must immediately follow Joy1PrevSt
 Joy1Down:           .res 1
 Joy2Down:           .res 1                  ; must immediately follow Joy1Down
 VScroll:            .res 1
-RngSeedL:           .res 1
-RngSeedH:           .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
@@ -148,6 +146,8 @@ DisplayList:        .res 256
 
 SaveMagicCookie:    .res .strlen(MAGIC_COOKIE)
 HiScore:            .res NUM_SCORE_DIGITS   ; BCD
+RngSeedL:           .res 1
+RngSeedH:           .res 1
 
 
 .segment "CODE"
@@ -211,11 +211,6 @@ Main:
         sta     Joy1State
         sta     Joy2State
 
-        ; @TODO@ -- better way to init this?
-        lda     #%11001001
-        sta     RngSeedL
-        sta     RngSeedH
-
         lda     #>MyOAM
         sta     OamPtrH
 
@@ -238,15 +233,14 @@ Main:
         bpl     @init_dummy_sprites
 
         ; Check if save data is initialized, and initialize it if not
-        ldx     #0
+        ldx     #.strlen(MAGIC_COOKIE) - 1
 @check_cookie:
         lda     MagicCookie,x
         cmp     SaveMagicCookie,x
         bne     @bad_cookie
-        inx
-        cpx     #.strlen(MAGIC_COOKIE)
-        bne     @check_cookie
-        beq     @cookie_ok
+        dex
+        bpl     @check_cookie
+        bmi     @cookie_ok
 @bad_cookie:
         ; Initialize magic cookie
         ldx     #0
@@ -263,6 +257,10 @@ Main:
         sta     HiScore,x
         dex
         bpl     @clear_high_score
+        ; Init random seed
+        lda     #%11001001
+        sta     RngSeedL
+        sta     RngSeedH
 @cookie_ok:
 
         ; Init sound

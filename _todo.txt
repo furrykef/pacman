@@ -66,7 +66,5 @@ Do eaten ghosts ever reverse direction with mode changes?
 
 If we add two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
 
-Initialize random seed better.
-
 
 Sound effects can be done with math: http://www.brettapitz.com/?p=538
