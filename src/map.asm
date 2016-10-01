@@ -167,29 +167,38 @@ ClearAttr:
 
 
 ; Input:
-;   X = X coordinate (clobbered)
-;   Y = Y coordinate (clobbered)
+;   X = X coordinate
+;   Y = Y coordinate
 ;
 ; Output:
 ;   A = the tile
 ;   RowAddr = address of row of tile
 ;
-; Won't touch AL
+; Won't touch AX
 GetTile:
-        ; Swap X and Y
-        txa
-        pha
-        tya
-        tax
-        pla
-        tay
-
-        ; Set RowAddr to the appropriate row of CurrentBoard
-        lda     CurrentBoardRowAddrL,x
-        sta     RowAddrL
-        lda     CurrentBoardRowAddrH,x
+        ; RowAddr := CurrentBoard + Y*32
+        ; Note that Y's max value is 31, hence we don't start ROLling until
+        ; carry is a possibility
+        lda     #0
         sta     RowAddrH
+        tya
+        asl
+        asl
+        asl
+        asl
+        rol     RowAddrH
+        asl
+        rol     RowAddrH
+
+        add     #<CurrentBoard
+        sta     RowAddrL
+        lda     #>CurrentBoard
+        adc     RowAddrH
+        sta     RowAddrH
+
         ; Now check if the tile can be entered or not
+        txa
+        tay
         lda     (RowAddrL),y
         rts
 
@@ -216,14 +225,3 @@ IsTileEnterable:
 
 FullBoardCompressed:
     .incbin "../assets/map.lzss"
-
-
-CurrentBoardRowAddrL:
-.repeat 31, I
-    .byte <CurrentBoard+(32*I)
-.endrepeat
-
-CurrentBoardRowAddrH:
-.repeat 31, I
-    .byte >(CurrentBoard+(32*I))
-.endrepeat
