@@ -190,7 +190,7 @@ GetTile:
 
 
 ; Input:
-;   A = tile ID
+;   Same as GetTile
 ;
 ; Output:
 ;   EQ if so, NE if not
