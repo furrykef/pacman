@@ -1031,13 +1031,12 @@ EvalDirection:
         beq     @end                        ; disallow if so
         eor     #$03                        ; put original direction back in A
         tax                                 ; clobber X for now
-        lda     NextTileX
-        add     DeltaXTbl,x
-        tay
         lda     NextTileY
         add     DeltaYTbl,x
+        tay
+        lda     NextTileX
+        add     DeltaXTbl,x
         tax
-        jsr     GetTile
         jsr     IsTileEnterable
         php
         ldx     GhostId                     ; restore X

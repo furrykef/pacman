@@ -130,11 +130,11 @@ MovePacManOneTick:
         cmp     #3                          ; is Pac-Man at center of tile?
         bne     @accept_move                ; move is OK if not
         ; Reject the move if he's about to run into a wall
-        lda     PacTileX
-        add     DeltaXTbl,x                 ; X still holds Pac-Man's direction
-        tay
         lda     PacTileY
-        add     DeltaYTbl,x
+        add     DeltaYTbl,x                 ; X still holds Pac-Man's direction
+        tay
+        lda     PacTileX
+        add     DeltaXTbl,x
         tax
         jsr     IsTileEnterable
         bne     @reject_move
@@ -177,13 +177,12 @@ TryTurningPacMan:
         ; Only allow if Pac-Man isn't blocked by the next tile in that direction
         sta     PacTryDirection
         tax
-        lda     PacTileX
-        add     DeltaXTbl,x
-        tay
         lda     PacTileY
         add     DeltaYTbl,x
+        tay
+        lda     PacTileX
+        add     DeltaXTbl,x
         tax
-        jsr     GetTile
         jsr     IsTileEnterable
         bne     @end                        ; reject turn if not enterable
         ; accept turn
@@ -249,8 +248,8 @@ MovePacManTowardCenter:
 ; Note: eating fruit is handled in fruit.asm
 EatStuff:
         ; Check for dots or energizers
-        ldy     PacTileX
-        ldx     PacTileY
+        ldx     PacTileX
+        ldy     PacTileY
         jsr     GetTile
         cmp     #DOT
         beq     @eat_dot

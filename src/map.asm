@@ -167,18 +167,23 @@ ClearAttr:
 
 
 ; Input:
-;   Y = X coordinate
-;   X = Y coordinate
-;
-; Yes, I know it's backwards!
+;   X = X coordinate (clobbered)
+;   Y = Y coordinate (clobbered)
 ;
 ; Output:
 ;   A = the tile
-;   Y = unchanged (column of tile)
 ;   RowAddr = address of row of tile
 ;
 ; Won't touch AL
 GetTile:
+        ; Swap X and Y
+        txa
+        pha
+        tya
+        tax
+        pla
+        tay
+
         ; Set RowAddr to the appropriate row of CurrentBoard
         lda     CurrentBoardRowAddrL,x
         sta     RowAddrL
