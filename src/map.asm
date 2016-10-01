@@ -209,7 +209,7 @@ GetTile:
 ; Output:
 ;   EQ if so, NE if not
 ;
-; Won't touch AL
+; Won't touch AX
 IsTileEnterable:
         jsr     GetTile
         cmp     #$20                        ; space
