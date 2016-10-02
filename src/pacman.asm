@@ -297,7 +297,7 @@ EatStuff:
         ; Remove object from maze
         ldx     PacTileX
         ldy     PacTileY
-        lda     #SPACE
+        lda     #BMP_EMPTY
         jsr     SetTile
 
         ; Draw space where Pac-Man is
