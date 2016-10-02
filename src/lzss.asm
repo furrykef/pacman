@@ -11,9 +11,6 @@
 ; A length of zero signifies the end of the stream.
 ; Indexes are absolute (not relative) indexes into the LZSS sliding window,
 ; implemented here as a 256-byte circular buffer.
-;
-; Implementation note:
-;   Display list doubles as LZSS buffer. Don't use LZSS while rendering!
 
 .segment "ZEROPAGE"
 
@@ -23,6 +20,13 @@ LzssFlagCount:      .res 1
 LzssFlags:          .res 1
 LzssSrcIdx:         .res 1
 LzssBackrefLen:     .res 1
+LzssTmpX:           .res 1
+LzssTmpY:           .res 1
+
+
+.segment "BSS"
+
+LzssBuf:            .res 256
 
 
 .segment "CODE"
@@ -50,7 +54,11 @@ LzssDecode:
         jsr     BumpPtr
         sta     LzssBuf,x
         inx
+        stx     LzssTmpX
+        sty     LzssTmpY
         jsr     JsrInd
+        ldx     LzssTmpX
+        ldy     LzssTmpY
         jmp     @subchunk_processed
 
 @backref:
@@ -72,7 +80,11 @@ LzssDecode:
         iny
         sta     LzssBuf,x
         inx
+        stx     LzssTmpX
+        sty     LzssTmpY
         jsr     JsrInd
+        ldx     LzssTmpX
+        ldy     LzssTmpY
         dec     LzssBackrefLen
         bne     @backref_loop
 

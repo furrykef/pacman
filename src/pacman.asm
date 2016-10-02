@@ -251,9 +251,9 @@ EatStuff:
         ldx     PacTileX
         ldy     PacTileY
         jsr     GetTile
-        cmp     #DOT
+        cmp     #BMP_DOT
         beq     @eat_dot
-        cmp     #ENERGIZER
+        cmp     #BMP_ENERGIZER
         beq     @eat_energizer
         rts
 
@@ -295,8 +295,10 @@ EatStuff:
         sta     SfxTMunchDot
 
         ; Remove object from maze
+        ldx     PacTileX
+        ldy     PacTileY
         lda     #SPACE
-        sta     (RowAddrL),y
+        jsr     SetTile
 
         ; Draw space where Pac-Man is
         DlBegin

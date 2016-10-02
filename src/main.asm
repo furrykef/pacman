@@ -138,7 +138,6 @@ DlStringLen:        .res 1
 .segment "BSS"
 
 ; Use same memory for LZSS sliding window and display list
-LzssBuf:
 DisplayList:        .res 256
 
 
@@ -291,7 +290,8 @@ PlayRound:
         jsr     ClearMyOAM
         jsr     RenderOff
         jsr     LoadPalette
-        jsr     LoadBoard
+        jsr     NewBoard
+        jsr     LoadBoardIntoVram
         jsr     LoadStatusBar
         jsr     RenderOn
 
