@@ -48,6 +48,8 @@ MyOAM = $200
 
 ; None of these macros touch the Y register except where otherwise specified
 .macro DlBegin
+        lda     #0
+        sta     fDisplayListReady
         ldx     DisplayListIndex
 .endmacro
 
@@ -79,6 +81,8 @@ MyOAM = $200
 .endmacro
 
 .macro DlEnd
+        lda     #1
+        sta     fDisplayListReady
         stx     DisplayListIndex
 .endmacro
 
@@ -287,11 +291,12 @@ NewGame:
         ; FALL THROUGH to PlayRound
 
 PlayRound:
-        jsr     ClearMyOAM
         jsr     RenderOff
+        jsr     ClearMyOAM
         jsr     LoadPalette
         jsr     NewBoard
         jsr     LoadBoardIntoVram
+        jsr     DrawStatus                  ; sprite zero hit needs this
         jsr     RenderOn
 
         lda     #244
@@ -700,8 +705,6 @@ WaitForVblank:
         lda     #0                          ; mark end of display list
         ldx     DisplayListIndex
         sta     DisplayList,x
-        lda     #1
-        sta     fDisplayListReady
         lda     FrameCounter
 @loop:
         cmp     FrameCounter
