@@ -91,10 +91,15 @@ NewBoardTile:
 ; Call while rendering is disabled
 LoadBoardIntoVram:
         jsr     PrepMapDecode
-        lda     #$20
+
+        ; We're filling into two nametables at once.
+        ; $2400 is a mirror of $2000, and the second nametable is at
+        ; $2800. So we start at $2400 to fill both.
+        lda     #$24
         sta     PPUADDR
         lda     #$00
         sta     PPUADDR
+
         lda     #<LoadTileIntoVram
         sta     JsrIndAddrL
         lda     #>LoadTileIntoVram
@@ -282,5 +287,6 @@ IsTileEnterable:
         rts
 
 
+; Two full nametables, so it also contains the HUD
 FullBoardCompressed:
-    .incbin "../assets/board.nam.lzss"
+    .incbin "../assets/board-combined.nam.lzss"

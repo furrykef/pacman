@@ -292,7 +292,6 @@ PlayRound:
         jsr     LoadPalette
         jsr     NewBoard
         jsr     LoadBoardIntoVram
-        jsr     LoadStatusBar
         jsr     RenderOn
 
         lda     #244
@@ -620,19 +619,17 @@ DrawStatus:
 
         ; Draw high score
         ; (size of string is still in DlStringLen)
-        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$ac
+        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$aa
         DlAddString HiScore
 
         ; Draw level number
-        DlAdd   #2, #$2b, #$99
+        DlAdd   #2, #$2b, #$9c
         lda     NumLevel
         add     #1                          ; level number is 0-based, but displayed as 1-based
         jsr     DrawTwoDigitNumber
 
         ; Draw number of lives
-        DlAdd   #2, #$2b, #$b9
-        lda     NumLives
-        jsr     DrawTwoDigitNumber
+        DlAdd   #1, #$2b, #$bc, NumLives
 
         DlEnd
         rts
@@ -683,22 +680,6 @@ LoadPalette:
         inx
         cpx     #PaletteSize
         bne     @copy_palette
-        rts
-
-
-LoadStatusBar:
-        lda     #$2b
-        sta     PPUADDR
-        lda     #$40
-        sta     PPUADDR
-        ldx     #0
-@loop:
-        lda     StatusBar,x
-        beq     @end
-        sta     PPUDATA
-        inx
-        jmp     @loop
-@end:
         rts
 
 
@@ -857,14 +838,6 @@ DeltaYTbl:
         .byte   -1                          ; north
         .byte   1                           ; south
         .byte   0                           ; east
-
-
-StatusBar:
-        .byte   "                                "
-        .byte   "                                "
-        .byte   "    1UP   HIGH SCORE   L=       "
-        .byte   "                       ", $98, $a0, "       "
-        .byte   0
 
 
 ; Unpacked BCD representations of points
