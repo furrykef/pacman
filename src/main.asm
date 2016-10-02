@@ -297,6 +297,7 @@ PlayRound:
         jsr     NewBoard
         jsr     LoadBoardIntoVram
         jsr     DrawStatus                  ; sprite zero hit needs this
+        jsr     FlushDisplayList            ; and this
         jsr     RenderOn
 
         lda     #244
@@ -700,11 +701,35 @@ RenderOn:
         rts
 
 
+FlushDisplayList:
+        ldx     #0
+@display_list_loop:
+        cpx     DisplayListIndex
+        beq     @display_list_end
+        ldy     DisplayList,x               ; size of chunk to copy
+        inx
+        lda     DisplayList,x               ; PPU address LSB
+        sta     PPUADDR
+        inx
+        lda     DisplayList,x               ; PPU address MSB
+        sta     PPUADDR
+        inx
+@copy_block:
+        lda     DisplayList,x
+        sta     PPUDATA
+        inx
+        dey
+        bne     @copy_block
+        beq     @display_list_loop
+@display_list_end:
+        lda     #0
+        sta     DisplayListIndex
+        sta     fDisplayListReady
+        rts
+
+
 ; Won't touch Y
 WaitForVblank:
-        lda     #0                          ; mark end of display list
-        ldx     DisplayListIndex
-        sta     DisplayList,x
         lda     FrameCounter
 @loop:
         cmp     FrameCounter
