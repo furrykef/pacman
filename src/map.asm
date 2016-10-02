@@ -283,4 +283,4 @@ IsTileEnterable:
 
 
 FullBoardCompressed:
-    .incbin "../assets/map.lzss"
+    .incbin "../assets/board.nam.lzss"
