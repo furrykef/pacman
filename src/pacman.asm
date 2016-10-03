@@ -335,7 +335,6 @@ EatDot:
         cmp     #244 - 170
         bne     @no_fruit
 @fruit:
-        ; @TODO@ -- clear score graphic in fruit area in case it is present
         jsr     SpawnFruit
 @no_fruit:
         jmp     GhostHandleDot
