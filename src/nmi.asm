@@ -19,28 +19,7 @@ HandleVblank:
         ; Render display list if ready
         lda     fDisplayListReady
         beq     @skip_display_list
-        ldx     #0
-@display_list_loop:
-        ldy     DisplayList,x               ; size of chunk to copy
-        beq     @display_list_end           ; size of zero means end of display list
-        inx
-        lda     DisplayList,x               ; PPU address LSB
-        sta     PPUADDR
-        inx
-        lda     DisplayList,x               ; PPU address MSB
-        sta     PPUADDR
-        inx
-@copy_block:
-        lda     DisplayList,x
-        sta     PPUDATA
-        inx
-        dey
-        bne     @copy_block
-        beq     @display_list_loop
-@display_list_end:
-        lda     #0
-        sta     DisplayListIndex
-        sta     fDisplayListReady
+        jsr     FlushDisplayList
 @skip_display_list:
 
         ; Cycle color 3 of BG palette 0
@@ -65,7 +44,7 @@ HandleVblank:
         lda     #208
         sta     PPUSCROLL
 
-        lda     #$18                        ; BG on, sprites off
+        lda     #$18                        ; BG and sprites on
         ldx     fPaused
         beq     @not_paused
         ora     #$e0                        ; color emphasis bits on

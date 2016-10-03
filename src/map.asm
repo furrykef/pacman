@@ -6,200 +6,267 @@
 ;   $95 = energizer
 
 SPACE           = $20                       ; enterable
+ENTERABLE_MASK  = $90
 DOT             = $92
 ENERGIZER       = $95
 
 
+; Values of bit pairs
+.enum
+    BMP_WALL                                ; must be zero
+    BMP_EMPTY
+    BMP_DOT
+    BMP_ENERGIZER
+.endenum
+
+
+BMP_BYTES_PER_ROW = 8
+
+
 .segment "ZEROPAGE"
 
-RowAddrL:       .res 1
-RowAddrH:       .res 1
+; Used during LZSS decoding
+MapX:       .res 1
+MapY:       .res 1
+
 pCurrentBoardL: .res 1
 pCurrentBoardH: .res 1
 
 
 .segment "BSS"
 
-CurrentBoard:   .res 32*31
+P1Board:    .res BMP_BYTES_PER_ROW*31
+P2Board:    .res BMP_BYTES_PER_ROW*31
 
 
 .segment "CODE"
 
-LoadBoard:
+NewBoard:
+        ; @TODO@ -- move this somewhere appropriate and support 2-player mode
+        lda     #<P1Board
+        sta     pCurrentBoardL
+        lda     #>P1Board
+        sta     pCurrentBoardH
+        ; end TODO
+
+        jsr     PrepMapDecode
+        lda     #<NewBoardTile
+        sta     JsrIndAddrL
+        lda     #>NewBoardTile
+        sta     JsrIndAddrH
+        jmp     LzssDecode
+
+
+NewBoardTile:
+        ldy     MapY
+        cpy     #30
+        bge     @end
+        ldx     MapX
+        cmp     #SPACE
+        beq     @empty
+        cmp     #ENTERABLE_MASK
+        beq     @empty
+        cmp     #DOT
+        beq     @dot
+        cmp     #ENERGIZER
+        beq     @energizer
+        ; Wall
+        lda     #BMP_WALL
+        bpl     @set                        ; always taken
+@empty:
+        lda     #BMP_EMPTY
+        bpl     @set
+@dot:
+        lda     #BMP_DOT
+        bpl     @set
+@energizer:
+        lda     #BMP_ENERGIZER
+@set:
+        jsr     SetTile
+        jsr     BumpMapCoords
+@end:
+        rts
+
+
+; Call while rendering is disabled
+LoadBoardIntoVram:
+        jsr     PrepMapDecode
+
+        ; We're filling into two nametables at once.
+        ; $2400 is a mirror of $2000, and the second nametable is at
+        ; $2800. So we start at $2400 to fill both.
+        lda     #$24
+        sta     PPUADDR
+        lda     #$00
+        sta     PPUADDR
+
+        lda     #<LoadTileIntoVram
+        sta     JsrIndAddrL
+        lda     #>LoadTileIntoVram
+        sta     JsrIndAddrH
+        jmp     LzssDecode
+
+LoadTileIntoVram:
+        ldy     MapY
+        cpy     #30
+        bge     @copy
+        cmp     #ENTERABLE_MASK             ; special-cased since this is BMP_EMPTY in the bitmap
+        beq     @copy
+        ldx     MapX
+        pha
+        jsr     GetTile
+        tax
+        pla
+        cpx     #BMP_WALL
+        beq     @copy
+        lda     BmpTileToVramTileTbl,x
+@copy:
+        sta     PPUDATA
+        jsr     BumpMapCoords
+        rts
+
+BmpTileToVramTileTbl:
+        .byte   0                           ; wall (dummy value)
+        .byte   SPACE
+        .byte   DOT
+        .byte   ENERGIZER
+
+
+PrepMapDecode:
         lda     #<FullBoardCompressed
         sta     pCompressedDataL
         lda     #>FullBoardCompressed
         sta     pCompressedDataH
-        lda     #<LoadBoardByte
-        sta     JsrIndAddrL
-        lda     #>LoadBoardByte
-        sta     JsrIndAddrH
-        lda     #<CurrentBoard
-        sta     pCurrentBoardL
-        lda     #>CurrentBoard
-        sta     pCurrentBoardH
-        jsr     LzssDecode
-        jmp     CopyBoardIntoVram
-
-
-; Must preserve X and Y
-LoadBoardByte:
-        sty     AL
-        ldy     #0
-        sta     (pCurrentBoardL),y
-        inc     pCurrentBoardL
-        inc_z   pCurrentBoardH
-        ldy     AL
-        rts
-
-
-CopyBoardIntoVram:
-        ; Load first nametable
-        lda     #$20
-        sta     PPUADDR
-        lda     #$00
-        sta     PPUADDR
-        lda     #<CurrentBoard
-        sta     AL
-        lda     #>CurrentBoard
-        sta     AH
-        ldx     #30
-@copy_row:
-        ldy     #0
-@copy_cell:
-        lda     (AX),y
-        sta     PPUDATA
-        iny
-        cpy     #32
-        bne     @copy_cell
-        ; Finished this row; bump pointer by a row
-        lda     AL
-        add     #32
-        sta     AL
-        inc_cs  AH
-        dex
-        bne     @copy_row
-
-        ; Last row has to be written to other nametable
-        lda     #$28
-        sta     PPUADDR
-        lda     #$00
-        sta     PPUADDR
-        tax
-@loop:
-        lda     CurrentBoard+32*30,x
-        sta     PPUDATA
-        inx
-        cpx     #32
-        bne     @loop
-
-        ; Clear attribute tables
-        lda     #$23
-        sta     PPUADDR
-        lda     #$c0
-        sta     PPUADDR
-        jsr     ClearAttr
-        lda     #$2b
-        sta     PPUADDR
-        lda     #$c0
-        sta     PPUADDR
-        jsr     ClearAttr
-
-        ; Attributes for door to ghost house (X=15..16, Y=12)
-        ; These use palette 1 instead of palette 0
-        ldx     #$23
-        stx     PPUADDR
-        ldy     #$db
-        sty     PPUADDR
-        lda     #1 << 2
-        sta     PPUDATA
-        lda     #1
-        sta     PPUDATA
-
-        ; Attributes for side tunnels
-        ; Left: X=0..1, Y=13..15
-        ; Right: X=30..31, Y=13..15
-        stx     PPUADDR
-        ldy     #$d8
-        lda     #%01010101
-        sty     PPUADDR
-        sta     PPUDATA
-        stx     PPUADDR
-        ldy     #$df
-        sty     PPUADDR
-        sta     PPUDATA
-
-        ; Attributes for fruit area (X=11..20, Y=16..18)
-        ; It's wide to accommodate the "GAME OVER" message
-        stx     PPUADDR
-        lda     #$e2
-        sta     PPUADDR
-        lda     #%11001100
-        sta     PPUDATA
-        lda     #%11111111
-        sta     PPUDATA
-        sta     PPUDATA
-        lda     #%00110011
-        sta     PPUDATA
-
-        ; Attributes for status area
-        lda     #$2b
-        sta     PPUADDR
-        lda     #$f8
-        sta     PPUADDR
-        lda     #%10101010
-        ldx     #8
-@loop2:
-        sta     PPUDATA
-        dex
-        bne     @loop2
-
-        rts
-
-ClearAttr:
         lda     #0
-        ldx     #64
-@loop:
-        sta     PPUDATA
-        dex
-        bne     @loop
+        sta     MapX
+        sta     MapY
+        rts
+
+
+; Won't touch X
+BumpMapCoords:
+        inc     MapX
+
+        ; if MapX % 32 == 0...
+        lda     MapX
+        and     #31
+        bne     @end
+
+        ; ...then we finished this row; move to the next one
+        sta     MapX                        ; stores zero
+        inc     MapY
+@end:
         rts
 
 
 ; Input:
-;   X = X coordinate
-;   Y = Y coordinate
+;   X = X coord (clobbered)
+;   Y = Y coord (clobbered)
 ;
 ; Output:
-;   A = the tile
-;   RowAddr = address of row of tile
+;   A = value of tile
+;   flags will be set according to the value of A
 ;
-; Won't touch AX
+; Clobbers AX
+;
+; If the X coord is >= 32, it wraps around (i.e. mod 32)
+; If the Y coord is >= 30, return wall.
+; These don't necessarily apply to other map routines.
 GetTile:
-        ; RowAddr := CurrentBoard + Y*32
-        ; Note that Y's max value is 31, hence we don't start ROLling until
-        ; carry is a possibility
-        lda     #0
-        sta     RowAddrH
-        tya
-        asl
-        asl
-        asl
-        asl
-        rol     RowAddrH
-        asl
-        rol     RowAddrH
+        cpy     #30
+        bge     @wall
 
-        add     #<CurrentBoard
-        sta     RowAddrL
-        lda     #>CurrentBoard
-        adc     RowAddrH
-        sta     RowAddrH
-
-        ; Now check if the tile can be entered or not
+        ; X %= 32 (wrap around)
         txa
+        and     #31
+        tax
+
+        jsr     CalcMapIndex
+
+        ; Shift the bit pair of interest into the least significant position
+        lda     (pCurrentBoardL),y
+        cpx     #0
+        beq     @skip_shift
+@shift:
+        lsr
+        dex
+        bne     @shift
+@skip_shift:
+
+        ; Mask out all the other bits
+        and     #$03
+        rts
+
+@wall:
+        lda     #BMP_WALL
+        rts
+
+
+; Input:
+;   A = value of tile
+;   X = X coord (clobbered)
+;   Y = Y coord (clobbered)
+;
+; Clobbers AX
+SetTile:
+        pha
+        jsr     CalcMapIndex
+        pla
+        sta     AL
+
+        ; Set up a bitmask to clear a pair of bits
+        ; Rotate it left one bits for each X
+        lda     #%11111100
+        cpx     #0
+        beq     @skip_shift
+@shift:
+        sec
+        rol
+        asl     AL
+        dex
+        bne     @shift
+@skip_shift:
+
+        and     (pCurrentBoardL),y          ; Clear the bits in the maze data
+        ora     AL                          ; Add in the new bits
+        sta     (pCurrentBoardL),y
+        rts
+
+
+; Input:
+;   X = X coord
+;   Y = Y coord
+;
+; Output:
+;   X = X % 4 * 2 (number of bits to shift)
+;   Y = byte offset into map
+;   AX = clobbered
+CalcMapIndex:
+        ; AL = Y*BMP_BYTES_PER_ROW
+        lda     #0
+        cpy     #0
+        beq     @skip_multiply
+@multiply:
+        add     #BMP_BYTES_PER_ROW
+        dey
+        bne     @multiply
+@skip_multiply:
+        sta     AL
+
+        ; Y = AL + X/4
+        txa
+        lsr
+        lsr
+        add     AL
         tay
-        lda     (RowAddrL),y
+
+        ; Y is now an index into a byte in the map
+        ; X = X % 4 * 2
+        txa
+        and     #$03
+        asl
+        tax
+
         rts
 
 
@@ -207,21 +274,19 @@ GetTile:
 ;   Same as GetTile
 ;
 ; Output:
-;   EQ if so, NE if not
+;   EQ if so, NE if not (@TODO@ - reverse this?)
 ;
-; Won't touch AX
+; Clobbers AX
 IsTileEnterable:
         jsr     GetTile
-        cmp     #$20                        ; space
-        beq     @done
-        cmp     #$92                        ; dot
-        beq     @done
-        cmp     #$95                        ; energizer
-        beq     @done
-        cmp     #$90                        ; enterable mask
-@done:
+        beq     @wall
+        lda     #0
+        rts
+@wall:
+        lda     #1
         rts
 
 
+; Two full nametables, so it also contains the HUD
 FullBoardCompressed:
-    .incbin "../assets/map.lzss"
+    .incbin "../assets/board-combined.nam.lzss"

@@ -1025,10 +1025,10 @@ ComputeTurn:
 ; Input:
 ;   A = direction to evaluate
 EvalDirection:
-        sta     AL                          ; keep direction for later
+        pha                                 ; keep direction for later
         eor     #$03                        ; get opposite direction
         cmp     GhostsDirection,x           ; is this ghost trying to reverse direction?
-        beq     @end                        ; disallow if so
+        beq     @pop_and_end                ; disallow if so
         eor     #$03                        ; put original direction back in A
         tax                                 ; clobber X for now
         lda     NextTileY
@@ -1041,8 +1041,9 @@ EvalDirection:
         php
         ldx     GhostId                     ; restore X
         plp
-        bne     @end                        ; skip to end if tile not enterable
-        ldy     AL                          ; put direction in Y
+        bne     @pop_and_end                ; skip to end if tile not enterable
+        pla                                 ; put direction in Y
+        tay
         lda     Scores,y
         cmp     MaxScore
         blt     @end
@@ -1050,6 +1051,10 @@ EvalDirection:
         sta     MaxScore
         sty     GhostsTurnDir,x
 @end:
+        rts
+
+@pop_and_end:
+        pla                                 ; direction was still on stack
         rts
 
 

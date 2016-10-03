@@ -48,6 +48,8 @@ MyOAM = $200
 
 ; None of these macros touch the Y register except where otherwise specified
 .macro DlBegin
+        lda     #0
+        sta     fDisplayListReady
         ldx     DisplayListIndex
 .endmacro
 
@@ -79,6 +81,8 @@ MyOAM = $200
 .endmacro
 
 .macro DlEnd
+        lda     #1
+        sta     fDisplayListReady
         stx     DisplayListIndex
 .endmacro
 
@@ -114,12 +118,17 @@ JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP 
 NumLevel:           .res 1
 NumLives:           .res 1
 NumDots:            .res 1
-Score:              .res NUM_SCORE_DIGITS   ; BCD
 fDiedThisRound:     .res 1
 fBonusLifeAwarded:  .res 1
 fStartOfGame:       .res 1
 
 DlStringLen:        .res 1
+
+pScoreL:            .res 1
+pScoreH:            .res 1
+
+P1Score:            .res NUM_SCORE_DIGITS   ; BCD
+P2Score:            .res NUM_SCORE_DIGITS   ; BCD
 
 
 .include "nmi.asm"                          ; This one should be first
@@ -138,7 +147,6 @@ DlStringLen:        .res 1
 .segment "BSS"
 
 ; Use same memory for LZSS sliding window and display list
-LzssBuf:
 DisplayList:        .res 256
 
 
@@ -279,7 +287,8 @@ NewGame:
         sta     fBonusLifeAwarded
         ldx     #NUM_SCORE_DIGITS-1
 @clear_score:
-        sta     Score,x
+        sta     P1Score,x
+        sta     P2Score,x
         dex
         bpl     @clear_score
 
@@ -288,11 +297,13 @@ NewGame:
         ; FALL THROUGH to PlayRound
 
 PlayRound:
-        jsr     ClearMyOAM
         jsr     RenderOff
+        jsr     ClearMyOAM
         jsr     LoadPalette
-        jsr     LoadBoard
-        jsr     LoadStatusBar
+        jsr     NewBoard
+        jsr     LoadBoardIntoVram
+        jsr     DrawStatus                  ; sprite zero hit needs this
+        jsr     FlushDisplayList            ; and this
         jsr     RenderOn
 
         lda     #244
@@ -371,6 +382,10 @@ InitLife:
         jsr     InitAI
         jsr     InitPacMan
         jsr     InitFruit
+        lda     #<P1Score
+        sta     pScoreL
+        lda     #>P1Score
+        sta     pScoreH
         rts
 
 
@@ -512,14 +527,14 @@ SetMazeColor:
 ;   carry flag
 .macro AddDigit
 .local @end
-        lda     Score,y
+        lda     (pScoreL),y
         adc     (AX),y
         cmp     #10
         blt     @end                        ; carry flag will be clear
         sub     #10
         ; carry flag will be set
 @end:
-        sta     Score,y
+        sta     (pScoreL),y
 .endmacro
 
 AddPoints:
@@ -535,7 +550,7 @@ AddPoints:
         ; most significant digit
         ldy     #0
 @compare_high_score:
-        lda     Score,y
+        lda     (pScoreL),y
         cmp     HiScore,y
         bne     @scores_differ
         iny
@@ -549,7 +564,7 @@ AddPoints:
         ; Update high score
         ldy     #NUM_SCORE_DIGITS-1
 @update_high_score:
-        lda     Score,y
+        lda     (pScoreL),y
         sta     HiScore,y
         dey
         bpl     @update_high_score
@@ -558,7 +573,8 @@ AddPoints:
         ; Award life at 10,000 points
         lda     fBonusLifeAwarded
         bne     @no_bonus_life
-        lda     Score+1                     ; is the ten thousands digit of the score nonzero?
+        ldy     #1
+        lda     (pScoreL),y                   ; is the ten thousands digit of the score nonzero?
         beq     @no_bonus_life
         ; Score reached 10,000 points for the first time
         inc     NumLives
@@ -611,28 +627,33 @@ Render:
 DrawStatus:
         DlBegin
 
-        ; Draw score
+        ; Draw player 1 score
         lda     #NUM_SCORE_DIGITS
         sta     DlStringLen
         DlAddA
         DlAdd   #$2b, #$a2
-        DlAddString Score
+        DlAddString P1Score
 
         ; Draw high score
         ; (size of string is still in DlStringLen)
-        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$ac
+        DlAdd   #NUM_SCORE_DIGITS, #$2b, #$aa
         DlAddString HiScore
 
+        ; Draw player 2 score
+        lda     #NUM_SCORE_DIGITS
+        sta     DlStringLen
+        DlAddA
+        DlAdd   #$2b, #$b2
+        DlAddString P2Score
+
         ; Draw level number
-        DlAdd   #2, #$2b, #$99
+        DlAdd   #2, #$2b, #$9c
         lda     NumLevel
         add     #1                          ; level number is 0-based, but displayed as 1-based
         jsr     DrawTwoDigitNumber
 
         ; Draw number of lives
-        DlAdd   #2, #$2b, #$b9
-        lda     NumLives
-        jsr     DrawTwoDigitNumber
+        DlAdd   #1, #$2b, #$bc, NumLives
 
         DlEnd
         rts
@@ -686,22 +707,6 @@ LoadPalette:
         rts
 
 
-LoadStatusBar:
-        lda     #$2b
-        sta     PPUADDR
-        lda     #$40
-        sta     PPUADDR
-        ldx     #0
-@loop:
-        lda     StatusBar,x
-        beq     @end
-        sta     PPUDATA
-        inx
-        jmp     @loop
-@end:
-        rts
-
-
 RenderOff:
         lda     #0
         sta     PPUCTRL
@@ -714,13 +719,35 @@ RenderOn:
         rts
 
 
+FlushDisplayList:
+        ldx     #0
+@display_list_loop:
+        cpx     DisplayListIndex
+        beq     @display_list_end
+        ldy     DisplayList,x               ; size of chunk to copy
+        inx
+        lda     DisplayList,x               ; PPU address LSB
+        sta     PPUADDR
+        inx
+        lda     DisplayList,x               ; PPU address MSB
+        sta     PPUADDR
+        inx
+@copy_block:
+        lda     DisplayList,x
+        sta     PPUDATA
+        inx
+        dey
+        bne     @copy_block
+        beq     @display_list_loop
+@display_list_end:
+        lda     #0
+        sta     DisplayListIndex
+        sta     fDisplayListReady
+        rts
+
+
 ; Won't touch Y
 WaitForVblank:
-        lda     #0                          ; mark end of display list
-        ldx     DisplayListIndex
-        sta     DisplayList,x
-        lda     #1
-        sta     fDisplayListReady
         lda     FrameCounter
 @loop:
         cmp     FrameCounter
@@ -857,14 +884,6 @@ DeltaYTbl:
         .byte   -1                          ; north
         .byte   1                           ; south
         .byte   0                           ; east
-
-
-StatusBar:
-        .byte   "                                "
-        .byte   "                                "
-        .byte   "    1UP   HIGH SCORE   L=       "
-        .byte   "                       ", $98, $a0, "       "
-        .byte   0
 
 
 ; Unpacked BCD representations of points
