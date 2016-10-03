@@ -118,12 +118,17 @@ JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP 
 NumLevel:           .res 1
 NumLives:           .res 1
 NumDots:            .res 1
-Score:              .res NUM_SCORE_DIGITS   ; BCD
 fDiedThisRound:     .res 1
 fBonusLifeAwarded:  .res 1
 fStartOfGame:       .res 1
 
 DlStringLen:        .res 1
+
+pScoreL:            .res 1
+pScoreH:            .res 1
+
+P1Score:            .res NUM_SCORE_DIGITS   ; BCD
+P2Score:            .res NUM_SCORE_DIGITS   ; BCD
 
 
 .include "nmi.asm"                          ; This one should be first
@@ -282,7 +287,8 @@ NewGame:
         sta     fBonusLifeAwarded
         ldx     #NUM_SCORE_DIGITS-1
 @clear_score:
-        sta     Score,x
+        sta     P1Score,x
+        sta     P2Score,x
         dex
         bpl     @clear_score
 
@@ -376,6 +382,10 @@ InitLife:
         jsr     InitAI
         jsr     InitPacMan
         jsr     InitFruit
+        lda     #<P1Score
+        sta     pScoreL
+        lda     #>P1Score
+        sta     pScoreH
         rts
 
 
@@ -517,14 +527,14 @@ SetMazeColor:
 ;   carry flag
 .macro AddDigit
 .local @end
-        lda     Score,y
+        lda     (pScoreL),y
         adc     (AX),y
         cmp     #10
         blt     @end                        ; carry flag will be clear
         sub     #10
         ; carry flag will be set
 @end:
-        sta     Score,y
+        sta     (pScoreL),y
 .endmacro
 
 AddPoints:
@@ -540,7 +550,7 @@ AddPoints:
         ; most significant digit
         ldy     #0
 @compare_high_score:
-        lda     Score,y
+        lda     (pScoreL),y
         cmp     HiScore,y
         bne     @scores_differ
         iny
@@ -554,7 +564,7 @@ AddPoints:
         ; Update high score
         ldy     #NUM_SCORE_DIGITS-1
 @update_high_score:
-        lda     Score,y
+        lda     (pScoreL),y
         sta     HiScore,y
         dey
         bpl     @update_high_score
@@ -563,7 +573,8 @@ AddPoints:
         ; Award life at 10,000 points
         lda     fBonusLifeAwarded
         bne     @no_bonus_life
-        lda     Score+1                     ; is the ten thousands digit of the score nonzero?
+        ldy     #1
+        lda     (pScoreL),y                   ; is the ten thousands digit of the score nonzero?
         beq     @no_bonus_life
         ; Score reached 10,000 points for the first time
         inc     NumLives
@@ -616,17 +627,24 @@ Render:
 DrawStatus:
         DlBegin
 
-        ; Draw score
+        ; Draw player 1 score
         lda     #NUM_SCORE_DIGITS
         sta     DlStringLen
         DlAddA
         DlAdd   #$2b, #$a2
-        DlAddString Score
+        DlAddString P1Score
 
         ; Draw high score
         ; (size of string is still in DlStringLen)
         DlAdd   #NUM_SCORE_DIGITS, #$2b, #$aa
         DlAddString HiScore
+
+        ; Draw player 2 score
+        lda     #NUM_SCORE_DIGITS
+        sta     DlStringLen
+        DlAddA
+        DlAdd   #$2b, #$b2
+        DlAddString P2Score
 
         ; Draw level number
         DlAdd   #2, #$2b, #$9c
