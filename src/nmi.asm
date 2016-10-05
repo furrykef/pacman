@@ -60,6 +60,11 @@ HandleVblank:
         ; Run sound engine while we wait for sprite zero
         jsr     SoundTick
 
+        ; Skip sprite zero hit if flag is set
+        ; (thus skipping to setting scroll)
+        lda     fSplitScreen
+        beq     @skip_sprite_zero
+
 @wait_for_sprite_zero:
         bit     PPUSTATUS
         bvc     @wait_for_sprite_zero
@@ -71,6 +76,7 @@ HandleVblank:
         bne     @delay                      ; 3 cycles (2 on last iteration)
         assert_branch_page @delay
 
+@skip_sprite_zero:
         ; See: http://wiki.nesdev.com/w/index.php/PPU_scrolling#Split_X.2FY_scroll
         ; NES hardware is weird, man
         ; These writes can occur outside hblank

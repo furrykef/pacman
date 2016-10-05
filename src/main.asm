@@ -102,6 +102,7 @@ AL:                 .res 1
 AH:                 .res 1
 
 FrameCounter:       .res 1
+fSplitScreen:       .res 1
 fPaused:            .res 1
 DisplayListIndex:   .res 1
 fDisplayListReady:  .res 1
@@ -142,6 +143,7 @@ P2Score:            .res NUM_SCORE_DIGITS   ; BCD
 .include "fruit.asm"
 .include "lzss.asm"
 .include "intermissions.asm"
+.include "title.asm"
 
 
 .segment "BSS"
@@ -212,6 +214,7 @@ Main:
         ; Init variables
         lda     #0
         sta     FrameCounter
+        sta     fSplitScreen
         sta     VScroll
         sta     DisplayListIndex
         sta     fDisplayListReady
@@ -221,24 +224,6 @@ Main:
 
         lda     #>MyOAM
         sta     OamPtrH
-
-        ; Set up sprite zero and dummy sprites for status area clipping
-        ; This will appear in the 0 at the end of player 1's score
-        ldx     #31
-@init_dummy_sprites:
-        lda     #56
-        sta     MyOAM,x                     ; X position
-        dex
-        lda     #0                          ; palette, priority, flip
-        sta     MyOAM,x
-        dex
-        lda     #$ff                        ; Tile ID
-        sta     MyOAM,x
-        dex
-        lda     #15                         ; Y position
-        sta     MyOAM,x
-        dex
-        bpl     @init_dummy_sprites
 
         ; Check if save data is initialized, and initialize it if not
         ldx     #.strlen(MAGIC_COOKIE) - 1
@@ -277,7 +262,8 @@ Main:
 @vblank2:
         bit     PPUSTATUS
         bpl     @vblank2
-        ; FALL THROUGH to NewGame
+        jmp     TitleScreen
+
 
 NewGame:
         lda     #3
@@ -304,6 +290,7 @@ PlayRound:
         jsr     LoadBoardIntoVram
         jsr     DrawStatus                  ; sprite zero hit needs this
         jsr     FlushDisplayList            ; and this
+        jsr     SplitOn
         jsr     RenderOn
 
         lda     #244
@@ -374,8 +361,7 @@ PlayRound:
         DlAdd   #$16
         DlEnd
         ldy     #180
-        jsr     WaitFrames
-        jmp     NewGame
+        jmp     WaitFrames
 
 
 InitLife:
@@ -718,6 +704,45 @@ RenderOn:
         sta     PPUCTRL
         rts
 
+SplitOff:
+        lda     #0
+        sta     fSplitScreen
+
+        ; Hide sprite zero and dummy sprites
+        lda     #$ff
+        ldx     #7*4
+@loop:
+        sta     MyOAM,x
+        dex
+        dex
+        dex
+        dex
+        bpl     @loop
+        rts
+
+SplitOn:
+        ; Set up sprite zero and dummy sprites for status area clipping
+        ; This will appear in the 0 at the end of player 1's score
+        ldx     #31
+@init_dummy_sprites:
+        lda     #56
+        sta     MyOAM,x                     ; X position
+        dex
+        lda     #0                          ; palette, priority, flip
+        sta     MyOAM,x
+        dex
+        lda     #$ff                        ; Tile ID
+        sta     MyOAM,x
+        dex
+        lda     #15                         ; Y position
+        sta     MyOAM,x
+        dex
+        bpl     @init_dummy_sprites
+
+        lda     #1
+        sta     fSplitScreen
+        rts
+
 
 FlushDisplayList:
         ldx     #0
@@ -808,6 +833,12 @@ ClearNametable1:
         dex
         bne     @fill_zero
 
+        rts
+
+
+; Used in LZSS decoding
+DrawTile:
+        sta     PPUDATA
         rts
 
 
