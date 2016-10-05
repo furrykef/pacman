@@ -39,11 +39,40 @@ TitleScreen:
         jsr     RenderOn
 
 @loop:
+        jsr     WaitForVblank
+        jsr     DrawCursor
         jsr     ReadJoys
-        lda     Joy1Down
+        lda     #JOY_UP | JOY_DOWN | JOY_SELECT
+        bit     Joy1Down
+        beq     :+
+        lda     CursorPos
+        eor     #$01
+        sta     CursorPos
+:
+        lda     #JOY_START | JOY_A
+        bit     Joy1Down
         beq     @loop
         jsr     NewGame
         jmp     TitleScreen
+
+
+DrawCursor:
+        lda     #0
+        sta     OamPtrL
+        lda     #68
+        sta     SprX
+        ldx     CursorPos
+        lda     DrawCursorYTbl,x
+        sta     SprY
+        lda     #$6c
+        sta     SprStartPattern
+        lda     #$03
+        sta     SprAttrib
+        jmp     DrawSprite16x16
+
+DrawCursorYTbl:
+        .byte   108                         ; 1-player game
+        .byte   124                         ; 2-player game
 
 
 TitleScreenCompressed:
