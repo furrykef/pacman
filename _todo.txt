@@ -64,7 +64,10 @@ Hide status bar while playing intermissions? (original game does this)
 
 Do eaten ghosts ever reverse direction with mode changes?
 
-If we add two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
+
+Only reset ghosts' dot counters at the start of a new round, not upon player death.
+
+For two-player play, don't forget that the ghosts' dot counters need to be associated with each player.
 
 
 Sound effects can be done with math: http://www.brettapitz.com/?p=538

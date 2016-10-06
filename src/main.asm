@@ -106,12 +106,9 @@ fSplitScreen:       .res 1
 fPaused:            .res 1
 DisplayListIndex:   .res 1
 fDisplayListReady:  .res 1
-Joy1State:          .res 1
-Joy2State:          .res 1                  ; must immediately follow Joy1State
-Joy1PrevState:      .res 1
-Joy2PrevState:      .res 1                  ; must immediately follow Joy1PrevState
-Joy1Down:           .res 1
-Joy2Down:           .res 1                  ; must immediately follow Joy1Down
+JoyState:          .res 1
+JoyPrevState:      .res 1
+JoyDown:           .res 1
 VScroll:            .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
@@ -232,8 +229,7 @@ Main:
         sta     DisplayListIndex
         sta     fDisplayListReady
         sta     fPaused
-        sta     Joy1State
-        sta     Joy2State
+        sta     JoyState
 
         lda     #>MyOAM
         sta     OamPtrH
@@ -334,9 +330,9 @@ NewRound:
         jsr     ClearReady
 @game_loop:
         jsr     WaitForVblank
-        jsr     ReadJoys
+        jsr     ReadJoy
         lda     #JOY_START
-        bit     Joy1Down
+        bit     JoyDown
         beq     :+
         jsr     Pause
 :
@@ -400,8 +396,9 @@ NewRound:
 ; Number of next player is in X
 @switch_player:
         stx     NumPlayer
+        jsr     ClearJoy                    ; won't touch X
         lda     fPlayersDiedThisRound,x
-        beq     :+                          ; Too far away to branch directly
+        beq     :+                          ; too far away to branch directly
         jmp     @start_life
 :
         jmp     NewRound
@@ -637,9 +634,9 @@ Pause:
         jsr     SoundOff
 @loop:
         jsr     WaitForVblank
-        jsr     ReadJoys
+        jsr     ReadJoy
         lda     #JOY_START
-        bit     Joy1Down
+        bit     JoyDown
         beq     @loop
         lda     #0
         sta     fPaused
@@ -905,30 +902,27 @@ DrawTile:
         rts
 
 
-ReadJoys:
-        ldy     #0                          ; controller 1
-        jsr     ReadOneJoy
-        iny                                 ; controller 2
-        ; FALL THROUGH to ReadOneJoy
+; Used when changing players so one gamepad won't interfere with the other
+; Won't touch X
+ClearJoy:
+        lda     #0
+        sta     JoyPrevState
+        rts
 
-; Inputs:
-;   Y = number of controller to read (0 = controller 1)
-;
-; Expects Joy2State to follow Joy1State in memory
-; Expects Joy2PrevState to follow Joy1PrevState in memory
-; Expects Joy2Down to follow Joy1Down in memory
-ReadOneJoy:
-        lda     Joy1State,y
-        sta     Joy1PrevState,y
+
+; Reads the gamepad of the player specified by the NumPlayer variable
+ReadJoy:
+        lda     JoyState
+        sta     JoyPrevState
         jsr     ReadJoyImpl
 @no_match:
-        sta     Joy1State,y
+        sta     JoyState
         jsr     ReadJoyImpl
-        cmp     Joy1State,y
+        cmp     JoyState
         bne     @no_match
-        eor     Joy1PrevState,y             ; get buttons that have changed
-        and     Joy1State,y                 ; filter out buttons not currently pressed
-        sta     Joy1Down,y
+        eor     JoyPrevState               ; get buttons that have changed
+        and     JoyState                   ; filter out buttons not currently pressed
+        sta     JoyDown
         rts
 
 ReadJoyImpl:
@@ -937,6 +931,7 @@ ReadJoyImpl:
         dex
         stx     JOYSTROBE
         txa
+        ldy     NumPlayer
         ldx     #8
 @loop:
         pha

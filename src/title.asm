@@ -18,6 +18,8 @@ TitleScreen:
         lda     #0
         sta     VScroll
         sta     BGM
+        sta     NumPlayer                   ; respond to player 1's input
+        jsr     ClearJoy
         jsr     ClearMyOAM
         jsr     LoadPalette
 
@@ -41,16 +43,16 @@ TitleScreen:
 @loop:
         jsr     WaitForVblank
         jsr     DrawCursor
-        jsr     ReadJoys
+        jsr     ReadJoy
         lda     #JOY_UP | JOY_DOWN | JOY_SELECT
-        bit     Joy1Down
+        bit     JoyDown
         beq     :+
         lda     CursorPos
         eor     #$01
         sta     CursorPos
 :
         lda     #JOY_START | JOY_A
-        bit     Joy1Down
+        bit     JoyDown
         beq     @loop
         lda     #3
         sta     P1Lives

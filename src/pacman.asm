@@ -158,7 +158,7 @@ MovePacManOneTick:
 TryTurningPacMan:
         ; Figure out direction we're trying to go in
         ; Upper four bits of joy state are directions
-        lda     Joy1State
+        lda     JoyState
         lsr
         lsr
         lsr
