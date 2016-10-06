@@ -9,14 +9,6 @@ The fright times in the Pac-Man Dossier are exact; there are no fractions of sec
 When flashing: 14 frames to change from blue to white or vice versa, but white to normal may take less than 14 frames (9 frames on level 1, 6 on level 2).
 
 
-LZSS
-----
-This can be used for both the maze and music patterns.
-
-<furrykef> I just realized I don't need local OAM or the display list while decompressing LZSS, so one of them can double as the LZSS sliding window buffer.
-<furrykef> So that saves 256 bytes of RAM.
-
-
 Intermissions
 -------------
 First intermission is after level 2, second after level 5, third after level 9 and every four levels thereafter.

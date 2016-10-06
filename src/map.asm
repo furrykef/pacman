@@ -42,13 +42,6 @@ P2Board:    .res BMP_BYTES_PER_ROW*31
 .segment "CODE"
 
 NewBoard:
-        ; @TODO@ -- move this somewhere appropriate and support 2-player mode
-        lda     #<P1Board
-        sta     pCurrentBoardL
-        lda     #>P1Board
-        sta     pCurrentBoardH
-        ; end TODO
-
         jsr     PrepMapDecode
         lda     #<NewBoardTile
         sta     JsrIndAddrL
@@ -140,7 +133,22 @@ PrepMapDecode:
         lda     #0
         sta     MapX
         sta     MapY
+
+        ldx     NumPlayer
+        lda     BoardLTbl,x
+        sta     pCurrentBoardL
+        lda     BoardHTbl,x
+        sta     pCurrentBoardH
+
         rts
+
+BoardLTbl:
+        .byte   <P1Board
+        .byte   <P2Board
+
+BoardHTbl:
+        .byte   >P1Board
+        .byte   >P2Board
 
 
 ; Won't touch X

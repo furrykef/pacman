@@ -52,6 +52,15 @@ TitleScreen:
         lda     #JOY_START | JOY_A
         bit     Joy1Down
         beq     @loop
+        lda     #3
+        sta     P1Lives
+        sta     P2Lives
+        lda     CursorPos
+        cmp     #MNU_2_PLAYER
+        beq     :+
+        lda     #0
+        sta     P2Lives
+:
         jsr     NewGame
         jmp     TitleScreen
 

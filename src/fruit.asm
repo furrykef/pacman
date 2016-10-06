@@ -33,10 +33,11 @@ InitFruit:
 
 
 GetFruitId:
-        ldx     NumLevel
-        cpx     #12
+        ldx     NumPlayer
+        ldy     PlayersLevel,x
+        cmp     #12
         bge     @key
-        lda     LevelToFruit,x
+        lda     LevelToFruit,y
         rts
 @key:
         lda     #KEY

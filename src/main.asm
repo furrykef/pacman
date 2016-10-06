@@ -116,11 +116,24 @@ VScroll:            .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
 
-NumLevel:           .res 1
-NumLives:           .res 1
-NumDots:            .res 1
-fDiedThisRound:     .res 1
-fBonusLifeAwarded:  .res 1
+NumPlayer:          .res 1
+
+PlayersLevel:
+P1Level:            .res 1
+P2Level:            .res 1
+PlayersLives:
+P1Lives:            .res 1
+P2Lives:            .res 1
+PlayersNumDots:
+P1NumDots:          .res 1
+P2NumDots:          .res 1
+fPlayersBonusLifeAwarded:
+fP1BonusLifeAwarded: .res 1
+fP2BonusLifeAwarded: .res 1
+fPlayersDiedThisRound:
+fP1DiedThisRound:   .res 1
+fP2DiedThisRound:   .res 1
+
 fStartOfGame:       .res 1
 
 DlStringLen:        .res 1
@@ -265,12 +278,16 @@ Main:
         jmp     TitleScreen
 
 
+; Note: P1Lives and P2Lives are initialized by the title screen
 NewGame:
-        lda     #3
-        sta     NumLives
         lda     #0
-        sta     NumLevel
-        sta     fBonusLifeAwarded
+        sta     NumPlayer
+        sta     P1Level
+        sta     P2Level
+        sta     fP1BonusLifeAwarded
+        sta     fP2BonusLifeAwarded
+        sta     fP1DiedThisRound
+        sta     fP2DiedThisRound
         ldx     #NUM_SCORE_DIGITS-1
 @clear_score:
         sta     P1Score,x
@@ -280,25 +297,26 @@ NewGame:
 
         lda     #1
         sta     fStartOfGame
-        ; FALL THROUGH to PlayRound
+        ; FALL THROUGH to NewRound
 
-PlayRound:
+NewRound:
+        jsr     NewBoard
+        ldx     NumPlayer
+        lda     #244
+        sta     PlayersNumDots,x
+        lda     #0
+        sta     fPlayersDiedThisRound,x
+
+@start_life:
         jsr     RenderOff
         jsr     ClearMyOAM
         jsr     LoadPalette
-        jsr     NewBoard
         jsr     LoadBoardIntoVram
         jsr     DrawStatus                  ; sprite zero hit needs this
         jsr     FlushDisplayList            ; and this
         jsr     SplitOn
         jsr     RenderOn
 
-        lda     #244
-        sta     NumDots
-        lda     #0
-        sta     fDiedThisRound
-
-@start_life:
         jsr     InitLife
         jsr     DrawReady
         jsr     Render
@@ -329,11 +347,12 @@ PlayRound:
         jsr     DecideBGM
         lda     fPacDead
         bne     @pac_dead
-        lda     NumDots
+        ldx     NumPlayer
+        lda     PlayersNumDots,x
         bne     @game_loop
         ; Round has been won
         jsr     WonRound
-        jmp     PlayRound
+        jmp     NewRound
 
 @pac_dead:
         lda     #BGM_NONE
@@ -343,11 +362,19 @@ PlayRound:
         jsr     ClearMyOAM
         jsr     DoPacManDeathAnimation
         jsr     ClearFruitGraphic
-        dec     NumLives
+        ldx     NumPlayer
+        dec     PlayersLives,x
         beq     @game_over
         lda     #1
-        sta     fDiedThisRound
-        bne     @start_life                 ; always taken
+        sta     fPlayersDiedThisRound,x
+        ; Switch to other player if applicable
+        txa
+        eor     #$01
+        tax
+        lda     PlayersLives,x
+        bne     @switch_player
+        jmp     @start_life
+
 @game_over:
         jsr     DrawStatus                  ; to show 0 lives
         DlBegin
@@ -361,38 +388,66 @@ PlayRound:
         DlAdd   #$16
         DlEnd
         ldy     #180
-        jmp     WaitFrames
+        jsr     WaitFrames
+        lda     NumPlayer
+        eor     #$01
+        tax
+        lda     PlayersLives,x
+        bne     @switch_player
+        ; Game is over for both players
+        rts
+
+; Number of next player is in X
+@switch_player:
+        stx     NumPlayer
+        lda     fPlayersDiedThisRound,x
+        beq     :+                          ; Too far away to branch directly
+        jmp     @start_life
+:
+        jmp     NewRound
 
 
 InitLife:
         jsr     InitAI
         jsr     InitPacMan
         jsr     InitFruit
-        lda     #<P1Score
+        ldx     NumPlayer
+        lda     ScoresLTbl,x
         sta     pScoreL
+        .assert >P1Score = >P2Score, error, "P1Score and P2Score on different pages"
         lda     #>P1Score
         sta     pScoreH
         rts
 
+ScoresLTbl:
+        .byte   <P1Score
+        .byte   <P2Score
+
 
 DrawReady:
         DlBegin
-        lda     #StrReadyLen
+        lda     #StrP1ReadyLen
         sta     DlStringLen
         DlAddA
-        DlAdd   #$22, #$2d
-        DlAddString StrReady
+        DlAdd   #$22, #$2b
+        DlAddString StrP1Ready
         DlAdd   #1, #$3f, #$0e
         DlAdd   #$28
+        lda     NumPlayer
+        beq     :+
+        ; Player 2; change "P1" to read "P2"
+        DlAdd   #1, #$22, #$2c
+        DlAdd   #'2'
+:
         DlEnd
         rts
 
 
 ClearReady:
         DlBegin
-        DlAdd   #6, #$22, #$2d
+        DlAdd   #9, #$22, #$2b
         lda     #' '
-        ldy     #6
+        ldy     #9
 @loop:
         DlAddA
         dey
@@ -402,6 +457,8 @@ ClearReady:
 
 
 DecideBGM:
+        ldy     NumPlayer
+
         ; If any ghosts have been eaten, use that
         ldx     #3
 @check_eaten_ghosts:
@@ -415,7 +472,7 @@ DecideBGM:
         ldx     #BGM_ALARM1
         lda     #128
 @loop:
-        cmp     NumDots
+        cmp     PlayersNumDots,y
         blt     @check_energizer
         lsr
         inx
@@ -462,10 +519,11 @@ WonRound:
         sub     #1
         bne     @loop
 
-        lda     NumLevel
+        ldx     NumPlayer
+        lda     PlayersLevel,x
         cmp     #99 - 1
         beq     :+                          ; don't inc past level 99
-        inc     NumLevel
+        inc     PlayersLevel,x
 :
 
         ; Check for intermissions
@@ -557,15 +615,16 @@ AddPoints:
 @hiscore_done:
 
         ; Award life at 10,000 points
-        lda     fBonusLifeAwarded
+        ldx     NumPlayer
+        lda     fPlayersBonusLifeAwarded,x
         bne     @no_bonus_life
         ldy     #1
         lda     (pScoreL),y                   ; is the ten thousands digit of the score nonzero?
         beq     @no_bonus_life
         ; Score reached 10,000 points for the first time
-        inc     NumLives
+        inc     PlayersLives,x
         lda     #1
-        sta     fBonusLifeAwarded
+        sta     fPlayersBonusLifeAwarded,x
         sta     fSfxTExtraLife
 @no_bonus_life:
 
@@ -632,14 +691,18 @@ DrawStatus:
         DlAdd   #$2b, #$b2
         DlAddString P2Score
 
+        ldy     NumPlayer
+
         ; Draw level number
         DlAdd   #2, #$2b, #$9c
-        lda     NumLevel
+        lda     PlayersLevel,y
         add     #1                          ; level number is 0-based, but displayed as 1-based
         jsr     DrawTwoDigitNumber
 
         ; Draw number of lives
-        DlAdd   #1, #$2b, #$bc, NumLives
+        DlAdd   #1, #$2b, #$bc
+        lda     PlayersLives,y
+        DlAddA
 
         DlEnd
         rts
@@ -934,8 +997,8 @@ Points3000: .byte   0,0,3,0,0,0
 Points5000: .byte   0,0,5,0,0,0
 
 
-StrReady:   .byte   "READY!"
-StrReadyLen = * - StrReady
+StrP1Ready: .byte   "P1 READY!"
+StrP1ReadyLen = * - StrP1Ready
 
 StrGameOver:    .byte   "GAME  OVER"
 StrGameOverLen = * - StrGameOver

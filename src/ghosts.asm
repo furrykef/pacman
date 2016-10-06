@@ -232,15 +232,17 @@ InitAI:
         lda     #32
         sta     GhostGlobalDotCounter
 
-        ; Reset individual dot counters if global dot counter is not active
-        lda     fDiedThisRound
+        ; Don't use global dot counter if Pac-Man hasn't died yet
+        ldy     NumPlayer
+        lda     fPlayersDiedThisRound,y
         bne     @died
         lda     #0
-        sta     GhostGlobalDotCounter       ; global dot counter only active when Pac-Man had died
+        sta     GhostGlobalDotCounter
 @died:
 
         ; Set difficulty level based on level
-        ldx     NumLevel
+        ldy     NumPlayer
+        ldx     PlayersLevel,y
         cpx     #19                         ; ghost difficulty capped at 18 (level 19)
         blt     :+
         ldx     #18
@@ -330,7 +332,8 @@ MoveGhosts:
         ; Do not adjust for Elroy if Clyde never left house
         lda     fClydeLeft
         beq     @elroy_done
-        lda     NumDots
+        ldy     NumPlayer
+        lda     PlayersNumDots,y
         cmp     Elroy2Dots
         blt     @elroy2
         beq     @elroy2

@@ -59,14 +59,15 @@ InitPacMan:
         sta     PacDelay
         sta     fPacDead
 
-        ldx     NumLevel
-        cpx     #21
+        ldx     NumPlayer
+        ldy     PlayersLevel
+        cpy     #21
         blt     :+
-        ldx     #20                         ; difficulty maxes out at level 21
+        ldy     #20                         ; difficulty maxes out at level 21
 :
-        lda PacBaseSpeedTbl,x
+        lda PacBaseSpeedTbl,y
         sta PacBaseSpeed
-        lda PacEnergizerSpeedTbl,x
+        lda PacEnergizerSpeedTbl,y
         sta PacEnergizerSpeed
 
         rts
@@ -289,7 +290,8 @@ EatStuff:
         ; FALL THROUGH to @eat_object
 
 @eat_object:
-        lda     NumDots
+        ldx     NumPlayer
+        lda     PlayersNumDots,x
         and     #$01
         add     #1
         sta     SfxTMunchDot
@@ -328,8 +330,9 @@ EatStuff:
 
 
 EatDot:
-        dec     NumDots
-        lda     NumDots
+        ldx     NumPlayer
+        dec     PlayersNumDots,x
+        lda     PlayersNumDots,x
         cmp     #244 - 70
         beq     @fruit
         cmp     #244 - 170
