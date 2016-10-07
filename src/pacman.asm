@@ -445,6 +445,9 @@ DoPacManDeathAnimation:
         ldy     #30
         jsr     WaitFrames
 
+        lda     #BGM_DYING
+        sta     BGM
+
         lda     #$a4
 @loop:
         sta     SprStartPattern
@@ -454,8 +457,22 @@ DoPacManDeathAnimation:
         jsr     WaitFrames
         pla
         add     #4
-        cmp     #$d4
+        cmp     #$c8
         bne     @loop
+
+        ldx     #BGM_DYING2
+        stx     BGM
+
+@loop2:
+        sta     SprStartPattern
+        pha
+        jsr     DrawSprite16x16
+        ldy     #8
+        jsr     WaitFrames
+        pla
+        add     #4
+        cmp     #$d4
+        bne     @loop2
 
         ldy     #60
         jmp     WaitFrames

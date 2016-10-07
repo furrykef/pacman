@@ -10,6 +10,8 @@
         BGM_ENERGIZER
         BGM_EATEN_GHOST
         BGM_INTERMISSION
+        BGM_DYING
+        BGM_DYING2
 .endenum
 
 
@@ -26,6 +28,8 @@ SongTbl:
         .addr   BgmEnergizer
         .addr   BgmEatenGhost
         .addr   BgmIntermission
+        .addr   BgmDying
+        .addr   BgmDying2
 
 
 BgmNone:
@@ -311,6 +315,28 @@ BgmIntermissionTriPattern2:
         .byte   DUR(12), LEN(11)
         .byte   Ds2, E2, F2, REST
         .byte   NEXT
+
+
+BgmDying:
+        .addr   NullPatternList
+        .addr   NullPatternList
+        .addr   NullPatternList
+
+
+BgmDying2:
+        .addr   NullPatternList
+        .addr   NullPatternList
+        .addr   Dying2PatternList
+
+Dying2PatternList:
+        .addr   Dying2Pattern
+        .addr   Dying2Pattern
+        .addr   NullPattern
+
+Dying2Pattern:
+        .byte   DUR(1), LEN(1)
+        .byte   Fs3, Fs4, Cs5, Fs5, As5, Cs6, E6, Fs6, Gs6, As6, C7
+        .byte   REST, NEXT
 
 
 SfxEatingGhostPatternList:
