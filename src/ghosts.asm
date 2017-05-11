@@ -446,21 +446,21 @@ DotClockTick:
 
 
 EnergizerClockTick:
+        ; If EnergizerClock is nonzero, decrement it
         lda     EnergizerClockL
-        beq     @maybe_zero
-        bne     @nonzero
-@maybe_zero:
-        ldy     EnergizerClockH
+        bne     @lsb_nonzero
+        lda     EnergizerClockH
         beq     @zero
-@nonzero:
-        sub     #1
-        sta     EnergizerClockL
-        dec_cc  EnergizerClockH
+        dec     EnergizerClockH
+@lsb_nonzero:
+        dec     EnergizerClockL
         lda     #1
         sta     fEnergizerActive
         rts
+
+        ; Else, end energizer (all ghosts nonscared)
 @zero:
-        lda     #0
+        ; A is zero
         sta     fEnergizerActive
         sta     fGhostsScared+BLINKY
         sta     fGhostsScared+PINKY

@@ -2,6 +2,14 @@ dasm of Pac-Man: http://web.archive.org/web/20091003171028/http://www.lomont.org
 dasm of Ms. Pac-Man: http://bartgrantham.com/_projects/mspacman/docs/SJL/mspac.20080621.asm
 
 
+Death noise
+-----------
+Hi-pitch envelope in FT:
+| -1 -1 0 -1 -1 0 1 1 0 1 1 0 1 1 0 1 1 0 
+
+With F#4 or around there gives a decent approximation. Could do some time measurements on the original sound to get a better estimate of how long to rise and how far to fall.
+
+
 Fright
 ------
 The fright times in the Pac-Man Dossier are exact; there are no fractions of seconds involved.
