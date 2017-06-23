@@ -231,9 +231,6 @@ Main:
         sta     fPaused
         sta     JoyState
 
-        lda     #>MyOAM
-        sta     OamPtrH
-
         ; Check if save data is initialized, and initialize it if not
         ldx     #.strlen(MAGIC_COOKIE) - 1
 @check_cookie:

@@ -364,9 +364,6 @@ CalcPacCoords:
 
 
 DrawPacMan:
-        lda     #PacManOAM
-        sta     OamPtrL
-
         ; Y position
         lda     PacY
         sta     SprY
@@ -417,13 +414,11 @@ DrawPacMan:
         lda     PacX
         sta     SprX
 
+        ldy     #PacManOAM
         jmp     DrawSprite16x16
 
 
 DoPacManDeathAnimation:
-        lda     #PacManOAM
-        sta     OamPtrL
-
         ; Y position
         lda     PacY
         sta     SprY
@@ -440,6 +435,7 @@ DoPacManDeathAnimation:
         lda     PacX
         sta     SprX
 
+        ldy     #PacManOAM
         jsr     DrawSprite16x16
 
         ldy     #30
@@ -452,6 +448,7 @@ DoPacManDeathAnimation:
 @loop:
         sta     SprStartPattern
         pha
+        ldy     #PacManOAM
         jsr     DrawSprite16x16
         ldy     #8
         jsr     WaitFrames
@@ -466,6 +463,7 @@ DoPacManDeathAnimation:
 @loop2:
         sta     SprStartPattern
         pha
+        ldy     #PacManOAM
         jsr     DrawSprite16x16
         ldy     #8
         jsr     WaitFrames

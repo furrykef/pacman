@@ -68,8 +68,6 @@ TitleScreen:
 
 
 DrawCursor:
-        lda     #0
-        sta     OamPtrL
         lda     #68
         sta     SprX
         ldx     CursorPos
@@ -79,6 +77,7 @@ DrawCursor:
         sta     SprStartPattern
         lda     #$03
         sta     SprAttrib
+        ldy     #0
         jmp     DrawSprite16x16
 
 DrawCursorYTbl:

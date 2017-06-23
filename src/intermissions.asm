@@ -242,8 +242,6 @@ DrawBlinky:
 
 
 DrawLeftHalfOfGiantPacMan:
-        lda     #GiantPacManOAM
-        sta     OamPtrL
         lda     PacX
         sub     #8
         sta     SprX
@@ -251,11 +249,10 @@ DrawLeftHalfOfGiantPacMan:
         sub     #8
         sta     SprY
         jsr     GetGiantPacManAnimFrame
+        ldy     #GiantPacManOAM
         jmp     DrawHalfOfGiantPacMan
 
 DrawRightHalfOfGiantPacMan:
-        lda     #GiantPacManOAM+16
-        sta     OamPtrL
         lda     PacX
         add     #8
         sta     SprX
@@ -265,15 +262,16 @@ DrawRightHalfOfGiantPacMan:
         jsr     GetGiantPacManAnimFrame
         add     #4
         sta     SprStartPattern
+        ldy     #GiantPacManOAM+16
         ; FALL THROUGH to DrawHalfOfGiantPacMan
 
 DrawHalfOfGiantPacMan:
         lda     #$03                        ; palette 3
         sta     SprAttrib
         jsr     DrawSprite16x16
-        lda     OamPtrL
+        tya
         add     #8
-        sta     OamPtrL
+        tay
         lda     PacY
         add     #8
         sta     SprY

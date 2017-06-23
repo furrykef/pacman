@@ -1265,12 +1265,13 @@ DrawGhosts:
 ;   X = GhostId
 DrawOneGhost:
         ; Calculate OAM address for this ghost
+        ; It will be kept in Y throughout this routine
         lda     GhostsPriority,x
         asl
         asl
         asl
         add     #40
-        sta     OamPtrL
+        tay
 
         ; Don't draw ghost if it's being eaten
         lda     GhostsState,x

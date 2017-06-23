@@ -88,6 +88,7 @@ DUTYVOL     = CMD_BASE+2
 REST        = CMD_BASE+3
 REPEAT      = CMD_BASE+4
 TRANSPOSE   = CMD_BASE+5
+SWEEP       = CMD_BASE+6
 
 .define LEN(length)     LEN_BASE + (length)
 .define DUR(duration)   DUR_BASE + (duration)
@@ -305,6 +306,14 @@ InitChannel:
         sta     Wait,x
         sta     LengthCounter,x
         sta     Transposition,x
+        txa
+        pha                                 ; so we can get the old X back
+        asl
+        asl
+        tax
+        sta     $4001,x
+        pla                                 ; restore X
+        tax
         rts
 
 
@@ -322,7 +331,7 @@ ChannelTick:
         dec     Wait,x
         lda     LengthCounter,x
         bne     @end
-        ; Duration ended; silence channel
+        ; Length ended; silence channel
         txa
         asl
         asl
@@ -412,6 +421,7 @@ CmdEnd:
         sta     Wait,x
         rts
 
+
 CmdDutyVol:
         jsr     ReadArg
         pha
@@ -445,6 +455,18 @@ CmdTranspose:
         rts
 
 
+CmdSweep:
+        jsr     ReadArg
+        pha
+        txa
+        asl
+        asl
+        tax
+        pla
+        sta     $4001,x
+        rts
+
+
 ReadArg:
         ldy     PatternIdx,x
         inc     PatternIdx,x
@@ -453,9 +475,9 @@ ReadArg:
 
 
 CmdLTbl:
-        .byte   <CmdNext, <CmdEnd, <CmdDutyVol, <CmdRest, <CmdRepeat, <CmdTranspose
+        .byte   <CmdNext, <CmdEnd, <CmdDutyVol, <CmdRest, <CmdRepeat, <CmdTranspose, <CmdSweep
 CmdHTbl:
-        .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest, >CmdRepeat, >CmdTranspose
+        .byte   >CmdNext, >CmdEnd, >CmdDutyVol, >CmdRest, >CmdRepeat, >CmdTranspose, >CmdSweep
 
 
 ; From http://wiki.nesdev.com/w/index.php/APU_period_table

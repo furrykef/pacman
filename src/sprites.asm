@@ -1,7 +1,5 @@
 .segment "ZEROPAGE"
 
-OamPtrL:            .res 1
-OamPtrH:            .res 1
 SprX:               .res 1
 SprY:               .res 1
 SprStartPattern:    .res 1
@@ -19,6 +17,7 @@ fSprAtLeftEdge:     .res 1
 
 .segment "CODE"
 
+; Y = OAM index (not clobbered)
 DrawSprite16x16:
         ; Y position
         lda     SprY
@@ -42,19 +41,15 @@ DrawSprite16x16:
         bge     :+
         lda     #$ff                        ; hide upper half
 :
-        ldy     #0
-        sta     (OamPtrL),y
-        ldy     #4
-        sta     (OamPtrL),y
+        sta     MyOAM,y
+        sta     MyOAM+4,y
 
         ; PatternID
         lda     SprStartPattern
         add     #1                          ; use $1000-1fff for sprites
-        ldy     #1
-        sta     (OamPtrL),y
+        sta     MyOAM+1,y
         add     #2
-        ldy     #5
-        sta     (OamPtrL),y
+        sta     MyOAM+5,y
 
         ; Attributes
         ; Flip priority if sprite is at edges of tunnel
@@ -62,58 +57,50 @@ DrawSprite16x16:
         lsr
         lsr
         lsr
-        tay
+        tax
         lda     SprAttrib
-        cpy     #3
+        cpx     #3
         blt     @flip
-        cpy     #29
+        cpx     #29
         blt     @no_flip
 @flip:
         ora     #$20
 @no_flip:
-        ldy     #2
-        sta     (OamPtrL),y
-        ldy     #6
-        sta     (OamPtrL),y
+        sta     MyOAM+2,y
+        sta     MyOAM+6,y
 
         ; X position of left half
         lda     SprX
         sub     #7
-        ldy     fSprAtLeftEdge
+        ldx     fSprAtLeftEdge
         beq     :+
         cmp     #256 - 8
         blt     :+
         ; Hide left half of sprite
-        ldy     #0
-        pha                                 ; we'll need the X coordinate gaain
+        pha                                 ; we'll need the X coordinate again
         lda     #$ff
-        sta     (OamPtrL),y
+        sta     MyOAM,y
         pla                                 ; get back X coord of left half of sprite
 :
-        ldy     #3
-        sta     (OamPtrL),y
+        sta     MyOAM+3,y
 
         ; X position of right half
         add     #8
-        ldy     fSprAtLeftEdge
+        ldx     fSprAtLeftEdge
         bne     :+
         cmp     #8
         bge     :+
         ; Hide right half of sprite
-        ldy     #4
         lda     #$ff
-        sta     (OamPtrL),y
+        sta     MyOAM+4,y
 :
-        ldy     #7
-        sta     (OamPtrL),y
+        sta     MyOAM+7,y
 
         rts
 
 
 HideSprite16x16:
         lda     #$ff
-        ldy     #0
-        sta     (OamPtrL),y
-        ldy     #4
-        sta     (OamPtrL),y
+        sta     MyOAM,y
+        sta     MyOAM+4,y
         rts

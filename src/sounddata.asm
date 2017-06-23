@@ -318,22 +318,35 @@ BgmIntermissionTriPattern2:
 
 
 BgmDying:
+        .addr   BgmDyingPatternList
         .addr   NullPatternList
         .addr   NullPatternList
-        .addr   NullPatternList
+
+BgmDyingPatternList:
+        .addr   BgmDyingPatternInit
+        .addr   BgmDyingPattern
+
+BgmDyingPatternInit:
+        .byte   DUR(1), LEN(31),  C5
+        .byte   NEXT
+
+BgmDyingPattern:
+        .byte   LEN(31)
+        .byte   SWEEP, $f1
+        .byte   REPEAT
 
 
 BgmDying2:
         .addr   NullPatternList
         .addr   NullPatternList
-        .addr   Dying2PatternList
+        .addr   BgmDying2PatternList
 
-Dying2PatternList:
-        .addr   Dying2Pattern
-        .addr   Dying2Pattern
+BgmDying2PatternList:
+        .addr   BgmDying2Pattern
+        .addr   BgmDying2Pattern
         .addr   NullPattern
 
-Dying2Pattern:
+BgmDying2Pattern:
         .byte   DUR(1), LEN(1)
         .byte   Fs3, Fs4, Cs5, Fs5, As5, Cs6, E6, Fs6, Gs6, As6, C7
         .byte   REST, NEXT
