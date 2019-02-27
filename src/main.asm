@@ -206,21 +206,6 @@ Main:
         inx
         bne     @init_ram
 
-        ; Clear VRAM ($2000-2fff)
-        lda     #$20
-        sta     PPUADDR
-        lda     #0
-        sta     PPUADDR
-        lda     #' '
-        ldx     #0
-        ldy     #$10
-@clear_vram:
-        sta     PPUDATA
-        inx
-        bne     @clear_vram
-        dey
-        bne     @clear_vram
-
         ; Init variables
         lda     #0
         sta     FrameCounter
@@ -268,6 +253,22 @@ Main:
 @vblank2:
         bit     PPUSTATUS
         bpl     @vblank2
+
+        ; Now that the PPU is initialized, we can clear VRAM ($2000-2fff)
+        lda     #$20
+        sta     PPUADDR
+        lda     #0
+        sta     PPUADDR
+        lda     #' '
+        ldx     #0
+        ldy     #$10
+@clear_vram:
+        sta     PPUDATA
+        inx
+        bne     @clear_vram
+        dey
+        bne     @clear_vram
+
         jmp     TitleScreen
 
 
