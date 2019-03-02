@@ -327,8 +327,7 @@ NewRound:
         jsr     WaitFrames
         jsr     ClearReady
 @game_loop:
-        jsr     WaitForVblank
-        jsr     ReadJoy
+        jsr     EndFrame
         lda     #JOY_START
         bit     JoyDown
         beq     :+
@@ -631,8 +630,7 @@ Pause:
         sta     fPaused
         jsr     SoundOff
 @loop:
-        jsr     WaitForVblank
-        jsr     ReadJoy
+        jsr     EndFrame
         lda     #JOY_START
         bit     JoyDown
         beq     @loop
@@ -830,17 +828,22 @@ FlushDisplayList:
 
 
 ; Won't touch Y
-WaitForVblank:
+EndFrame:
         lda     FrameCounter
 @loop:
         cmp     FrameCounter
         beq     @loop
+        tya
+        pha
+        jsr     ReadJoy
+        pla
+        tay
         rts
 
 ; Input:
 ;   Y = number of frames to wait (0 = 256)
 WaitFrames:
-        jsr     WaitForVblank
+        jsr     EndFrame
         dey
         bne     WaitFrames
         rts

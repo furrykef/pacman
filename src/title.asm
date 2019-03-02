@@ -41,9 +41,8 @@ TitleScreen:
         jsr     RenderOn
 
 @loop:
-        jsr     WaitForVblank
         jsr     DrawCursor
-        jsr     ReadJoy
+        jsr     EndFrame
         lda     #JOY_UP | JOY_DOWN | JOY_SELECT
         bit     JoyDown
         beq     :+

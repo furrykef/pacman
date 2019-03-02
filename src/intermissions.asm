@@ -34,7 +34,7 @@ Intermission1:
         sta     IntermissionCounter
 :       jsr     DrawPacMan
         jsr     MovePacManIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         dec     IntermissionCounter
         bne     :-
 
@@ -48,7 +48,7 @@ Intermission1:
         jsr     DrawBlinky
         jsr     MovePacManIntermission
         jsr     MoveBlinkyIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     PacX
         bmi     :-
 
@@ -61,7 +61,7 @@ Intermission1:
         jsr     DrawBlinky
         jsr     MovePacManIntermission
         jsr     MoveBlinkyIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     PacX
         bpl     :-
 
@@ -71,7 +71,7 @@ Intermission1:
         ; Let Blinky move until he scrolls offscreen
 :       jsr     DrawBlinky
         jsr     MoveBlinkyIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     BlinkyX
         bpl     :-
 
@@ -94,7 +94,7 @@ Intermission1:
         sta     IntermissionCounter
 :       jsr     DrawBlinky
         jsr     MoveBlinkyIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         dec     IntermissionCounter
         bne     :-
 
@@ -103,7 +103,7 @@ Intermission1:
         jsr     DrawRightHalfOfGiantPacMan
         jsr     MoveBlinkyIntermission
         jsr     MovePacManIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     PacX
         cmp     #8
         blt     :-
@@ -115,7 +115,7 @@ Intermission1:
         jsr     DrawRightHalfOfGiantPacMan
         jsr     MoveBlinkyIntermission
         jsr     MovePacManIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     BlinkyX
         bpl     :-
 
@@ -128,7 +128,7 @@ Intermission1:
         jsr     DrawRightHalfOfGiantPacMan
         jsr     MoveBlinkyIntermission
         jsr     MovePacManIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     BlinkyX
         cmp     #7
         beq     :+
@@ -142,7 +142,7 @@ Intermission1:
 :       jsr     DrawLeftHalfOfGiantPacMan
         jsr     DrawRightHalfOfGiantPacMan
         jsr     MovePacManIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     PacX
         cmp     #255
         beq     :+
@@ -155,7 +155,7 @@ Intermission1:
         ; Proceed until giant Pac-Man is fully offscreen
 :       jsr     DrawLeftHalfOfGiantPacMan
         jsr     MovePacManIntermission
-        jsr     WaitForVblank
+        jsr     EndFrame
         lda     PacX
         cmp     #15
         beq     :+
