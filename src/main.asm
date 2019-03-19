@@ -106,9 +106,9 @@ fSplitScreen:       .res 1
 fPaused:            .res 1
 DisplayListIndex:   .res 1
 fDisplayListReady:  .res 1
-JoyState:          .res 1
-JoyPrevState:      .res 1
-JoyDown:           .res 1
+JoyState:           .res 1
+JoyPrevState:       .res 1
+JoyDown:            .res 1
 VScroll:            .res 1
 JsrIndAddrL:        .res 1                  ; Since we're on the zero page,
 JsrIndAddrH:        .res 1                  ; we won't get bit by the $xxFF JMP bug
@@ -158,7 +158,6 @@ P2Score:            .res NUM_SCORE_DIGITS   ; BCD
 
 .segment "BSS"
 
-; Use same memory for LZSS sliding window and display list
 DisplayList:        .res 256
 
 
